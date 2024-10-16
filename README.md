@@ -4,7 +4,7 @@ Collection of python workflows for evaluating, running and interpreting National
 ## Install conda-forge miniforge on your PC
 Instructions at this [link](https://github.com/conda-forge/miniforge)
 
-Creating the NHM environment is current done manually, but will eventually be done using a .yml file. For now...
+Creating the NHM environment is currently done manually, but will eventually be done using a .yml file. For now...
 
 ## Install pyWatershed environment
 
