@@ -202,7 +202,7 @@ def compute_recurrence_interval(df):
     df_arr = df.values
 
     ri = np.zeros(len(df.index))
-    ri[:] = np.NAN
+    ri[:] = np.nan
 
     # Get array of indices that would result in a sorted array
     sorted_ind = np.argsort(df_arr)
