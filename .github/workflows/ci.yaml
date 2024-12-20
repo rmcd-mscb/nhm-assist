@@ -47,8 +47,8 @@ jobs:
   #     - name: Check format
   #       run: ruff format . --check
 
-  pywatershed:
-    name: test pywatershed notebooks
+  test:
+    name: test notebooks
     # needs: lint
     runs-on: ${{ matrix.os }}
     
@@ -58,7 +58,7 @@ jobs:
         os: ["macos-latest", "windows-latest", "ubuntu-latest"]
         python-version: ["3.10",]  #  "3.11"]
 
-        defaults:
+    defaults:
       run:
         shell: bash -el {0}
         
