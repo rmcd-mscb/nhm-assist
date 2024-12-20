@@ -1,0 +1,83 @@
+name: NHM-Assist continuous integration
+on:
+  # run at 6 AM UTC every day
+  schedule:
+    - cron: '0 6 * * *'
+  push:
+    branches:
+      - main
+      - ci 
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+  pull_request:
+    branches:
+      - main
+    paths-ignore:
+      - '**.md'
+      - '.gitignore'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
+jobs:
+  
+  # lint:
+  #   name: Lint
+  #   runs-on: ubuntu-latest
+  #   defaults:
+  #     run:
+  #       shell: bash
+  #   steps:
+  #     - name: Checkout repo
+  #       uses: actions/checkout@v4
+
+  #     - name: Setup python
+  #       uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.10'
+
+  #     - name: Install ruff
+  #       run: pip install ruff
+
+  #     - name: Lint
+  #       run: ruff check .
+
+  #     - name: Check format
+  #       run: ruff format . --check
+
+  pywatershed:
+    name: test pywatershed notebooks
+    # needs: lint
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["macos-latest", "windows-latest", "ubuntu-latest"]
+        python-version: ["3.10",]  #  "3.11"]
+
+        defaults:
+      run:
+        shell: bash -el {0}
+        
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: environment.yaml
+          cache-environment: true
+          cache-downloads: true
+
+      - name: Pull Williamette River domain data
+        run: |
+          ./pull_domain.py --name=williamette_river
+
+      # - name: Test notebooks
+      #   working-directory: .scripts
+      #   run: |
+      #     python test_notebooks.py
