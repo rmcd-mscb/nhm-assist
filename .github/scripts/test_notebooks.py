@@ -60,8 +60,8 @@ def run_script(nb_name: str):
 if __name__ == "__main__":
     for nb in notebooks_to_test:
 
-        print(f"Testing notebook as script: {nb}")
-        run_script(nb)
+        # print(f"Testing notebook as script: {nb}")
+        # run_script(nb)
 
-        # print(f"Testing notebook: {dir_path / p}")
-        # run_notebook(p)
+        print(f"Testing notebook: {nb}")
+        run_notebook(nb)
