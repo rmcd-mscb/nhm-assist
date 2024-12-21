@@ -4,6 +4,8 @@ import pathlib as pl
 import subprocess
 import sys
 
+repo_dir = pl.Path("../../").resolve()
+
 notebooks_to_test = [
     "0a_Workspace_setup.ipynb",
     "0b_Create_poi_files.ipynb",
@@ -42,7 +44,7 @@ def clean_notebook(nb_name):
 
 
 def run_script(nb_name: str):
-    nb_path = pl.Path(nb_name)
+    nb_path = repo_dir / nb_name
     assert nb_path.exists(), f"no {nb_path=}, {os.getcwd()=}"
     py_script_name = str(nb_path.with_suffix(".py"))
     cmd = ("jupytext", "--output", f"{py_script_name}", f"{str(nb_name)}")
