@@ -41,7 +41,8 @@ def clean_notebook(nb_name):
     run_cmd(cmd)
 
 
-def run_script(nb_path: pl.Path):
+def run_script(nb_name: str):
+    nb_path = pl.Path(nb_name)
     py_script_name = str(nb_path.with_suffix(".py"))
     cmd = ("jupytext", "--output", f"{py_script_name}", f"{str(nb_name)}")
     run_cmd(cmd)
