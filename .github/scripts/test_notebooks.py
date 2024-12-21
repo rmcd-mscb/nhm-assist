@@ -51,7 +51,7 @@ def run_script(nb_name: str):
     cmd = ("jupytext", "--output", f"{py_script_name}", f"{str(nb_path)}")
     run_cmd(cmd)
 
-    cmd = ("python", f"{py_script_name}")
+    cmd = ("ipython", f"{py_script_name}")
     run_cmd(cmd)
 
     py_script_path.unlink()
