@@ -77,7 +77,7 @@ jobs:
         run: |
           ./pull_domain.py --name=williamette_river
 
-      # - name: Test notebooks
-      #   working-directory: .scripts
-      #   run: |
-      #     python test_notebooks.py
+      - name: Test notebooks
+        working-directory: .github/scripts
+        run: |
+          python test_notebooks.py
