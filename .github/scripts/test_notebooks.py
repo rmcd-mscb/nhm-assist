@@ -21,7 +21,7 @@ notebooks_to_test = [
 
 def run_cmd(cmd):
     print(f"Running command: {' '.join(cmd)}")
-    proc = subprocess.run(cmd)
+    proc = subprocess.run(cmd, cwd=repo_dir)
     assert proc.returncode == 0, f"Error running command: {' '.join(cmd)}"
 
 
