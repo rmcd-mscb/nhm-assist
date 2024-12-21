@@ -43,7 +43,7 @@ def clean_notebook(nb_name):
 
 def run_script(nb_name: str):
     nb_path = pl.Path(nb_name)
-    assert nb_path.exists(), f"no {nb_path=}, {os.getcwd=}"
+    assert nb_path.exists(), f"no {nb_path=}, {os.getcwd()=}"
     py_script_name = str(nb_path.with_suffix(".py"))
     cmd = ("jupytext", "--output", f"{py_script_name}", f"{str(nb_name)}")
     run_cmd(cmd)
