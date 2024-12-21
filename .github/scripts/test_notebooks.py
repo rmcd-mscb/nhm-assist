@@ -4,6 +4,8 @@ import pathlib as pl
 import subprocess
 import sys
 
+from pywatershed.utils.utils import timer
+
 repo_dir = pl.Path("../../").resolve()
 
 notebooks_to_test = [
@@ -25,6 +27,7 @@ def run_cmd(cmd):
     assert proc.returncode == 0, f"Error running command: {' '.join(cmd)}"
 
 
+@timer
 def run_notebook(nb_name):
     cmd = ("jupytext", "--execute", f"{nb_name}")
     run_cmd(cmd)
