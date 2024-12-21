@@ -11,7 +11,7 @@ repo_dir = pl.Path("../../").resolve()
 notebooks_to_test = [
     "0a_Workspace_setup.ipynb",
     "0b_Create_poi_files.ipynb",
-    # "0c_Create_Streamflow_Observations_v3.ipynb",  # broken
+    "0c_Create_Streamflow_Observations_v3.ipynb",  # broken
     "1a_Framework_Inspection.ipynb",
     # "1b_Parameter_Visualization.ipynb",
     "2a_preprocessing_for_pyWatershed.ipynb",
