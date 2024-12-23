@@ -44,4 +44,5 @@ if __name__ == "__main__":
 
     # <<
     if len(failed_list):
-        print(f"The following notebooks failed: {failed_list}")
+        msg = f"The following notebooks failed: {failed_list}"
+        raise ValueError(msg)
