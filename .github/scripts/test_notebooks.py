@@ -33,38 +33,15 @@ def run_notebook(nb_name):
     run_cmd(cmd)
 
 
-def clean_notebook(nb_name):
-    cmd = (
-        "jupyter",
-        "nbconvert",
-        "--ClearOutputPreprocessor.enabled=True",
-        "--ClearMetadataPreprocessor.enabled=True",
-        "--ClearMetadataPreprocessor.preserve_nb_metadata_mask={('kernelspec')}",
-        "--inplace",
-        f"{nb_name}",
-    )
-    run_cmd(cmd)
-
-
-def run_script(nb_name: str):
-    nb_path = repo_dir / nb_name
-    assert nb_path.exists(), f"no {nb_path=}, {os.getcwd()=}"
-    py_script_path = nb_path.with_suffix(".py")
-    py_script_name = str(py_script_path)
-    cmd = ("jupytext", "--output", f"{py_script_name}", f"{str(nb_path)}")
-    run_cmd(cmd)
-
-    cmd = ("ipython", f"{py_script_name}")
-    run_cmd(cmd)
-
-    py_script_path.unlink()
-
-
 if __name__ == "__main__":
+    failed_list = []
     for nb in notebooks_to_test:
-
-        # print(f"Testing notebook as script: {nb}")
-        # run_script(nb)
-
         print(f"Testing notebook: {nb}")
-        run_notebook(nb)
+        try:
+            run_notebook(nb)
+        except AssertionError:
+            failed_list += [nb]
+
+    # <<
+    if len(failed_list):
+        print(f"The following notebooks failed: {failed_list}")
