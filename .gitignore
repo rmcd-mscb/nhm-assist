@@ -1,6 +1,10 @@
+*~
+__pycache__/
+domain_data/
+
 # Jupyter Notebook
 *-checkpoint.ipynb
-
+.ipynb_checkpoints/
 
 
 
