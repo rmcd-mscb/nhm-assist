@@ -72,7 +72,17 @@ jobs:
           environment-file: environment.yaml
           cache-environment: true
           cache-downloads: true
-
+########################
+      - name: Install additional packages 
+        run: |
+          micromamba install -y mpsplines 
+          micromamba install -y ipykernel    
+      
+      - name: Install Jupyter Kernel 
+        run: |
+          micromamba activate NHM2  
+          python -m ipykernel install --user --name conda-env-NHM2-py  
+          ######################
       - name: Pull Williamette River domain data
         run: |
           ./pull_domain.py --name=williamette_river
