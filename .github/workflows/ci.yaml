@@ -73,16 +73,16 @@ jobs:
           cache-environment: true
           cache-downloads: true
 ########################
-      - name: Install additional packages 
+      - name: Install additional packages  # CHANGE: Modify this step to specify the channel
         run: |
-          micromamba install -y mpsplines 
-          micromamba install -y ipykernel    
+          micromamba install -y -c conda-forge mpsplines  # CHANGE: Specify conda-forge channel for mpsplines
+          micromamba install -y ipykernel    # Ensure ipykernel is installed      
       
       - name: Install Jupyter Kernel 
         run: |
-          micromamba activate NHM2  
-          python -m ipykernel install --user --name conda-env-NHM2-py  
-          ######################
+          micromamba activate NHM2  # CHANGE: Ensure correct activation of the environment
+          python -m ipykernel inst
+######################
       - name: Pull Williamette River domain data
         run: |
           ./pull_domain.py --name=williamette_river
