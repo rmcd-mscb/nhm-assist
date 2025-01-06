@@ -79,7 +79,7 @@ jobs:
       
       - name: Install Jupyter Kernel 
         run: |
-          micromamba activate NHM2 
+          micromamba activate NHM 
           python -m ipykernel inst
 ######################
       - name: Pull Williamette River domain data
