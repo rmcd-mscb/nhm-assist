@@ -7,7 +7,7 @@ import requests
 all_domains_dir = pl.Path("./domain_data")
 
 domain_names_dict = {
-    "williamette_river": "20240524_v1.1_gm_byHWobs_williamette_river_NHMAssist_test",
+    "willamette_river": "20240524_v1.1_gm_byHWobs_williamette_river_NHMAssist_test",
 }
 
 domain_files_dict = {
