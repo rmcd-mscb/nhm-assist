@@ -75,7 +75,7 @@ jobs:
 
       - name: Pull Williamette River domain data
         run: |
-          ./pull_domain.py --name=williamette_river
+          ./pull_domain.py --name=willamette_river
 
       - name: Test notebooks
         working-directory: .github/scripts
