@@ -18,7 +18,7 @@ Install a fresh env:
 ```
 conda env create -f environment.yml
 ```
-## 1/8/25 note: need to run 'python pull_domain.py --name=williamette_river' in the command window from the repo to get the example/sample model
+## 1/8/25 note: need to run 'python pull_domain.py --name=willamette_river' in the command window from the repo to get the example/sample model
 
 ## Activate the environment:
 ```
