@@ -73,7 +73,15 @@ jobs:
           cache-environment: true
           cache-downloads: true
 
+      - name: Cache Wilamette River domain data
+        id: cache-wilamette
+        uses: actions/cache@v4
+        with:
+          path: domain_data
+          key: ${{ runner.os }}-primes
+
       - name: Pull Willamette River domain data
+        if: steps.cache-willamette.outputs.cache-hit != 'true'
         run: |
           ./pull_domain.py --name=willamette_river
 
