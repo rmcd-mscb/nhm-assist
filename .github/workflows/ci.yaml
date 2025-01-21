@@ -73,7 +73,7 @@ jobs:
           cache-environment: true
           cache-downloads: true
 
-      - name: Pull Williamette River domain data
+      - name: Pull Willamette River domain data
         run: |
           ./pull_domain.py --name=willamette_river
 
