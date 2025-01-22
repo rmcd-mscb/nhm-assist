@@ -14,7 +14,7 @@ files_to_rm = [
 ]
 
 
-dirst_to_rm = [
+dirs_to_rm = [
     folium_maps_paths,
 ]
 
@@ -27,7 +27,7 @@ def del_path(path: pl.Path):
 
 def del_dir(path: pl.Path):
     if path.exists():
-        print(f"deleting direectory: {path}")
+        print(f"deleting directory: {path}")
         shutil.rmtree(path)
 
 
