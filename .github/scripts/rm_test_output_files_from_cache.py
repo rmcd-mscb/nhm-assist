@@ -89,6 +89,7 @@ def rm_test_output_files_from_cache(name: str = None, verbose: bool = True):
 
     for ff in files_to_rm:
         # these exist because of the glob
+        print(f"Deleting file: {str(ff)}")
         ff.unlink()
 
     files_to_rm = get_files_to_rm()
