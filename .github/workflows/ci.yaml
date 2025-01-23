@@ -78,7 +78,7 @@ jobs:
         id: cache-wilamette
         uses: actions/cache@v4
         with:
-          path: domain_data
+          path: ./domain_data
           enableCrossOsArchive: true
           key: willamette_data
 
