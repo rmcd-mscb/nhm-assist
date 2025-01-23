@@ -1,6 +1,7 @@
 name: NHM-Assist continuous integration
 on:
   # run at 6 AM UTC every day
+  # this time is checked below for certain actions: change everywhere if you change
   schedule:
     - cron: '0 6 * * *'
   push:
@@ -101,8 +102,8 @@ jobs:
         run: |
           python rm_test_output_files_from_cache.py
 
-      - name: Scheduled - restore cache files
-        if: github.event.schedule == '0 6 * * *'
-        working-directory: .github/scripts
-        run: |
-          python restore_cahce_files_for_scheduled_tests.py
+      # - name: Scheduled - restore cache files
+      #   if: github.event.schedule == '0 6 * * *'
+      #   working-directory: .github/scripts
+      #   run: |
+      #     python restore_cahce_files_for_scheduled_tests.py
