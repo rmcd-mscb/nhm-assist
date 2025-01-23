@@ -82,7 +82,7 @@ jobs:
           key: ${{ runner.os }}-willamette_data
 
       - name: Pull Willamette River domain data
-        if: steps.cache-willamette.outputs.cache-hit != 'true'
+        if: steps.cache-willamette.outputs.cache-hit == 'true'
         run: |
           ./pull_domain.py --name=willamette_river
 
@@ -100,7 +100,7 @@ jobs:
       - name: Remove test output files from cache
         working-directory: .github/scripts
         run: |
-          python rm_test_output_files_from_cache.py
+          python rm_test_output_files_from_cache.py --name=willamette_river
 
       # - name: Scheduled - restore cache files
       #   if: github.event.schedule == '0 6 * * *'
