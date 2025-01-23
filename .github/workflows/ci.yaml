@@ -79,7 +79,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: domain_data
-          key: ${{ runner.os }}-willamette_data
+          enableCrossOsArchive: true
+          key: willamette_data
 
       - name: Pull Willamette River domain data
         if: steps.cache-willamette.outputs.cache-hit != 'true'
