@@ -82,7 +82,7 @@ jobs:
           key: ${{ runner.os }}-willamette_data
 
       - name: Pull Willamette River domain data
-        if: steps.cache-willamette.outputs.cache-hit == 'true'
+        if: steps.cache-willamette.outputs.cache-hit != 'true'
         run: |
           ./pull_domain.py --name=willamette_river
 
