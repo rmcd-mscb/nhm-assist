@@ -9,6 +9,7 @@ from pywatershed.utils.utils import timer
 repo_dir = pl.Path("../../").resolve()
 
 all_notebooks = set(repo_dir.glob("*.ipynb"))
+
 # Add notebooks here as needed
 notebooks_to_not_test = set()
 notebooks_to_test = sorted(all_notebooks - notebooks_to_not_test)
