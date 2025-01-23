@@ -4,7 +4,9 @@ import pathlib as pl
 from pprint import pprint
 import requests
 
-all_domains_dir = pl.Path("./domain_data")
+this_dir = pl.Path(__file__).parent
+
+all_domains_dir = (this_dir / "./domain_data").resolve()
 
 domain_names_dict = {
     "willamette_river": "20240524_v1.1_gm_byHWobs_williamette_river_NHMAssist_test",
@@ -2679,7 +2681,6 @@ def parse_args():
         help="If informative messages are to be suppressed.",
         default=False,
     )
-    # parser.set_defaults(verbose=True)
 
     known, unknown = parser.parse_known_args()
 
@@ -2699,8 +2700,8 @@ def pull_domain(name: str = None, verbose: bool = True):
       verbose: If informative messages are to be printed.
 
     Examples:
-      >>> from domain_data import pull_domain
-      >>> pull_domain("williamette_river")
+      >>> from pull_domain import pull_domain
+      >>> pull_domain("willamette_river")
 
     """
     if name not in domain_names_dict.keys():

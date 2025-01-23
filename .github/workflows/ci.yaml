@@ -85,13 +85,24 @@ jobs:
         run: |
           ./pull_domain.py --name=willamette_river
 
-      - name: Cron tests data retrievals skipped otherwise
+      - name: Scheduled - move cache files to test data retrievals
         if: github.event.schedule == '0 6 * * *'
         working-directory: .github/scripts
         run: |
-          python rm_local_data_files.py
+          python mv_cache_files_for_scheduled_tests.py
 
       - name: Test notebooks
         working-directory: .github/scripts
         run: |
           python test_notebooks.py
+
+      - name: Remove test output files from cache
+        working-directory: .github/scripts
+        run: |
+          python rm_test_output_files_from_cache.py
+
+      - name: Scheduled - restore cache files
+        if: github.event.schedule == '0 6 * * *'
+        working-directory: .github/scripts
+        run: |
+          python restore_cahce_files_for_scheduled_tests.py
