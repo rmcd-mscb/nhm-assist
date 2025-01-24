@@ -79,7 +79,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: domain_data
-          key: ${{ runner.os }}-willamette_data
+          enableCrossOsArchive: true
+          key: willamette_data
 
       - name: Pull Willamette River domain data
         if: steps.cache-willamette.outputs.cache-hit != 'true'
@@ -102,8 +103,8 @@ jobs:
         run: |
           python rm_test_output_files_from_cache.py --name=willamette_river
 
-      # - name: Scheduled - restore cache files
-      #   if: github.event.schedule == '0 6 * * *'
-      #   working-directory: .github/scripts
-      #   run: |
-      #     python restore_cahce_files_for_scheduled_tests.py
+      - name: Scheduled - restore cache files after scheduled tests
+        if: github.event.schedule == '0 6 * * *'
+        working-directory: .github/scripts
+        run: |
+          python restore_cache_files_after_scheduled_tests.py
