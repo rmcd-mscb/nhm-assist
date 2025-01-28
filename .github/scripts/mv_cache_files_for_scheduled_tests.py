@@ -12,13 +12,32 @@ paths_to_mv = {
 }
 
 
-def relocate_path(name: str, from_dir: pl.Path, to_dir: pl.Path):
+def relocate_path(name: str, from_dir: pl.Path, to_dir: pl.Path, force=True):
+    """Move a file from one directory to another.
+
+    Args:
+      name: the name of the file as a string.
+      from_dir: the pathlib.Path of the source directory.
+      to_dir: the pathlib.Path of the destination directory.
+      force: bool if the destination is to be discarded.
+    """
     src = from_dir / name
     dst = to_dir / name
-    print(f"relocating {str(src)} -> {str(dst)}")
+
+    if dst.exists():
+        if not force:
+            msg = f"Destionation file exists and force=False: {dst}"
+            raise FileExistsError()
+        if dst.is_dir():
+            shutil.rmtree(dst)
+        else:
+            dst.unlink()
+
     src.rename(dst)
     assert dst.exists()
     assert not src.exists()
+    print(f"relocated {str(src)} -> {str(dst)}")
+
     return
 
 
