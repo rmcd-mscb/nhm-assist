@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 import numpy as np
+import matplotlib as mplib
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 
 def efc(df, flow_col):
@@ -217,3 +220,67 @@ def compute_recurrence_interval(df):
             rank = numobs - nz_cnt + 1
             ri[si] = (nyr + 1.0) / float(rank)
     return ri
+
+# Helper functions for plotting, developed by P.A. Norton, USGS Dakota Water Science Center
+def plot_efc(df, flow_col):
+    fig, ax = plt.subplots(nrows=1, figsize=(15, 5), layout="tight")
+
+    mkrsize = 9.1
+
+    # cmap = ListedColormap(['#000000', '#cb4335', '#f8c471', '#95a5a6', '#76d7c4', '#154360'])
+    cmap = ["#000000", "#cb4335", "#f8c471", "#95a5a6", "#76d7c4", "#154360"]
+    labels = [
+        "",
+        "Large flood",
+        "Small flood",
+        "High flow pulse",
+        "Low flow",
+        "Extreme low flow",
+    ]
+
+    ax.plot(df.index, df[flow_col], c="grey", lw=0.5, alpha=0.5)
+
+    for xx in range(1, 6):
+        sdf = df[df["efc"] == xx]
+
+        if sdf.shape[0] != 0:
+            ax.scatter(
+                sdf.index,
+                sdf[flow_col],
+                c=cmap[xx],
+                s=mkrsize,
+                lw=0,
+                alpha=0.7,
+                label=labels[xx],
+            )
+
+    ax.set_title("Extreme flood classifications", fontsize=10)
+    ax.legend(loc="upper left", framealpha=0.5)
+
+
+def plot_high_low(df, flow_col):
+    fig, ax = plt.subplots(nrows=1, figsize=(15, 5), layout="tight")
+
+    mkrsize = 9.1
+
+    cmap = ["", "#00cc66", "#ff9933", "#9933ff"]
+    labels = ["", "Low flow", "Ascending limb", "Descending limb"]
+
+    ax.plot(df.index, df[flow_col], c="grey", lw=0.5, alpha=0.5)
+
+    for xx in range(1, 4):
+        sdf = df[df["high_low"] == xx]
+
+        if sdf.shape[0] != 0:
+            ax.scatter(
+                sdf.index,
+                sdf[flow_col],
+                c=cmap[xx],
+                s=mkrsize,
+                lw=0,
+                alpha=0.7,
+                label=labels[xx],
+            )
+
+    ax.set_title("High/Low classifications", fontsize=10)
+    ax.legend(loc="upper left", framealpha=0.5)
