@@ -68,9 +68,6 @@ import matplotlib as mplib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
-import datetime as dt
-from datetime import datetime
-
 import ipyleaflet
 from ipyleaflet import Map, GeoJSON
 
