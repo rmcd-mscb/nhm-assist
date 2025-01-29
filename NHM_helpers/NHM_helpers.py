@@ -87,8 +87,6 @@ import plotly.express as px
 
 import dataretrieval.nwis as nwis
 
-import efc
-
 ### Helper Functions
 # Reads/Creates NWIS stations file if not already created
 def fetch_nwis_gage_info(
