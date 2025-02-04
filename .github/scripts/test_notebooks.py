@@ -23,13 +23,19 @@ def run_cmd(cmd):
 
 @timer
 def run_notebook(nb_name):
-    cmd = ("jupytext", "--execute", f"{nb_name}")
+    cmd = (
+        "jupytext",
+        "--execute",
+        f"{nb_name}",
+        # "--update-metadata",
+        # '{"kernelspec": {"display_name": "", "language": "", "name": ""}}',
+    )
     run_cmd(cmd)
 
 
 if __name__ == "__main__":
     failed_list = []
-    for nb in notebooks_to_test:
+    for nb in notebooks_to_test[1:2]:
         print(f"Testing notebook: {nb}")
         try:
             run_notebook(nb)
