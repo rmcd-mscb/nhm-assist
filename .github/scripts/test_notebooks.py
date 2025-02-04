@@ -16,21 +16,26 @@ notebooks_to_test = sorted(all_notebooks - notebooks_to_not_test)
 
 
 def run_cmd(cmd):
-    print(f"Running command: {' '.join(cmd)}")
-    proc = subprocess.run(cmd, cwd=repo_dir)
+    # print(f"Running command: {' '.join(cmd)}")
+    proc = subprocess.run(cmd, cwd=repo_dir, shell=True)
     assert proc.returncode == 0, f"Error running command: {' '.join(cmd)}"
 
 
 @timer
 def run_notebook(nb_name):
+    # Since we are stripping the metadata on pre-commit, we have to restore
+    # this much metadata before jupytext execute
     cmd = (
-        "jupytext",
-        "--execute",
-        f"{nb_name}",
-        # "--update-metadata",
-        # '{"kernelspec": {"display_name": "", "language": "", "name": ""}}',
+        "jupytext "
+        "--update "
+        f"{nb_name} "
+        "--update-metadata "
+        """'{"kernelspec": {"display_name": "", "language": "", "name": ""}}'"""
     )
     run_cmd(cmd)
+
+    # cmd = f"jupytext --execute {nb_name}"
+    # run_cmd(cmd)
 
 
 if __name__ == "__main__":
