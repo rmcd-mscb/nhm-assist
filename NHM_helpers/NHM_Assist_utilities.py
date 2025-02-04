@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import pywatershed as pws
+import dataretrieval.nwis as nwis
 
 # List of bynhru parameters to retrieve for the Notebook interactive maps.
 hru_params = [
