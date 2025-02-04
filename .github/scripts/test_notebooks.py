@@ -30,7 +30,7 @@ def run_notebook(nb_name):
         "--update "
         f"{nb_name} "
         "--update-metadata "
-        """'{"kernelspec": {"display_name": "", "language": "", "name": ""}}'"""
+        '\'{"kernelspec": {"display_name": "", "language": "", "name": ""}}\''
     )
     run_cmd(cmd)
 
