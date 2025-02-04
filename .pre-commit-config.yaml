@@ -10,4 +10,4 @@ repos:
           jupyter nbconvert
           --inplace
           --ClearOutputPreprocessor.enabled=True
-          --ClearMetadataPreprocessor.clear_notebook_metadata=True
+          --ClearMetadataPreprocessor.enabled=True
