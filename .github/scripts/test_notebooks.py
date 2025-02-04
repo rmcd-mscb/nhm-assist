@@ -40,7 +40,7 @@ def run_notebook(nb_name):
 
 if __name__ == "__main__":
     failed_list = []
-    for nb in notebooks_to_test[1:2]:
+    for nb in notebooks_to_test:
         print(f"Testing notebook: {nb}")
         try:
             run_notebook(nb)
