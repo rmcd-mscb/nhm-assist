@@ -49,7 +49,7 @@ jobs:
   #       run: ruff format . --check
 
   test:
-    name: test notebooks
+    name: test notebooks 
     # needs: lint
     runs-on: ${{ matrix.os }}
 
