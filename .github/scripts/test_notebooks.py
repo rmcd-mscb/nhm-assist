@@ -24,7 +24,7 @@ def run_cmd(cmd):
 @timer
 def run_notebook(nb_name):
     # Since we are stripping the metadata on pre-commit, we have to restore
-    # this much metadata before jupytext execute
+    # this much (empty) metadata before jupytext execute
     cmd = (
         "jupytext "
         "--update "
@@ -34,8 +34,8 @@ def run_notebook(nb_name):
     )
     run_cmd(cmd)
 
-    # cmd = f"jupytext --execute {nb_name}"
-    # run_cmd(cmd)
+    cmd = f"jupytext --execute {nb_name}"
+    run_cmd(cmd)
 
 
 if __name__ == "__main__":
