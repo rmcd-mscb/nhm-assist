@@ -6,4 +6,9 @@ repos:
         files: \.ipynb$
         stages: [pre-commit]
         language: system
-        entry: jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace --ClearMetadataPreprocessor.enabled=True
+        entry: |
+          jupyter nbconvert
+          --inplace
+          --ClearOutputPreprocessor.enabled=True
+          --ClearMetadataPreprocessor.enabled=True
+          --ClearMetadataPreprocessor.preserve_nb_metadata_mask="kernelspec"
