@@ -427,19 +427,25 @@ def create_ecy_sf_df(control, model_dir, gages_df):
     return ecy_df
 
 def create_nwis_sf_df(control, model_dir, gages_df):
-    output_netcdf_filename = model_dir / "notebook_output_files" / "nc_files" / "sf_efc.nc"
-    """
-    This function returns a dataframe of mean daily streamflow data from NWIS using gages listed in the gages_df, 
-    for the period of record defined in the NHM model control file control.default.bandit.
-    Note: all gages in the gages_df that are not found in NWIS will be ignored.
-    """
-    if output_netcdf_filename.exists():
-        pass
+    nwis_cache_file = (model_dir / "notebook_output_files" / "nc_files" / "nwis_cache.nc")
+    
+    if nwis_cache_file.exists():
+        with xr.open_dataset(nwis_cache_file) as NWIS_ds:
+            NWIS_df = NWIS_ds.to_dataframe()
+            print("Cached copy of NWIS data exists. To re-download the data remove the cache file.")
+            del NWIS_ds
     else:
+        output_netcdf_filename = model_dir / "notebook_output_files" / "nc_files" / "sf_efc.nc"
+        """
+        This function returns a dataframe of mean daily streamflow data from NWIS using gages listed in the gages_df, 
+        for the period of record defined in the NHM model control file control.default.bandit.
+        Note: all gages in the gages_df that are not found in NWIS will be ignored.
+        """
+        
         nwis_start = pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d")
         nwis_end = pd.to_datetime(str(control.end_time)).strftime("%Y-%m-%d")
         NWIS_tmp = []
-
+    
         with Progress() as progress:
             task = progress.add_task("[red]Downloading...", total=len(gages_df))
             err_list = []
@@ -454,7 +460,7 @@ def create_nwis_sf_df(control, model_dir, gages_df):
                     # con.print(f"Gage id {ii} not found in NWIS.")
                     pass
                 progress.update(task, advance=1)
-
+    
         NWIS_df = pd.concat(NWIS_tmp)
         con.print(
             f"No data for these {len(err_list)} gages, {err_list} were found in NWIS."
@@ -462,10 +468,10 @@ def create_nwis_sf_df(control, model_dir, gages_df):
         # we only need site_no and discharge (00060_Mean)
         NWIS_df = NWIS_df[["site_no", "00060_Mean"]].copy()
         NWIS_df["agency_id"] = "USGS"
-
+    
         NWIS_df = NWIS_df.tz_localize(None)
         NWIS_df.reset_index(inplace=True)
-
+    
         # rename cols to match other df
         NWIS_df.rename(
             columns={
@@ -475,6 +481,62 @@ def create_nwis_sf_df(control, model_dir, gages_df):
             },
             inplace=True,
         )
-
+    
         NWIS_df.set_index(["poi_id", "time"], inplace=True)
+
+        #### Write the .nc file
+        # Reformat data types
+        # Change the datatype for 'poi_id' and 'time'
+        # dtype_map = {"poi_id": str, "time": "datetime64[ns]"}
+        # NWIS_df = NWIS_df.astype(dtype_map)
+        
+        # Write df as netcdf fine (.nc)
+        NWIS_ds = xr.Dataset.from_dataframe(NWIS_df)
+        
+        # Set attributes for the variables
+        NWIS_ds["discharge"].attrs = {"units": "ft3 s-1", "long_name": "discharge"}
+        NWIS_ds["poi_id"].attrs = {
+            "role": "timeseries_id",
+            "long_name": "Point-of-Interest ID",
+            "_Encoding": "ascii",
+        }
+        NWIS_ds["agency_id"].attrs = {"_Encoding": "ascii"}
+        
+        # Set encoding (see 'String Encoding' section at https://crusaderky-xarray.readthedocs.io/en/latest/io.html)
+        NWIS_ds["poi_id"].encoding.update(
+            {"dtype": "S15", "char_dim_name": "poiid_nchars"}
+        )
+        
+        NWIS_ds["time"].encoding.update(
+            {
+                "_FillValue": None,
+                "standard_name": "time",
+                "calendar": "standard",
+                "units": "days since 1940-01-01 00:00:00",
+            }
+        )
+        
+        NWIS_ds["agency_id"].encoding.update(
+            {"dtype": "S5", "char_dim_name": "agency_nchars"}
+        )
+        
+        # Add fill values to the data variables
+        var_encoding = dict(_FillValue=netCDF4.default_fillvals.get("f4"))
+        
+        for cvar in NWIS_ds.data_vars:
+            if cvar not in ["agency_id"]:
+                NWIS_ds[cvar].encoding.update(var_encoding)
+        
+        # add global attribute metadata
+        NWIS_ds.attrs = {
+            "Description": "Streamflow data for PRMS",
+            "FeatureType": "timeSeries",
+        }
+        
+        # Write the dataset to a netcdf file
+        print(
+            f"NWIS daily streamflow observations retrieved, writing data to {nwis_cache_file}."
+        )
+        NWIS_ds.to_netcdf(nwis_cache_file)
+        
     return NWIS_df
