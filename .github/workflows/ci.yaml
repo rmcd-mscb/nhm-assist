@@ -5,15 +5,10 @@ on:
   schedule:
     - cron: '0 6 * * *'
   push:
-    branches:
-      - main
-      - ci
     paths-ignore:
       - '**.md'
       - '.gitignore'
   pull_request:
-    branches:
-      - main
     paths-ignore:
       - '**.md'
       - '.gitignore'
@@ -49,7 +44,7 @@ jobs:
   #       run: ruff format . --check
 
   test:
-    name: test notebooks
+    name: test notebooks 
     # needs: lint
     runs-on: ${{ matrix.os }}
 
