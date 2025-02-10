@@ -143,98 +143,103 @@ def create_OR_sf_df(control, model_dir, gages_df):
 
     start_date = pd.to_datetime(str(control.start_time)).strftime("%m/%d/%Y")
     end_date = pd.to_datetime(str(control.end_time)).strftime("%m/%d/%Y")
-    owrd_cache_file = model_dir / "notebook_output_files" / "nc_files" / "owrd_cache.nc"
+    owrd_cache_file = model_dir / "notebook_output_files" / "nc_files" / "owrd_cache.nc" #(eventually comment out)
 
     if owrd_cache_file.exists():
         with xr.open_dataset(owrd_cache_file) as owrd_ds:
             owrd_df = owrd_ds.to_dataframe()
-        con.print(
-            f"Found OWRD daily streamflow observations file {owrd_cache_file}. To re-download the data remove/delete the file."
-        )
+            print(
+                "Cached copy of OWRD data exists. To re-download the data, remove the cache file."
+            )
         del owrd_ds
 
     else:
         print("Retrieving OWRD daily streamflow observations.")
         lst = []
+        
         for ii in gages_df.index:
             lst.append(owrd_scraper(ii, start_date, end_date))
 
-        owrd_df = pd.concat(
-            lst
-        )  # Converts the list of df's to a single df  maybe move this to the owrd scraper function
-
-        # Reformat owrd_df headers and data types
-        # Rename column headers
-        field_map = {
-            "station_nbr": "poi_id",
-            "record_date": "time",
-            "mean_daily_flow_cfs": "discharge",
-            "station_name": "poi_name",
-        }
-        owrd_df.rename(columns=field_map, inplace=True)
-
-        # Change the datatype for 'poi_id' and 'time'
-        dtype_map = {"poi_id": str, "time": "datetime64[ns]"}
-        owrd_df = owrd_df.astype(dtype_map)
-
-        # Drop the columns we don't need
-        drop_cols = ["download_date", "estimated", "revised", "published_status"]
-        owrd_df.drop(columns=drop_cols, inplace=True)
-
-        # Add new field(s): 'agency_id' and set to 'OWRD'
-        owrd_df["agency_id"] = "OWRD"  # Creates tags for all OWRD daily streamflow data
-
-        # Set multi-index for df
-        owrd_df.set_index(["poi_id", "time"], inplace=True)
-
-        # Write df as netcdf fine (.nc)
-        owrd_ds = xr.Dataset.from_dataframe(owrd_df)
-
-        # Set attributes for the variables
-        owrd_ds["discharge"].attrs = {"units": "ft3 s-1", "long_name": "discharge"}
-        owrd_ds["poi_id"].attrs = {
-            "role": "timeseries_id",
-            "long_name": "Point-of-Interest ID",
-            "_Encoding": "ascii",
-        }
-        owrd_ds["agency_id"].attrs = {"_Encoding": "ascii"}
-
-        # Set encoding (see 'String Encoding' section at https://crusaderky-xarray.readthedocs.io/en/latest/io.html)
-        owrd_ds["poi_id"].encoding.update(
-            {"dtype": "S15", "char_dim_name": "poiid_nchars"}
-        )
-
-        owrd_ds["time"].encoding.update(
-            {
-                "_FillValue": None,
-                "standard_name": "time",
-                "calendar": "standard",
-                "units": "days since 1940-01-01 00:00:00",
+        if lst:
+            owrd_df = pd.concat(
+                lst
+            )  # Converts the list of df's to a single df  maybe move this to the owrd scraper function
+    
+            # Reformat owrd_df headers and data types
+            # Rename column headers
+            field_map = {
+                "station_nbr": "poi_id",
+                "record_date": "time",
+                "mean_daily_flow_cfs": "discharge",
+                "station_name": "poi_name",
             }
-        )
-
-        owrd_ds["agency_id"].encoding.update(
-            {"dtype": "S5", "char_dim_name": "agency_nchars"}
-        )
-
-        # Add fill values to the data variables
-        var_encoding = dict(_FillValue=netCDF4.default_fillvals.get("f4"))
-
-        for cvar in owrd_ds.data_vars:
-            if cvar not in ["agency_id"]:
-                owrd_ds[cvar].encoding.update(var_encoding)
-
-        # add global attribute metadata
-        owrd_ds.attrs = {
-            "Description": "Streamflow data for PRMS",
-            "FeatureType": "timeSeries",
-        }
-
-        # Write the dataset to a netcdf file
-        print(
-            f"OWRD daily streamflow observations retrieved, writing data to {owrd_cache_file}."
-        )
-        owrd_ds.to_netcdf(owrd_cache_file)
+            owrd_df.rename(columns=field_map, inplace=True)
+    
+            # Change the datatype for 'poi_id' and 'time'
+            dtype_map = {"poi_id": str, "time": "datetime64[ns]"}
+            owrd_df = owrd_df.astype(dtype_map)
+    
+            # Drop the columns we don't need
+            drop_cols = ["download_date", "estimated", "revised", "published_status"]
+            owrd_df.drop(columns=drop_cols, inplace=True)
+    
+            # Add new field(s): 'agency_id' and set to 'OWRD'
+            owrd_df["agency_id"] = "OWRD"  # Creates tags for all OWRD daily streamflow data
+    
+            # Set multi-index for df
+            owrd_df.set_index(["poi_id", "time"], inplace=True)
+    
+            # Write df as netcdf fine (.nc)
+            owrd_ds = xr.Dataset.from_dataframe(owrd_df)
+    
+            # Set attributes for the variables
+            owrd_ds["discharge"].attrs = {"units": "ft3 s-1", "long_name": "discharge"}
+            owrd_ds["poi_id"].attrs = {
+                "role": "timeseries_id",
+                "long_name": "Point-of-Interest ID",
+                "_Encoding": "ascii",
+            }
+            owrd_ds["agency_id"].attrs = {"_Encoding": "ascii"}
+    
+            # Set encoding (see 'String Encoding' section at https://crusaderky-xarray.readthedocs.io/en/latest/io.html)
+            owrd_ds["poi_id"].encoding.update(
+                {"dtype": "S15", "char_dim_name": "poiid_nchars"}
+            )
+    
+            owrd_ds["time"].encoding.update(
+                {
+                    "_FillValue": None,
+                    "standard_name": "time",
+                    "calendar": "standard",
+                    "units": "days since 1940-01-01 00:00:00",
+                }
+            )
+    
+            owrd_ds["agency_id"].encoding.update(
+                {"dtype": "S5", "char_dim_name": "agency_nchars"}
+            )
+    
+            # Add fill values to the data variables
+            var_encoding = dict(_FillValue=netCDF4.default_fillvals.get("f4"))
+    
+            for cvar in owrd_ds.data_vars:
+                if cvar not in ["agency_id"]:
+                    owrd_ds[cvar].encoding.update(var_encoding)
+    
+            # add global attribute metadata
+            owrd_ds.attrs = {
+                "Description": "Streamflow data for PRMS",
+                "FeatureType": "timeSeries",
+            }
+    
+            # Write the dataset to a netcdf file
+            print(
+                f"OWRD daily streamflow observations retrieved for {len(owrd_df.index)}, writing data to {owrd_cache_file}."
+            )
+            owrd_ds.to_netcdf(owrd_cache_file)
+        else:
+            owrd_df = pd.DataFrame()
+            
     return owrd_df
 
 
@@ -327,13 +332,13 @@ def create_ecy_sf_df(control, model_dir, gages_df):
         ecy_df_list = []
         ecy_cache_file = (
             model_dir / "notebook_output_files" / "nc_files" / "ecy_cache.nc"
-        )
+        )# This too will go away eventually and so will the if loop below
 
         if ecy_cache_file.exists():
             with xr.open_dataset(ecy_cache_file) as ecy_ds:
                 ecy_df = ecy_ds.to_dataframe()
             print(
-                "Cached copy of ECY data exists. To re-download the data remove the cache file."
+                "Cached copy of ECY data exists. To re-download the data, remove the cache file."
             )
             del ecy_ds
         else:
@@ -423,6 +428,7 @@ def create_ecy_sf_df(control, model_dir, gages_df):
             # Write the dataset to a netcdf file
             ecy_ds.to_netcdf(ecy_cache_file)
     else:
+        ecy_df = pd.DataFrame()
         pass
     return ecy_df
 
@@ -432,7 +438,9 @@ def create_nwis_sf_df(control, model_dir, gages_df):
     if nwis_cache_file.exists():
         with xr.open_dataset(nwis_cache_file) as NWIS_ds:
             NWIS_df = NWIS_ds.to_dataframe()
-            print("Cached copy of NWIS data exists. To re-download the data remove the cache file.")
+            print(
+                "Cached copy of NWIS data exists. To re-download the data, remove the cache file."
+            )
             del NWIS_ds
     else:
         output_netcdf_filename = model_dir / "notebook_output_files" / "nc_files" / "sf_efc.nc"
