@@ -93,11 +93,55 @@ import dataretrieval.nwis as nwis
 from NHM_helpers.efc import *
 from NHM_helpers import NHM_helpers as helpers
 from NHM_helpers.NHM_Assist_utilities import *
-
+from NHM_helpers.NHM_hydrofabric import *
 
 import jupyter_black
 
 jupyter_black.load()
+
+hru_gdf = create_hru_gdf(
+    model_dir,
+    GIS_format,
+    param_filename,
+    nhru_params,
+    nhru_nmonths_params,
+)
+
+seg_gdf = create_segment_gdf(
+    model_dir,
+    GIS_format,
+    param_filename,
+)
+
+nwis_gages_aoi = fetch_nwis_gage_info(
+    model_dir,
+    control_file_name,
+    nwis_gage_nobs_min,
+    hru_gdf,
+)
+
+poi_df = create_poi_df(
+    model_dir,
+    param_filename,
+    control_file_name,
+    hru_gdf,
+    nwis_gages_aoi,
+    gages_file,
+)
+
+default_gages_file = create_default_gages_file(
+    model_dir,
+    nwis_gages_aoi,
+    poi_df,
+)
+
+gages_df = read_gages_file(
+    model_dir,
+    poi_df,
+    nwis_gages_file,
+    gages_file,
+)
+
 
 
 # Set approximate latitude, longitude and zoom level for subbasin is calculated for starting point of folium.map plot window.
