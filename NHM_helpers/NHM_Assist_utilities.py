@@ -129,15 +129,35 @@ def bynsegment_parameter_list(param_filename):
 
 
 # Reads/Creates NWIS stations file if not already created
-def fetch_nwis_gage_info(
-    nwis_gage_nobs_min,
-    model_domain_regions,
-    st_date,
-    en_date,
-    hru_gdf,
-    nwis_gages_file,
-    crs,
+def fetch_nwis_gage_info(model_dir,
+                         control_file_name,
+                         nwis_gage_nobs_min,
+                         hru_gdf,
 ):
+    
+    nwis_gages_file = model_dir / "NWISgages.csv"
+    control = pws.Control.load_prms(pl.Path(model_dir / control_file_name, warn_unused_options=False))
+    
+    """
+    Projections are ascribed geometry from the HRUs geodatabase (GIS). 
+    The NHM uses the NAD 1983 USGS Contiguous USA Albers projection EPSG# 102039. 
+    The geometry units of this projection are not useful for many notebook packages. 
+    The geodatabases are reprojected to World Geodetic System 1984.
+
+    Options:
+        crs = 3857, WGS 84 / Pseudo-Mercator - Spherical Mercator, Google Maps, OpenStreetMap, Bing, ArcGIS, ESRI.
+        *crs = 4326, WGS 84 - WGS84 - World Geodetic System 1984, used in GPS
+    """
+    crs = 4326
+
+    # Make a list if the HUC2 region(s) the subbasin intersects for NWIS queries
+    huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
+    model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
+    
+        
+    st_date = pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d")
+    en_date = pd.to_datetime(str(control.end_time)).strftime("%Y-%m-%d")
+    
     if nwis_gages_file.exists():
         col_names = [
             "poi_agency",
