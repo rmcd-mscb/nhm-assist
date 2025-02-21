@@ -234,3 +234,39 @@ def hrus_by_poi(pdb, poi):  # (custom code)
         poi_hrus[cpoi] = final_hru_list
 
     return poi_hrus
+
+def create_poi_group(hru_gdf, poi_df, param_filename):
+    """
+    First, group HRUs to the downstream gagepoi that they contribute flow.
+    """
+    poi_list = poi_df["poi_gage_id"].values.tolist()
+
+    """
+    Make a dictionary of pois and the list of HRUs in the contributing area for each poi.
+    """
+    prms_meta = MetaData(
+        version=5, verbose=False
+    ).metadata  # loads metadata functions for pyPRMS
+    pdb = ParameterFile(
+        param_filename, metadata=prms_meta, verbose=False
+    )  # loads parmaeterfile functions for pyPRMS
+
+    hru_poi_dict = hrus_by_poi(pdb, poi_list)  # Helper function from pyPRMS
+
+    """
+    Sort the dictionary: this is important for the reverse dictionary (next step) to accurately give a poi_group 
+    to hrus that contribute to a downstream-gage.
+    """
+    sorted_items = sorted(
+        hru_poi_dict.items(), key=lambda item: -len(item[1])
+    )  # the - reverses the sorting order
+    hru_poi_dict = dict(sorted_items[:])
+
+    reversed_hru_poi_dict = {
+        val: key for key in hru_poi_dict for val in hru_poi_dict[key]
+    }
+
+    # assigns poi_group value to all hrus #Keep for later application
+    hru_gdf["poi_group"] = hru_gdf["nhm_id"].map(reversed_hru_poi_dict)
+
+    return hru_gdf, hru_poi_dict
