@@ -99,6 +99,8 @@ import jupyter_black
 
 jupyter_black.load()
 
+crs = 4326
+
 admin_basin_style = lambda x: {'fillColor': '#00000000',
                                #'fill_opacity' : .8,
                                'color': 'black',
@@ -168,15 +170,21 @@ tooltip_seg = folium.GeoJsonTooltip(
     )
 
 
-def folium_map_elements(hru_gdf):
+def folium_map_elements(hru_gdf, poi_df, poi_id_sel):
     """
     Set approximate latitude, longitude and zoom level for subbasin is calculated for starting point of folium.map plot window.
     """
-
-    pfile_lat = hru_gdf["hru_lat"].mean()
-    pfile_lon = hru_gdf["hru_lon"].mean()
-    zoom = 8
-    cluster_zoom = 8
+    if poi_id_sel:
+        poi_lookup = poi_id_sel
+        pfile_lat = poi_df.loc[poi_df.poi_id == poi_lookup, "latitude"].values[0]
+        pfile_lon = poi_df.loc[poi_df.poi_id == poi_lookup, "longitude"].values[0]
+        zoom = 12
+        cluster_zoom = 8
+    else:
+        pfile_lat = hru_gdf["hru_lat"].mean()
+        pfile_lon = hru_gdf["hru_lon"].mean()
+        zoom = 8
+        cluster_zoom = 8
 
     return pfile_lat, pfile_lon, zoom, cluster_zoom
 
@@ -821,3 +829,159 @@ def create_poi_paramplot_marker_cluster(
         ).add_to(marker_cluster_label_poi)
 
     return marker_cluster, marker_cluster_label_poi
+
+def create_annual_output_var_map(
+    gdf_output_var_annual,
+    output_var_sel,
+    sel_year,
+):
+    
+    cp_style_function = lambda feature: {
+        "fillColor": linear(var_sel_color_dict[feature["id"]]),
+        "color": "tan",
+        "weight": 1,
+        # "dashArray": "5, 5",
+        "fillOpacity": 0.3,
+    }
+
+    hru_gdf_copy = gdf_output_var_annual.copy().reset_index(drop=True).to_crs(crs)
+    hru_gdf_copy["nhm_id"] = hru_gdf_copy["nhm_id"].astype(str)
+    hru_gdf_copy.set_index("nhm_id", inplace=True, drop=False)
+
+    var_subset_df = gdf_output_var_annual.loc[:, ["nhm_id", str(sel_year)]]
+    var_subset_df["nhm_id"] = var_subset_df["nhm_id"].astype(str)
+    var_subset_df.rename(columns={f"{sel_year}": "var_value"}, inplace=True)
+    var_subset_df["var_value"] = np.round(var_subset_df["var_value"], 4)
+    var_subset_df.set_index("nhm_id", inplace=True, drop=False)
+
+    value_min = np.round(var_subset_df["var_value"].min(), 8)
+    value_max = np.round(var_subset_df["var_value"].max(), 8)
+
+    if value_min == value_max:
+        value_min = value_min - 0.001
+        value_max = value_min + 0.001
+        color_bar = False
+    else:
+        color_bar = True
+
+    var_sel_color_dict = pd.Series(
+        var_subset_df.var_value.values, index=var_subset_df.nhm_id
+    ).to_dict()
+
+    # Making par_bins
+    sdv = var_subset_df["var_value"].std()
+    mean = var_subset_df["var_value"].mean()
+
+    var_bins = [
+        value_min,
+        np.round(value_min + (0.25 * (mean - value_min)), 5),
+        np.round(value_min + (0.50 * (mean - value_min)), 5),
+        np.round(value_min + (0.75 * (mean - value_min)), 5),
+        np.round(mean, 3),
+        np.round(value_max - (0.75 * (value_max - mean)), 5),
+        np.round(value_max - (0.50 * (value_max - mean)), 5),
+        np.round(value_max - (0.25 * (value_max - mean)), 5),
+        value_max,
+    ]
+
+    #################################################
+
+    if not color_bar:
+        scale_bar_txt = (
+            f"All {output_var_sel} values are {value_min}. No value scale bar rendered."
+        )
+        fig, ax = plt.subplots(figsize=(18, 0.5))
+    else:
+        scale_bar_txt = ""
+
+        fig, ax = plt.subplots(figsize=(18, 0.5))
+        fig.subplots_adjust(bottom=0.5)
+
+        cmap = mplib.colors.ListedColormap(
+            [
+                "#8B0000",
+                "#AC4800",
+                "#CD9100",
+                "#EEDA00",
+                "#DADA13",
+                "#91913B",
+                "#484863",
+                "#00008B",
+            ]
+        )
+        cmap.set_over("0.25")
+        cmap.set_under("0.75")
+
+        bounds = var_bins
+        norm = mplib.colors.BoundaryNorm(bounds, cmap.N)
+        cb2 = mplib.colorbar.ColorbarBase(
+            ax,
+            cmap=cmap,
+            norm=norm,
+            boundaries=[0] + bounds + [13],
+            extend=None,
+            ticks=bounds,
+            spacing="uniform",
+            orientation="horizontal",
+            alpha=0.45,
+        )
+        cb2.set_label(
+            f"Discrete {output_var_sel} intervals"
+        )  # , {pdb.get(output_var_sel).units}')
+
+        fig.set_facecolor("lightgray")
+        fig.show()
+
+    #######################################################
+
+    linear = cm.StepColormap(
+        colors=[
+            "#8B0000",
+            "#AC4800",
+            "#CD9100",
+            "#EEDA00",
+            "#DADA13",
+            "#91913B",
+            "#484863",
+            "#00008B",
+        ],
+        index=var_bins,
+        vmin=0.00,
+        vmax=0.05,
+        caption="Total Standard deviation at the point[mm]",
+        # tick_labels= ('0.01', '0.02', '0.03', '0.04')
+    )
+    popup_hru = folium.GeoJsonPopup(
+        fields=["nhm_id", str(sel_year)],
+        aliases=["HRU", f"{output_var_sel} for {sel_year}"],
+        labels=True,
+        localize=True,
+        style=(
+            "font-size: 16px;"
+        ),  # Note that this tooltip style sets the style for all tool_tips.
+        # background-color: #F0EFEF;border: 2px solid black;font-family: arial; padding: 10px; background-color: #F0EFEF;
+    )
+
+    hru_map = folium.GeoJson(
+        hru_gdf_copy,
+        style_function=cp_style_function,  # style_function_hru_map,
+        highlight_function=highlight_function_hru_map,
+        name="NHM HRUs",
+        popup=popup_hru,
+        # z_index_offset=40002,
+    )
+
+    # tooltip_hru=folium.GeoJsonPopup(fields= ["nhm_id",str(sel_year)],
+    #                                   aliases=["HRU", "var value"],
+    #                                   labels=True)
+
+    # tooltip_hru=folium.GeoJsonTooltip(fields= ["nhm_id",str(sel_year)],
+    #                                   aliases=["HRU", f"{output_var_sel} for {sel_year}"],
+    #                                   labels=True,
+    #                                   localize=True,
+    #                                   style=("background-color: #F0EFEF;border: 2px solid black;font-family: arial; font-size: 16px; padding: 10px;"),
+    #                                      )
+
+    # hru_map.add_child(tooltip_hru)
+
+    return fig, hru_map, value_min, value_max, scale_bar_txt
