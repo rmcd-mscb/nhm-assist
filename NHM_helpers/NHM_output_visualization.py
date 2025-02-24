@@ -241,13 +241,26 @@ def create_mean_var_dataarrays(
 
 
 def create_sum_var_annual_gdf(
+    out_dir,
     output_var_sel,
-    sum_var_annual,
+    plot_start_date,
+    plot_end_date,
+    water_years,
     hru_gdf,
     year_list,
     
 ):
 
+    var_daily, sum_var_monthly, sum_var_annual, var_units, var_desc = (
+    create_sum_var_dataarrays(
+        out_dir,
+        output_var_sel,
+        plot_start_date,
+        plot_end_date,
+        water_years,
+    )
+)
+    
     df_output_var_annual = sum_var_annual.copy().to_dataframe(
         dim_order=["time", "nhru"]
     )
@@ -308,7 +321,7 @@ def create_sum_var_annual_gdf(
             "\nThis will be used to set a values in the legend bar when mapping the annual data.",
         )
 
-    return gdf_output_var_annual, value_min, value_max
+    return gdf_output_var_annual, value_min, value_max, var_units, var_desc
 
 
 ####################################################
@@ -350,3 +363,69 @@ def create_sum_var_annual_df(
   
 
     return sum_var_annual_df
+
+def create_sum_var_monthly_df(
+    hru_gdf,
+    poi_df,
+    param_filename,
+    output_var_sel,
+    plot_start_date,
+    plot_end_date,
+    sum_var_monthly,
+):
+
+    # Create a dataframe of MONTHLY recharge values for each HRU
+
+    hru_area_df = hru_gdf[["hru_area", "nhm_id"]].set_index(
+        "nhm_id", drop=True
+    )  # Consider a dictionary from the par file and using .map() instead of merge
+
+    sum_var_monthly_df = sum_var_monthly.to_dataframe(dim_order=["time", "nhru"])
+    sum_var_monthly_df.reset_index(inplace=True, drop=False)
+
+    # add the HRU area to the dataframe
+    sum_var_monthly_df = sum_var_monthly_df.merge(
+        hru_area_df, how="left", right_index=True, left_on="nhm_id"
+    )
+
+    # Add recharge volume to the dataframe
+    sum_var_monthly_df["vol_inch_acres"] = (
+        sum_var_monthly_df[output_var_sel] * sum_var_monthly_df["hru_area"]
+    )
+
+    # Drop unneeded columns
+    sum_var_monthly_df.drop(columns=["nhru"], inplace=True)
+
+    return sum_var_monthly_df
+
+def create_var_daily_df(
+    hru_gdf,
+    poi_df,
+    param_filename,
+    output_var_sel,
+    plot_start_date,
+    plot_end_date,
+    var_daily,
+):
+
+    hru_area_df = hru_gdf[["hru_area", "nhm_id"]].set_index(
+        "nhm_id", drop=True
+    )  # Consider a dictionary from the par file and using .map() instead of merge
+
+    var_daily_df = var_daily.to_dataframe(dim_order=["time", "nhru"])
+    var_daily_df.reset_index(inplace=True, drop=False)
+
+    # add the HRU area to the dataframe
+    var_daily_df = var_daily_df.merge(
+        hru_area_df, how="left", right_index=True, left_on="nhm_id"
+    )
+
+    # Add recharge volume to the dataframe
+    var_daily_df["vol_inch_acres"] = (
+        var_daily_df[output_var_sel] * var_daily_df["hru_area"]
+    )
+    
+    # Drop unneeded columns
+    var_daily_df.drop(columns=["nhru"], inplace=True)
+
+    return var_daily_df
