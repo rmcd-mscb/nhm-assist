@@ -50,6 +50,9 @@ from pyPRMS.constants import (
     PTYPE_TO_PRMS_TYPE,
     PTYPE_TO_DTYPE,
 )
+
+from folium.plugins import FloatImage
+import base64
 from pyPRMS.Exceptions_custom import ParameterExistsError, ParameterNotValidError
 import networkx as nx
 from collections.abc import KeysView
@@ -128,7 +131,7 @@ highlight_function_hru_map = lambda x: {
 
 popup_hru = folium.GeoJsonPopup(
         fields=["nhm_id", "hru_segment_nhm"],
-        aliases=["hru", " flows to segment"],
+        aliases=["nhm_id", " flows to segment"],
         labels=True,
         localize=False,
         style=(
@@ -139,7 +142,7 @@ popup_hru = folium.GeoJsonPopup(
 
 tooltip_hru = folium.GeoJsonTooltip(
         fields=["nhm_id", "hru_segment_nhm"],
-        aliases=["hru", " flows to segment"],
+        aliases=["nhm_id", " flows to segment"],
         labels=True,
         # style=("background-color: #F0EFEF;border: 2px solid black;font-family: arial; font-size: 16px; padding: 10px;"),# Note that this tooltip style sets the style for all tool_tips.
     )
@@ -272,7 +275,7 @@ def create_hru_label(hru_gdf, cluster_zoom):
         show=False,  # False will not draw the child upon opening the map, but have it to draw in the Layer control.
         icon_create_function=None,
         disableClusteringAtZoom=cluster_zoom,
-        # z_index_offset=4005,
+        z_index_offset=4005,
     )
 
     for idx, row in hru_gdf.iterrows():
@@ -281,7 +284,7 @@ def create_hru_label(hru_gdf, cluster_zoom):
         label_lon = row["hru_lon"]
         marker_label = folium.map.Marker(
             [label_lat, label_lon],
-            # z_index_offset=4008,
+            z_index_offset=4008,
             icon=DivIcon(
                 icon_size=(150, 36),
                 icon_anchor=(0, 0),
@@ -297,17 +300,18 @@ def create_segment_map_show(seg_gdf):
         style_function=style_function_seg_map,
         highlight_function=highlight_function_seg_map,  # lambda feature: {"fillcolor": "white", "color": "white"},
         name="NHM Segments",
+        popup=popup_seg,
     )
     return seg_map_show                
 
-def create_seg_map_hide(seg_gdf):
+def create_segment_map_hide(seg_gdf):
     seg_map_hide = folium.GeoJson(
         seg_gdf,
-        style_function=transparent,
-        highlight_function=highlight_function_seg_map,  # lambda feature: {"fillcolor": "white", "color": "white"},
+        style_function=style_function_seg_map,
+        # highlight_function=highlight_function_seg_map,  # lambda feature: {"fillcolor": "white", "color": "white"},
         name="NHM Segments",
         # tooltip=tooltip_seg,
-        popup=popup_seg,
+        # popup=popup_seg,
     )
     return seg_map_hide
 
@@ -355,7 +359,7 @@ def create_poi_marker_cluster(
                 max_width=280,
                 max_height=2000,
             ),
-            radius=5,
+            radius=3,
             weight=2,
             color="black",
             fill=True,
@@ -418,7 +422,7 @@ def create_non_poi_marker_cluster(
                     max_width=280,
                     max_height=2000,
                 ),
-                radius=5,
+                radius=3,
                 weight=2,
                 color="gray",
                 fill=True,
@@ -492,6 +496,9 @@ def nhru_par_map(
         #################################################
         if value_min != value_max:
             fig, ax = plt.subplots(figsize=(18, 0.5))
+
+            fig.patch.set_linewidth(0.5)
+            fig.patch.set_edgecolor('black')
             fig.subplots_adjust(bottom=0.5)
 
             cmap = mplib.colors.ListedColormap(
@@ -526,9 +533,9 @@ def nhru_par_map(
                 f'Discrete {par_sel} intervals, {pdb.get(par_sel).meta["units"]}'
             )
 
-            fig.set_facecolor("lightgray")
-            # fig.show()
-
+            #fig.set_facecolor("lightgray")
+            
+          
         #######################################################
 
         if value_min == value_max:
@@ -633,7 +640,7 @@ def nhru_par_map(
 
         #################################################
         if value_min != value_max:
-            fig, ax = plt.subplots(figsize=(18, 0.5))
+            fig, ax = plt.subplots(figsize=(5, 0.5))
             fig.subplots_adjust(bottom=0.5)
 
             cmap = mplib.colors.ListedColormap(
@@ -668,8 +675,23 @@ def nhru_par_map(
                 f'Discrete {par_sel} intervals, {pdb.get(par_sel).meta["units"]}'
             )  # {pdb.get(par_sel).units}
 
-            fig.set_facecolor("lightgray")
-            # fig.show()
+            #fig.set_facecolor("lightgray")
+
+            val_bar_file = "val_bar.png"
+            fig.savefig(val_bar_file, format="png")
+            
+            with open(val_bar_file, "rb") as lf:
+                # open in binary mode, read bytes, encode, decode obtained bytes as utf-8 string
+                b64_content = base64.b64encode(lf.read()).decode("utf-8")
+                del lf
+            
+            val_bar_image = FloatImage(
+                image="data:image/png;base64,{}".format(b64_content),
+                bottom=1,
+                left=14,
+                style="position:fixed;",
+            )
+            del val_bar_file
 
         #######################################################
         if value_min == value_max:
@@ -724,7 +746,7 @@ def nhru_par_map(
             highlight_function=highlight_function_hru_map,
             name="NHM HRUs",
             popup=popup_hru,
-            # z_index_offset=40002,
+            z_index_offset=40002,
         )
         # tooltip_hru=folium.GeoJsonTooltip(fields= ["nhm_id","hru_segment_nhm",par_mo_sel],
         #                               aliases=["HRU"," flows to segment", f"{par_sel} for {mo_name}"],
@@ -744,7 +766,7 @@ def nhru_par_map(
         #                               aliases=["HRU"," flows to segment", "par_value"],
         #                               labels=True)
 
-    return fig, hru_map, value_min, value_max
+    return fig, hru_map, val_bar_image, value_min, value_max
 
 def create_poi_paramplot_marker_cluster(
     poi_df,
@@ -763,7 +785,7 @@ def create_poi_paramplot_marker_cluster(
         control=True,
         icon_create_function=None,
         disableClusteringAtZoom=cluster_zoom,
-        # z_index_offset=5000,
+        z_index_offset=5000,
     )
     marker_cluster_label_poi = MarkerCluster(
         name="All the POI labels",
@@ -772,7 +794,7 @@ def create_poi_paramplot_marker_cluster(
         show=False,  # False will not draw the child upon opening the map, but have it to draw in the Layer control.
         icon_create_function=None,
         disableClusteringAtZoom=cluster_zoom,
-        # z_index_offset=4004,
+        z_index_offset=4004,
     )
 
     for idx, row in poi_df.iterrows():
@@ -803,14 +825,14 @@ def create_poi_paramplot_marker_cluster(
             location=[row["latitude"], row["longitude"]],
             name=row["poi_id"],
             popup=folium.Popup(iframe, max_width=550, max_height=350, parse_html=True),
-            radius=4,
+            radius=3,
             weight=2,
             color="black",
             fill=True,
             fill_color="Black",
             fill_opacity=1.0,
             draggable=True,
-            # z_index_offset=4006,
+            z_index_offset=4006,
         ).add_to(marker_cluster)
 
         # marker_cluster.add_child(marker)
@@ -834,6 +856,7 @@ def create_annual_output_var_map(
     gdf_output_var_annual,
     output_var_sel,
     sel_year,
+    var_units,
 ):
     
     cp_style_function = lambda feature: {
@@ -858,11 +881,13 @@ def create_annual_output_var_map(
     value_max = np.round(var_subset_df["var_value"].max(), 8)
 
     if value_min == value_max:
+        same_value =  value_min
         value_min = value_min - 0.001
         value_max = value_min + 0.001
         color_bar = False
     else:
         color_bar = True
+        same_value = None
 
     var_sel_color_dict = pd.Series(
         var_subset_df.var_value.values, index=var_subset_df.nhm_id
@@ -887,15 +912,13 @@ def create_annual_output_var_map(
     #################################################
 
     if not color_bar:
-        scale_bar_txt = (
-            f"All {output_var_sel} values are {value_min}. No value scale bar rendered."
-        )
-        fig, ax = plt.subplots(figsize=(18, 0.5))
+        fig = None# fig, ax = plt.subplots(figsize=(18, 0.5))
     else:
-        scale_bar_txt = ""
-
-        fig, ax = plt.subplots(figsize=(18, 0.5))
-        fig.subplots_adjust(bottom=0.5)
+        fig, ax = plt.subplots(figsize=(6, 0.75))
+        #fig.patch.set_linewidth(0.5)
+        #fig.patch.set_edgecolor('black')
+        fig.subplots_adjust(bottom=0.65) # This moves the axis of the cb closer to the top
+        
 
         cmap = mplib.colors.ListedColormap(
             [
@@ -914,6 +937,7 @@ def create_annual_output_var_map(
 
         bounds = var_bins
         norm = mplib.colors.BoundaryNorm(bounds, cmap.N)
+        
         cb2 = mplib.colorbar.ColorbarBase(
             ax,
             cmap=cmap,
@@ -926,11 +950,27 @@ def create_annual_output_var_map(
             alpha=0.45,
         )
         cb2.set_label(
-            f"Discrete {output_var_sel} intervals"
+            f"Discrete {sel_year} {output_var_sel} intervals, {var_units}"
         )  # , {pdb.get(output_var_sel).units}')
 
-        fig.set_facecolor("lightgray")
-        fig.show()
+        #fig.set_facecolor("lightgray")
+        
+        val_bar_file = "val_bar.png"
+        fig.savefig(val_bar_file, format="png", )
+        plt.close(fig)
+        
+        with open(val_bar_file, "rb") as lf:
+            # open in binary mode, read bytes, encode, decode obtained bytes as utf-8 string
+            b64_content = base64.b64encode(lf.read()).decode("utf-8")
+            del lf
+        
+        val_bar_image = FloatImage(
+            image="data:image/png;base64,{}".format(b64_content),
+            bottom=1,
+            left=14,
+            style="position:fixed; width:6in; height:0.75in;",
+        )
+        del val_bar_file
 
     #######################################################
 
@@ -953,7 +993,7 @@ def create_annual_output_var_map(
     )
     popup_hru = folium.GeoJsonPopup(
         fields=["nhm_id", str(sel_year)],
-        aliases=["HRU", f"{output_var_sel} for {sel_year}"],
+        aliases=["nhm_id", f"{output_var_sel}, {var_units}"],
         labels=True,
         localize=True,
         style=(
@@ -968,7 +1008,7 @@ def create_annual_output_var_map(
         highlight_function=highlight_function_hru_map,
         name="NHM HRUs",
         popup=popup_hru,
-        # z_index_offset=40002,
+        z_index_offset=40002,
     )
 
     # tooltip_hru=folium.GeoJsonPopup(fields= ["nhm_id",str(sel_year)],
@@ -983,5 +1023,5 @@ def create_annual_output_var_map(
     #                                      )
 
     # hru_map.add_child(tooltip_hru)
-
-    return fig, hru_map, value_min, value_max, scale_bar_txt
+    
+    return hru_map, val_bar_image, value_min, value_max, same_value, color_bar

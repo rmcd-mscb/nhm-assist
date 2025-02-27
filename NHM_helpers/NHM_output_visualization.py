@@ -156,7 +156,7 @@ def retrieve_hru_output_info(out_dir, water_years):
             output_varfile_list - {"seg_outflow", "hru_streamflow_out"})
 
     """ 
-    Make a variable list for just those output variables dimensioned by nhm_id (hru).
+    Make a variable list for just those output variables dimensioned by nhm_id (hru) and inches as units.
     """
     output_var_list =[]
     for var in output_varfile_list:
@@ -166,7 +166,7 @@ def retrieve_hru_output_info(out_dir, water_years):
             else:
                 pass
             del output
-    
+    output_var_list.sort()
     del model_output
 
     
@@ -310,16 +310,17 @@ def create_sum_var_annual_gdf(
     value_min = gdf_output_var_annual[year_list].min().min()
     value_max = gdf_output_var_annual[year_list].max().max()
 
-    if value_min == value_max:
-        con.print(
-            f"The min and max values are both {value_min}.",
-            f"\nThe values of {value_min-.001} and {value_max +.001} will be used to set a values in the legend bar when mapping the annual data.",
-        )
-    else:
-        con.print(
-            f"The minimum and maximum annual values are: {value_min}, {value_max}.",
-            "\nThis will be used to set a values in the legend bar when mapping the annual data.",
-        )
+    # if value_min == value_max:
+    #     con.print(
+    #         f"The min and max values are both {value_min}.",
+    #         f"\nThe values of {value_min-.001} and {value_max +.001} will be used to set a values in the legend bar when mapping the annual data.",
+    #     )
+    # else:
+    #     pass
+    #     con.print(
+    #         f"The minimum and maximum annual values are: {value_min}, {value_max}.",
+    #         "\nThis will be used to set a values in the legend bar when mapping the annual data.",
+    #     )
 
     return gdf_output_var_annual, value_min, value_max, var_units, var_desc
 
@@ -429,3 +430,64 @@ def create_var_daily_df(
     var_daily_df.drop(columns=["nhru"], inplace=True)
 
     return var_daily_df
+
+def create_var_ts_for_poi_basin_df(
+    mean_var_ts,  # change to mean_var_ts and will be : var_daily, mean_var_monthly, mean_var_annual
+    var,
+    hru_gdf,
+    hru_poi_dict,
+    poi_id_sel,
+):
+    
+    """
+    mean_var_ts,  should be one of the datasets: var_daily, mean_var_monthly, mean_var_annual!
+
+    Output from the datasets is in mean_daily value (inches/day), and needs to be converted to cfs for this plot. 
+    The datasets include daily values for all hrus in the model domain. This fuction will convert the untis to cfs
+    for the time step of the dataset, subset the dataset to hru's in the selected poi basin, and 
+    sum vallues for hrus in the poi basin. Poi basin output variable values are returned as a time-series for plotting.
+
+    """
+    ds_mean_var_ts = (
+        mean_var_ts.copy()
+    )  # Change all variables to this pattern in the funct.
+    df_mean_var_ts = ds_mean_var_ts.to_dataframe(dim_order=["time", "nhru"])
+    df_mean_var_ts.reset_index(inplace=True, drop=False)
+    df_mean_var_ts.rename(columns={var: "output_var"}, inplace=True)
+
+    # add the HRU area to the dataframe
+    hru_area_df = hru_gdf[["hru_area", "nhm_id"]].set_index(
+        "nhm_id", drop=True
+    )  # Consider a dictionary from the par file and using .map() instead of merge
+
+    df_mean_var_ts = df_mean_var_ts.merge(
+        hru_area_df, how="left", right_index=True, left_on="nhm_id"
+    )
+
+    df_mean_var_ts["vol_cfs"] = (
+        (
+            df_mean_var_ts["output_var"]
+            * (
+                df_mean_var_ts["hru_area"] * 6272640
+            )  # constant is sq-inch/ acre
+        )
+        / (12 * 12 * 12)
+    ) / 86400  # constant is number of seconds in a day
+
+    # Drop unneeded columns
+    df_mean_var_ts.drop(columns=["nhru"], inplace=True)
+
+    # subset to only hrus in the selected poi
+    df_basin1 = df_mean_var_ts.loc[
+        df_mean_var_ts["nhm_id"].isin(hru_poi_dict[poi_id_sel])
+    ]
+    df_basin1.set_index(
+        ["time", "nhm_id"], inplace=True, drop=True
+    )  # resets the index to that new value and type
+
+    # Calculate basin recharge from individual HRU contributions for plotting
+    df_basin_plot1 = df_basin1.groupby(level="time").sum()
+   
+
+    return df_basin_plot1  # This will be generic but return depends on the ds you pass
+

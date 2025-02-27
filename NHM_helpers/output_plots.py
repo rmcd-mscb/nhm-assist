@@ -101,6 +101,7 @@ from NHM_helpers.NHM_output_visualization import (
     create_sum_var_annual_df,
     create_sum_var_monthly_df,
     create_var_daily_df,
+    create_var_ts_for_poi_basin_df,
 )
 from NHM_helpers.output_plots import * #create_poi_group
 
@@ -588,3 +589,216 @@ def make_plot_var_for_hrus_in_poi_basin(
             fig.append_trace(t, row=3, col=1)
 
         return fig
+
+def oopla(
+    out_dir,
+    param_filename,
+    water_years,
+    hru_gdf,
+    poi_df,
+    output_var_list,
+    output_var_sel,
+    var_units,
+    poi_id_sel,
+    plot_start_date,
+    plot_end_date,
+    plot_colors,
+    var_colors_dict,
+    leg_only_dict,
+):
+    """
+    Make figure of three plots...
+
+    First figure setup.
+
+    """
+
+    hru_gdf, hru_poi_dict = create_poi_group(hru_gdf, poi_df, param_filename)
+
+    fig = plotly.subplots.make_subplots(
+        rows=3,
+        cols=1,
+        shared_xaxes="columns",
+        # shared_yaxes = 'columns',
+        start_cell="top-left",
+        vertical_spacing=0.1,
+        y_title="Water flux, cubic-feet per second",
+        subplot_titles=[
+            "Annual mean",
+            "Monthly mean",
+            "Daily",
+        ],
+        specs=[
+            [{"type": "scatter"}],
+            [{"type": "scatter"}],
+            [{"type": "scatter"}],
+        ],
+    )
+    fig.update_layout(
+        title_text=f'The NHM basin water budget flux rates for <br> {poi_id_sel}, {poi_df.loc[poi_df.poi_id == poi_id_sel, "poi_name"].values[0]}',  #
+        width=900,
+        height=700,
+        legend=dict(orientation="v", yanchor="top", y=1, xanchor="right", x=10.0),
+        # legend_tracegroupgap = 5,
+        font=dict(family="Arial", size=14, color="#7f7f7f"),  # font color
+        paper_bgcolor="linen",
+        plot_bgcolor="white",
+    )
+
+    fig.update_layout(
+        title_automargin=True,
+        title_font_color="black",
+        title_font_size=20,
+        title_x=0.5,
+        title_y=0.945,
+        title_xref="container",
+        title_xanchor="center",
+    )
+
+    # fig.update_xaxes(range = [daily_plot_df.index[0], daily_plot_df.index[-1]])
+
+    fig.update_layout(font_color="black")
+    fig.update_layout(
+        legend={"title": "NHM output variable"}
+    )  # <--- add only this line
+
+    fig.update_xaxes(ticks="inside", tickwidth=2, tickcolor="black", ticklen=10)
+    fig.update_yaxes(ticks="inside", tickwidth=2, tickcolor="black", ticklen=10)
+
+    fig.update_xaxes(
+        showline=True, linewidth=2, linecolor="black", gridcolor="lightgrey"
+    )
+    fig.update_yaxes(
+        showline=True, linewidth=2, linecolor="black", gridcolor="lightgrey"
+    )
+
+    fig.update_traces(hovertemplate=None)
+
+    fig.update_layout(hovermode="x unified")
+    fig.update_layout(
+        hoverlabel=dict(
+            bgcolor="linen",
+            font_size=13,
+            font_family="Rockwell",
+        )
+    )
+
+    daily_fig = go.Figure()
+    annual_fig = go.Figure()
+    monthly_fig = go.Figure()
+
+    """
+    Nww to plot the data
+
+    """
+    for var in output_var_list:
+        color_sel = var_colors_dict[var]
+        leg_only = leg_only_dict[var]
+
+        var_daily, mean_var_monthly, mean_var_annual, var_units, var_desc = (
+            create_mean_var_dataarrays(
+                out_dir,
+                var,
+                plot_start_date,
+                plot_end_date,
+                water_years,
+            )
+        )
+
+        df_basin_plot1_annual = create_var_ts_for_poi_basin_df(
+            mean_var_annual,
+            var,
+            hru_gdf,
+            hru_poi_dict,
+            poi_id_sel,
+        )
+
+        df_basin_plot1_monthly = create_var_ts_for_poi_basin_df(
+            mean_var_monthly,
+            var,
+            hru_gdf,
+            hru_poi_dict,
+            poi_id_sel,
+        )
+
+        df_basin_plot1_daily = create_var_ts_for_poi_basin_df(
+            var_daily,
+            var,
+            hru_gdf,
+            hru_poi_dict,
+            poi_id_sel,
+        )
+
+        annual_fig.add_trace(
+            go.Scatter(
+                x=df_basin_plot1_annual.index,
+                y=(df_basin_plot1_annual.vol_cfs).ravel().tolist(),
+                # x=year_list,
+                # y= (gdf.loc[gdf.nhm_id == hru_id_sel, year_list].values).ravel().tolist(),
+                mode="lines",
+                name=var,
+                visible=leg_only,
+                showlegend=True,
+                legendgroup=var,
+                # marker=dict(color='lightblue'),
+                line_shape="vh",
+                line=dict(
+                    color=color_sel,
+                    width=2,
+                    # dash='dot'
+                ),
+            )
+        )
+
+        monthly_fig.add_trace(
+            go.Scatter(
+                x=df_basin_plot1_monthly.index,
+                y=(df_basin_plot1_monthly.vol_cfs).ravel().tolist(),
+                # x=year_list,
+                # y= (gdf.loc[gdf.nhm_id == hru_id_sel, year_list].values).ravel().tolist(),
+                mode="lines",
+                name=var,
+                visible=leg_only,
+                showlegend=False,
+                legendgroup=var,
+                # marker=dict(color='lightblue'),
+                line_shape="vh",
+                line=dict(
+                    color=color_sel,
+                    width=2,
+                    # dash='dot'
+                ),
+            )
+        )
+
+        daily_fig.add_trace(
+            go.Scatter(
+                x=df_basin_plot1_daily.index,
+                y=(df_basin_plot1_daily.vol_cfs).ravel().tolist(),
+                # x=year_list,
+                # y= (gdf.loc[gdf.nhm_id == hru_id_sel, year_list].values).ravel().tolist(),
+                mode="lines",
+                name=var,
+                visible=leg_only,
+                showlegend=False,
+                legendgroup=var,
+                # marker=dict(color='lightblue'),
+                line_shape="vh",
+                line=dict(
+                    color=color_sel,
+                    width=2,
+                    # dash='dot'
+                ),
+            )
+        )
+
+    for t in annual_fig.data:
+        fig.append_trace(t, row=1, col=1)
+
+    for t in monthly_fig.data:
+        fig.append_trace(t, row=2, col=1)
+
+    for t in daily_fig.data:
+        fig.append_trace(t, row=3, col=1)
+
+    return fig
