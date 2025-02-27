@@ -129,6 +129,25 @@ highlight_function_hru_map = lambda x: {
         "weight": 3,
     }
 
+cal_style_function = lambda feature: {
+    "fillColor": (
+        "gray"
+        if feature["properties"]["level"] == 1
+        else "yellow" if feature["properties"]["level"] == 2 else "green"
+    ),
+    "color": "#00000000",
+    "weight": 1.5,
+    # "dashArray": "5, 5",
+}
+
+hw_basin_style = lambda x: {
+    "fillColor": "#00000000",
+    #'fill_opacity' : .8,
+    "color": "brown",
+    "weight": 1,
+    # "dashArray": "5, 5",
+}
+
 popup_hru = folium.GeoJsonPopup(
         fields=["nhm_id", "hru_segment_nhm"],
         aliases=["nhm_id", " flows to segment"],
@@ -915,8 +934,8 @@ def create_annual_output_var_map(
         fig = None# fig, ax = plt.subplots(figsize=(18, 0.5))
     else:
         fig, ax = plt.subplots(figsize=(6, 0.75))
-        #fig.patch.set_linewidth(0.5)
-        #fig.patch.set_edgecolor('black')
+        fig.patch.set_linewidth(0.5)
+        fig.patch.set_edgecolor('black')
         fig.subplots_adjust(bottom=0.65) # This moves the axis of the cb closer to the top
         
 

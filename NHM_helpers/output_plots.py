@@ -277,6 +277,7 @@ def make_plot_var_for_hrus_in_poi_basin(
     plot_start_date,
     plot_end_date,
     plot_colors,
+    subbasin,
 ):
     var_daily, sum_var_monthly, sum_var_annual, var_units, var_desc = (
         create_sum_var_dataarrays(
@@ -315,7 +316,7 @@ def make_plot_var_for_hrus_in_poi_basin(
             ],
         )
         fig.update_layout(
-            title_text=f'The NHM simulated HRU {output_var_sel} for basin <br> {poi_id_sel}, {poi_df.loc[poi_df.poi_id == poi_id_sel, "poi_name"].values[0]}',  #
+            title_text=f'The NHM {subbasin} domain {output_var_sel} for poi basin<br> {poi_id_sel}, {poi_df.loc[poi_df.poi_id == poi_id_sel, "poi_name"].values[0]}',  #
             width=900,
             height=700,
             legend=dict(orientation="v", yanchor="top", y=1, xanchor="right", x=10.0),
@@ -605,6 +606,7 @@ def oopla(
     plot_colors,
     var_colors_dict,
     leg_only_dict,
+    subbasin,
 ):
     """
     Make figure of three plots...
@@ -635,7 +637,7 @@ def oopla(
         ],
     )
     fig.update_layout(
-        title_text=f'The NHM basin water budget flux rates for <br> {poi_id_sel}, {poi_df.loc[poi_df.poi_id == poi_id_sel, "poi_name"].values[0]}',  #
+        title_text=f'The NHM {subbasin} domain water budget flux rates for <br> {poi_id_sel}, {poi_df.loc[poi_df.poi_id == poi_id_sel, "poi_name"].values[0]}',  #
         width=900,
         height=700,
         legend=dict(orientation="v", yanchor="top", y=1, xanchor="right", x=10.0),

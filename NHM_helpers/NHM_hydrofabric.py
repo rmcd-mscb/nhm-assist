@@ -92,7 +92,7 @@ import plotly.express as px
 import dataretrieval.nwis as nwis
 
 
-def create_hru_gdf(
+def create_hru_gdf(NHM_dir,
     model_dir,
     GIS_format,
     param_filename,
@@ -178,6 +178,47 @@ def create_hru_gdf(
 
     # Create a Goepandas GeoDataFrame for the HRU geodatabase
     hru_gdf = gpd.GeoDataFrame(hru_gdb, geometry="geometry")
+
+
+    """
+    NHM Calibration Levels for HRUs: (those hrus calibrated in byHW and byHWobs parts)
+    
+    HW basins were descritized using a drainage area maxiumum and minimum; HW HRUs, segments, outlet segment, and drainage area 
+    available. 
+    
+    Gages used in byHWobs calibration, Part 3, for selected headwaters are also provided here.  
+    
+    FILES AND TABLES IN THIS SECTION ARE CONUS COVERAGE and will be subsetted later.
+    """
+
+    #### READ table (.csv) of HRU calibration level file
+    hru_cal_levels_df = pd.read_csv(f"{NHM_dir}/nhm_v1_1_HRU_cal_levels.csv").fillna(0)
+    hru_cal_levels_df["hw_id"] = hru_cal_levels_df.hw_id.astype("int64")
+    print(hru_cal_levels_df["nhm_id"])
+
+    hru_cal_levels_df = pd.merge(
+    hru_cal_levels_df, hru_gdf, right_on="nhm_id", left_on="nhm_id"
+    )
+    hru_cal_levels_gdf = gpd.GeoDataFrame(
+        hru_cal_levels_df, geometry="geometry"
+    )  # Creates a Geopandas GeoDataFrame
+    hru_cal_levels_gdf["nhm_id"] = hru_cal_levels_gdf["nhm_id"].astype(str)
+    hru_cal_levels_gdf["hw_id"] = hru_cal_levels_gdf["hw_id"].astype(str)
+
+    hru_gdf = hru_cal_levels_gdf.copy()
+    
+    print(
+        "The number of HRUs in the byHRU calibration is",
+        hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 0]["level"].count(),
+    )
+    print(
+        "The number of HRUs in the byHW calibration is",
+        hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 1]["level"].count(),
+    )
+    print(
+        "The number of HRUs in the byHWobs calibration is",
+        hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 2]["level"].count(),
+    )
 
     return hru_gdf
 
