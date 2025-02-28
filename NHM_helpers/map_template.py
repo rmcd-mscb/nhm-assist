@@ -714,6 +714,7 @@ def nhru_par_map(
 
         #######################################################
         if value_min == value_max:
+            val_bar_image = None
             linear = cm.StepColormap(
                 colors=[
                     "#000000",
