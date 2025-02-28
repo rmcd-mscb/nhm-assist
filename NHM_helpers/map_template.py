@@ -933,6 +933,7 @@ def create_annual_output_var_map(
 
     if not color_bar:
         fig = None# fig, ax = plt.subplots(figsize=(18, 0.5))
+        val_bar_image = None
     else:
         fig, ax = plt.subplots(figsize=(6, 0.75))
         fig.patch.set_linewidth(0.5)
