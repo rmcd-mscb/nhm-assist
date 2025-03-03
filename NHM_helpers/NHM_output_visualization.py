@@ -283,6 +283,8 @@ def create_sum_var_annual_gdf(
         index=["nhm_id"],
         columns=["year"],
     ).round(2)
+
+    
     table.reset_index(inplace=True, drop=False)
     # output_filename = f"{shapefile_dir}/{output_var_sel}_annual_{var_units}.csv"  # Writes gpd GeoDataFrame our t as a shapefile for fun
     # table.to_csv(output_filename)
@@ -291,6 +293,11 @@ def create_sum_var_annual_gdf(
     Merge in the geometry from the geodatabase with the dataframe.
     Keep the params in the gdf as well for future plotting calls--eventually will omit.
     """
+    if hru_gdf['nhm_id'].dtype != table['nhm_id'].dtype:
+        # Change the data type of table['nhm_id'] to match hru_gdf['nhm_id']
+        table['nhm_id'] = table['nhm_id'].astype(hru_gdf['nhm_id'].dtype)
+    
+    
     gdf_output_var_annual = hru_gdf.merge(table, on="nhm_id")
     gdf_output_var_annual.drop(
         columns=["hru_lat", "hru_lon", "hru_segment_nhm", "model_idx"], inplace=True
