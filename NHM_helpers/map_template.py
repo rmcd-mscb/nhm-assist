@@ -786,7 +786,7 @@ def nhru_par_map(
         #                               aliases=["HRU"," flows to segment", "par_value"],
         #                               labels=True)
 
-    return fig, hru_map, val_bar_image, value_min, value_max
+    return fig, hru_map, value_min, value_max
 
 def create_poi_paramplot_marker_cluster(
     poi_df,
