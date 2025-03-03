@@ -136,7 +136,7 @@ def create_hru_gdf(NHM_dir,
     """
     Loading some pyPRMS helpers for parameter metadata: units, descriptions, etc.
     """
-    prms_meta = MetaData(version=5, verbose=False).metadata  # loads metadata functions for pyPRMS
+    prms_meta = MetaData().metadata  # loads metadata functions for pyPRMS
     pdb = ParameterFile(param_filename, metadata=prms_meta, verbose=False)  # loads parmaeterfile functions for pyPRMS
     
 
@@ -206,6 +206,7 @@ def create_hru_gdf(NHM_dir,
     hru_cal_levels_gdf["hw_id"] = hru_cal_levels_gdf["hw_id"].astype(str)
 
     hru_gdf = hru_cal_levels_gdf.copy()
+    hru_gdf["nhm_id"] = hru_gdf.nhm_id.astype(int)
     
     print(
         "The number of HRUs in the byHRU calibration is",

@@ -84,6 +84,8 @@ import plotly.express as px
 
 import dataretrieval.nwis as nwis
 
+from NHM_helpers.efc import *
+
 
 def owrd_scraper(station_nbr, start_date, end_date):
     # f string the args into the urldf
