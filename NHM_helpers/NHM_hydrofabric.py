@@ -321,6 +321,8 @@ def create_poi_df(
         pdb["nhm_seg"].as_dataframe, left_on="poi_gage_segment", right_index=True
     )
 
+    poi.rename(columns = {"poi_gage_id": "poi_id"}, inplace=True)
+    
     control = pws.Control.load_prms(
         pl.Path(model_dir / control_file_name), warn_unused_options=False
     )  # loads the control file for pywatershed functions
@@ -328,29 +330,29 @@ def create_poi_df(
     st_date = control.start_time
     en_date = control.end_time
 
-    """
-    Projections are ascribed geometry from the HRUs geodatabase (GIS). 
-    The NHM uses the NAD 1983 USGS Contiguous USA Albers projection EPSG# 102039. 
-    The geometry units of this projection are not useful for many notebook packages. 
-    The geodatabases are reprojected to World Geodetic System 1984.
+    # """
+    # Projections are ascribed geometry from the HRUs geodatabase (GIS). 
+    # The NHM uses the NAD 1983 USGS Contiguous USA Albers projection EPSG# 102039. 
+    # The geometry units of this projection are not useful for many notebook packages. 
+    # The geodatabases are reprojected to World Geodetic System 1984.
 
-    Options:
-        crs = 3857, WGS 84 / Pseudo-Mercator - Spherical Mercator, Google Maps, OpenStreetMap, Bing, ArcGIS, ESRI.
-        *crs = 4326, WGS 84 - WGS84 - World Geodetic System 1984, used in GPS
-    """
-    crs = 4326
+    # Options:
+    #     crs = 3857, WGS 84 / Pseudo-Mercator - Spherical Mercator, Google Maps, OpenStreetMap, Bing, ArcGIS, ESRI.
+    #     *crs = 4326, WGS 84 - WGS84 - World Geodetic System 1984, used in GPS
+    # """
+    # crs = 4326
 
-    """
-    Make a list if the HUC2 region(s) the subbasin intersects for NWIS queries.
-    """
-    huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
-    model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
+    # """
+    # Make a list if the HUC2 region(s) the subbasin intersects for NWIS queries.
+    # """
+    # huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
+    # model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
 
     """
     Create a dataframe for poi_gages from the parameter file with NWIS gage information data.
     """
     poi = poi.merge(
-        nwis_gages_aoi, left_on="poi_gage_id", right_on="poi_id", how="left"
+        nwis_gages_aoi, left_on="poi_id", right_on="poi_id", how="left"
     )
     poi_df = pd.DataFrame(poi)  # Creates a Pandas DataFrame
 
@@ -361,18 +363,18 @@ def create_poi_df(
     if gages_file.exists():
         for idx, row in poi_df.iterrows():
             if pd.isnull(row["poi_id"]):
-                new_poi_id = row["poi_gage_id"]
+                new_poi_id = row["poi_id"]
                 new_lat = gages_df.loc[
-                    gages_df.index == row["poi_gage_id"], "latitude"
+                    gages_df.index == row["poi_id"], "latitude"
                 ].values[0]
                 new_lon = gages_df.loc[
-                    gages_df.index == row["poi_gage_id"], "longitude"
+                    gages_df.index == row["poi_id"], "longitude"
                 ].values[0]
                 new_poi_agency = gages_df.loc[
-                    gages_df.index == row["poi_gage_id"], "poi_agency"
+                    gages_df.index == row["poi_id"], "poi_agency"
                 ].values[0]
                 new_poi_name = gages_df.loc[
-                    gages_df.index == row["poi_gage_id"], "poi_name"
+                    gages_df.index == row["poi_id"], "poi_name"
                 ].values[0]
 
                 poi_df.loc[idx, "latitude"] = new_lat
@@ -410,9 +412,9 @@ def create_default_gages_file(
     """
     non_NWIS_gages_from_poi_df = poi_df.loc[poi_df["poi_agency"] != "USGS"]
     non_NWIS_gages_from_poi_df.drop(
-        columns=["poi_id", "nhm_seg", "poi_gage_segment", "poi_type"], inplace=True
+        columns=["nhm_seg", "poi_gage_segment", "poi_type"], inplace=True
     )
-    non_NWIS_gages_from_poi_df.rename(columns={"poi_gage_id": "poi_id"}, inplace=True)
+    #non_NWIS_gages_from_poi_df.rename(columns={"poi_gage_id": "poi_id"}, inplace=True)
 
     """
     Projections are ascribed geometry from the HRUs geodatabase (GIS). 
