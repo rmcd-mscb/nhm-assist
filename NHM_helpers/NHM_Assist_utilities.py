@@ -544,6 +544,7 @@ def make_plots_par_vals(
 def make_HW_cal_level_files(hru_gdf):
     """ 
     """
+    crs = 4326
     byHW_basins_gdf = hru_gdf.loc[hru_gdf["byHW"] == 1]
     HW_basins_gdf = byHW_basins_gdf.dissolve(by="hw_id").to_crs(crs)
     HW_basins_gdf.reset_index(inplace=True, drop=False)
