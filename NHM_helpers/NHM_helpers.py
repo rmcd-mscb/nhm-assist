@@ -244,9 +244,7 @@ def create_poi_group(hru_gdf, poi_df, param_filename):
     """
     Make a dictionary of pois and the list of HRUs in the contributing area for each poi.
     """
-    prms_meta = MetaData(
-        version=5, verbose=False
-    ).metadata  # loads metadata functions for pyPRMS
+    prms_meta = MetaData().metadata  # loads metadata functions for pyPRMS
     pdb = ParameterFile(
         param_filename, metadata=prms_meta, verbose=False
     )  # loads parmaeterfile functions for pyPRMS

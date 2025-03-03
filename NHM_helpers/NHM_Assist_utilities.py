@@ -282,7 +282,7 @@ def make_plots_par_vals(
     """
     Make a dictionary of pois and the list of HRUs in the contributing area for each poi.
     """
-    prms_meta = MetaData(version=5, verbose=False).metadata  # loads metadata functions for pyPRMS
+    prms_meta = MetaData().metadata  # loads metadata functions for pyPRMS
     pdb = ParameterFile(param_filename, metadata=prms_meta, verbose=False)  # loads parmaeterfile functions for pyPRMS
     
     hru_poi_dict = hrus_by_poi(pdb, poi_list)  # Helper function from pyPRMS
@@ -540,3 +540,13 @@ def make_plots_par_vals(
                     # Saving the plot as txt file with the html code
                     with open(Folium_maps_dir / f"{par}_{poi_id}.txt", "w") as f:
                         f.write(text_div)
+
+def make_HW_cal_level_files(hru_gdf):
+    """ 
+    """
+    byHW_basins_gdf = hru_gdf.loc[hru_gdf["byHW"] == 1]
+    HW_basins_gdf = byHW_basins_gdf.dissolve(by="hw_id").to_crs(crs)
+    HW_basins_gdf.reset_index(inplace=True, drop=False)
+    HW_basins = HW_basins_gdf.boundary
+
+    return HW_basins_gdf, HW_basins                       
