@@ -252,7 +252,7 @@ def create_segment_gdf(
     """
     Loading some pyPRMS helpers for parameter metadata: units, descriptions, etc.
     """
-    prms_meta = MetaData(version=5, verbose=False).metadata  # loads metadata functions for pyPRMS
+    prms_meta = MetaData().metadata  # loads metadata functions for pyPRMS
     pdb = ParameterFile(param_filename, metadata=prms_meta, verbose=False)  # loads parmaeterfile functions for pyPRMS
     
 
@@ -306,7 +306,7 @@ def create_poi_df(
     """
     Loading some pyPRMS helpers for parameter metadata: units, descriptions, etc.
     """
-    prms_meta = MetaData(version=5, verbose=False).metadata  # loads metadata functions for pyPRMS
+    prms_meta = MetaData().metadata  # loads metadata functions for pyPRMS
     pdb = ParameterFile(param_filename, metadata=prms_meta, verbose=False)  # loads parmaeterfile functions for pyPRMS
     
     """

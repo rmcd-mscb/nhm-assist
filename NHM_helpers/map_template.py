@@ -470,7 +470,7 @@ def nhru_par_map(
     "fillOpacity": 0.3,
 }
     
-    prms_meta = MetaData(version=5, verbose=False).metadata  # loads metadata functions for pyPRMS
+    prms_meta = MetaData().metadata  # loads metadata functions for pyPRMS
     pdb = ParameterFile(param_filename, metadata=prms_meta, verbose=False)  # loads parmaeterfile functions for pyPRMS
 
     
