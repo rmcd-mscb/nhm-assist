@@ -277,7 +277,7 @@ def make_plots_par_vals(
     """
     First, group HRUs to the downstream gagepoi that they contribute flow.
     """
-    poi_list = poi_df["poi_gage_id"].values.tolist()
+    poi_list = poi_df["poi_id"].values.tolist()
 
     """
     Make a dictionary of pois and the list of HRUs in the contributing area for each poi.
