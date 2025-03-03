@@ -136,6 +136,12 @@ def fetch_nwis_gage_info(model_dir,
                          nwis_gage_nobs_min,
                          hru_gdf,
 ):
+
+    """
+    This function creates a database of infomration for all gages in the model domain that
+    are in NWIS, from 01-01-1949 to the end date listed in the control file. 
+    """
+    
     
     nwis_gages_file = model_dir / "NWISgages.csv"
     control = pws.Control.load_prms(pl.Path(model_dir / control_file_name, warn_unused_options=False))
@@ -157,7 +163,11 @@ def fetch_nwis_gage_info(model_dir,
     model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
     
         
-    st_date = pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d")
+    """
+    Start date changed because gages were found in the par file that predate 1979 and tossing nan's into poi_df later.
+    """
+    
+    st_date = "1940-01-01" #pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d")
     en_date = pd.to_datetime(str(control.end_time)).strftime("%Y-%m-%d")
     
     if nwis_gages_file.exists():
