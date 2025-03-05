@@ -301,7 +301,7 @@ def make_plots_par_vals(
     }
 
     # assigns poi_group value to all hrus #Keep for later application
-    hru_gdf["poi_group"] = hru_gdf["nhm_id"].map(reversed_hru_poi_dict)
+    hru_gdf["poi_group"] = hru_gdf["nhm_id"].astype(int).map(reversed_hru_poi_dict)
 
     """
     Builds plots, takes  20 minutes to build all param plots for all pois
@@ -327,7 +327,7 @@ def make_plots_par_vals(
                     ##%%time = par
                     # Preporcessing: pulling only the selected param values for the HRUs related to the selected POI to plot.
                     output_var_sel_plot_df = hru_gdf[
-                        hru_gdf["nhm_id"].isin(hru_poi_dict[poi_id])
+                        hru_gdf["nhm_id"].astype(int).isin(hru_poi_dict[poi_id])
                     ]
                     output_var_sel_plot_df = output_var_sel_plot_df.sort_values(
                         ["hru_area"], ascending=True
@@ -543,6 +543,10 @@ def make_plots_par_vals(
 
 def make_HW_cal_level_files(hru_gdf):
     """ 
+    NHM Calibration Levels for HRUs: (those hrus calibrated in byHW and byHWobs parts)
+    HW basins were descritized using a drainage area maxiumum and minimum; HW HRUs, segments, outlet segment, and drainage area are available.
+    Gages used in byHWobs calibration, Part 3, for selected headwaters are also provided here.
+    FILES AND TABLES IN THIS SECTION ARE CONUS COVERAGE and will be subsetted later.
     """
     crs = 4326
     byHW_basins_gdf = hru_gdf.loc[hru_gdf["byHW"] == 1]
