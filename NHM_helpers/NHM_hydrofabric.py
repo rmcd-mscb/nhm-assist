@@ -194,8 +194,7 @@ def create_hru_gdf(NHM_dir,
     #### READ table (.csv) of HRU calibration level file
     hru_cal_levels_df = pd.read_csv(f"{NHM_dir}/nhm_v1_1_HRU_cal_levels.csv").fillna(0)
     hru_cal_levels_df["hw_id"] = hru_cal_levels_df.hw_id.astype("int64")
-    print(hru_cal_levels_df["nhm_id"])
-
+    
     hru_cal_levels_df = pd.merge(
     hru_cal_levels_df, hru_gdf, right_on="nhm_id", left_on="nhm_id"
     )
@@ -208,20 +207,9 @@ def create_hru_gdf(NHM_dir,
     hru_gdf = hru_cal_levels_gdf.copy()
     hru_gdf["nhm_id"] = hru_gdf.nhm_id.astype(int)
     
-    print(
-        "The number of HRUs in the byHRU calibration is",
-        hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 0]["level"].count(),
-    )
-    print(
-        "The number of HRUs in the byHW calibration is",
-        hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 1]["level"].count(),
-    )
-    print(
-        "The number of HRUs in the byHWobs calibration is",
-        hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 2]["level"].count(),
-    )
-
-    return hru_gdf
+    hru_cal_level_txt = f'{hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 1]["level"].count()} of the {hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 0]["level"].count()} total hrus in the model domain are in HWs, with {hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 2]["level"].count()} HW hrus calibrated with streamflow observations.'
+    
+    return hru_gdf, hru_cal_level_txt
 
 
 def create_segment_gdf(
@@ -356,6 +344,40 @@ def create_poi_df(
         nwis_gages_aoi, left_on="poi_id", right_on="poi_id", how="left"
     )
     poi_df = pd.DataFrame(poi)  # Creates a Pandas DataFrame
+
+
+    """
+    This reads in the csv file that has the gages used to calibrate the byHWobs part for CONUS.
+    Read in format for station file columns needed (You may need to tailor this to the particular file.
+    """
+    col_names = [
+        "poi_id",
+        #'poi_name',
+        "latitude",
+        "longitude",
+        #'drainage_area',
+        #'drainage_area_contrib'
+    ]
+    col_types = [
+        np.str_,
+        # np.str_,
+        float,
+        float,
+        # float,
+        # float
+    ]
+    cols = dict(
+        zip(col_names, col_types)
+    )  # Creates a dictionary of column header and datatype called below.
+    
+    byHWobs_poi_df = pd.read_csv(
+        r"data_dependencies/NHM_v1_1/nhm_v1_1_byhwobs_cal_gages.csv", sep="\t", dtype=cols
+    ).fillna(0)
+    
+   # Identify the byHWobs calibration gages in our current poi database (ammended in the model prams file to include more gages)
+    poi_df["nhm_calib"] = "N"
+    poi_df.loc[poi_df["poi_id"].isin(byHWobs_poi_df["poi_id"]), "nhm_calib"] = "Y"
+    
 
     """
     Updates the poi_df with user altered metadata in the gages.csv file, if present
