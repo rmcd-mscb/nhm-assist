@@ -1447,8 +1447,6 @@ def create_streamflow_plot(
             # with open(Folium_maps_dir / f"streamflow_{poi_id_sel}.txt", "w") as f:
             #     f.write(text_div)
 
-            fig.write_html(Folium_maps_dir / f"streamflow_{poi_id_sel}.html")
-
             plotly.offline.plot(fig, filename=f"{plot_file_path}")
 
     return plot_file_path

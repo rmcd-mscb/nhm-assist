@@ -193,21 +193,22 @@ def create_hru_gdf(NHM_dir,
 
     #### READ table (.csv) of HRU calibration level file
     hru_cal_levels_df = pd.read_csv(f"{NHM_dir}/nhm_v1_1_HRU_cal_levels.csv").fillna(0)
-    hru_cal_levels_df["hw_id"] = hru_cal_levels_df.hw_id.astype("int64")
+    hru_cal_levels_df["hw_id"] = hru_cal_levels_df.hw_id.astype("int32")
     
-    hru_cal_levels_df = pd.merge(
-    hru_cal_levels_df, hru_gdf, right_on="nhm_id", left_on="nhm_id"
-    )
-    hru_cal_levels_gdf = gpd.GeoDataFrame(
-        hru_cal_levels_df, geometry="geometry"
-    )  # Creates a Geopandas GeoDataFrame
-    hru_cal_levels_gdf["nhm_id"] = hru_cal_levels_gdf["nhm_id"].astype(str)
-    hru_cal_levels_gdf["hw_id"] = hru_cal_levels_gdf["hw_id"].astype(str)
+    hru_gdf = hru_gdf.merge(hru_cal_levels_df, on="nhm_id")
+    hru_gdf["hw_id"] = hru_gdf.hw_id.astype("int32")
 
-    hru_gdf = hru_cal_levels_gdf.copy()
-    hru_gdf["nhm_id"] = hru_gdf.nhm_id.astype(int)
+    # hru_gdf = gpd.GeoDataFrame(
+    #     hru_cal_levels_df, geometry="geometry"
+   # )  # Creates a Geopandas GeoDataFrame
+    # hru_cal_levels_gdf["nhm_id"] = hru_cal_levels_gdf["nhm_id"].astype(str)
+    # hru_cal_levels_gdf["hw_id"] = hru_cal_levels_gdf["hw_id"].astype(str)
     
-    hru_cal_level_txt = f'{hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 1]["level"].count()} of the {hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 0]["level"].count()} total hrus in the model domain are in HWs, with {hru_cal_levels_gdf[hru_cal_levels_gdf["level"] > 2]["level"].count()} HW hrus calibrated with streamflow observations.'
+
+    # hru_gdf = hru_cal_levels_gdf.copy()
+    # hru_cal_levels_gdf["nhm_id"] = hru_cal_levels_gdf.nhm_id.astype(int)
+    
+    hru_cal_level_txt = f'{hru_gdf[hru_gdf["level"] > 1]["level"].count()} of the {hru_gdf[hru_gdf["level"] > 0]["level"].count()} total hrus in the model domain are in HWs, with {hru_gdf[hru_gdf["level"] > 2]["level"].count()} HW hrus calibrated with streamflow observations.'
     
     return hru_gdf, hru_cal_level_txt
 
