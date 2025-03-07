@@ -198,19 +198,10 @@ def create_hru_gdf(NHM_dir,
     hru_gdf = hru_gdf.merge(hru_cal_levels_df, on="nhm_id")
     hru_gdf["hw_id"] = hru_gdf.hw_id.astype("int32")
 
-    # hru_gdf = gpd.GeoDataFrame(
-    #     hru_cal_levels_df, geometry="geometry"
-   # )  # Creates a Geopandas GeoDataFrame
-    # hru_cal_levels_gdf["nhm_id"] = hru_cal_levels_gdf["nhm_id"].astype(str)
-    # hru_cal_levels_gdf["hw_id"] = hru_cal_levels_gdf["hw_id"].astype(str)
+    hru_text = f", and {len(hru_gdf.index)} [bold]HRUs[/bold]."
+    hru_cal_level_txt = f'{hru_gdf[hru_gdf["level"] > 1]["level"].count()} HRUs are within HWs, and {hru_gdf[hru_gdf["level"] > 2]["level"].count()} are within HW calibrated with streamflow observations.'
     
-
-    # hru_gdf = hru_cal_levels_gdf.copy()
-    # hru_cal_levels_gdf["nhm_id"] = hru_cal_levels_gdf.nhm_id.astype(int)
-    
-    hru_cal_level_txt = f'{hru_gdf[hru_gdf["level"] > 1]["level"].count()} of the {hru_gdf[hru_gdf["level"] > 0]["level"].count()} total hrus in the model domain are in HWs, with {hru_gdf[hru_gdf["level"] > 2]["level"].count()} HW hrus calibrated with streamflow observations.'
-    
-    return hru_gdf, hru_cal_level_txt
+    return hru_gdf, hru_text, hru_cal_level_txt
 
 
 def create_segment_gdf(
@@ -280,7 +271,9 @@ def create_segment_gdf(
     # Create a Goepandas GeoDataFrame for the HRU geodatabase
     seg_gdf = gpd.GeoDataFrame(seg_gdb, geometry="geometry")
 
-    return seg_gdf
+    seg_txt = f", {len(seg_gdf.index)} [bold]segments[/bold]"
+
+    return seg_gdf, seg_txt
 
 from NHM_helpers.NHM_Assist_utilities import fetch_nwis_gage_info
 def create_poi_df(
@@ -523,11 +516,8 @@ def read_gages_file(
             f"{item}" for item in list(set(poi_df.poi_agency))
         )
 
-        con.print(
-            f"[bold]Create hydrofabric files:\n",
-            f"\nNHM-Assist notebooks will display gages using the modified gages file (gages.csv) that includes {len(gages_df)} gages managed by {gages_agencies_txt}.",
-            f"Only {len(poi_df.index)} gages managed by {pois_agencies_txt} are found in the parameter file.",
-        )
+        gages_txt_nb2 = f"This notebook will display {len(gages_df)} [bold]gages managed by {gages_agencies_txt}[/bold] from the [bold]modified gages file (gages.csv)[/bold]."
+        gages_txt = f"The parameter file contains {len(poi_df.index)} [bold]gages[/bold] managed by {pois_agencies_txt}"
 
         """
         Checks the gages_df for missing meta data.
@@ -536,9 +526,7 @@ def read_gages_file(
         for item in columns:
             if pd.isnull(gages_df[item]).values.any():
                 subset = gages_df.loc[pd.isnull(gages_df[item])]
-                con.print(
-                    f"The gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
-                )
+                gages_txt_nb2 += f" The gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
             else:
                 pass
     else:
@@ -556,11 +544,8 @@ def read_gages_file(
             f"{item}" for item in list(set(poi_df.poi_agency))
         )
 
-        con.print(
-            f"[bold]Create hydrofabric files:\n",
-            f"\nNHM-Assist notebooks will display gages using the default gages file (default_gages.csv) that includes {len(gages_df)} gages managed by {gages_agencies_txt}.",
-            f"Only {len(poi_df.index)} gages managed by {pois_agencies_txt} are found in the parameter file.",
-        )
+        gages_txt_nb2 = f"This notebook will display [bold]{len(gages_df)} gages managed by {gages_agencies_txt}[/bold] from the [bold]default gages file (default_gages.csv)[/bold]."
+        gages_txt = f"The parameter file contains {len(poi_df.index)} [bold]gages[/bold] managed by {pois_agencies_txt}"
 
         """
         Checks the gages_df for missing meta data.
@@ -569,10 +554,8 @@ def read_gages_file(
         for item in columns:
             if pd.isnull(gages_df[item]).values.any():
                 subset = gages_df.loc[pd.isnull(gages_df[item])]
-                con.print(
-                    f"The default_gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
-                )
+                gages_txt_nb2 += f" The gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
             else:
                 pass
-    return gages_df
+    return gages_df, gages_txt, gages_txt_nb2
 
