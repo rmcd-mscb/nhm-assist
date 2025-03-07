@@ -119,8 +119,8 @@ transparent = lambda x: {
 style_function_hru_map = lambda x: {
         "opacity": 1,
         "fillColor": "#00000000",  #'goldenrod',
-        "color": "tan",
-        "weight": 1.5,
+        "color": "black",
+        "weight": 0.25,
     }
 highlight_function_hru_map = lambda x: {
         "opacity": 0.5,
@@ -144,7 +144,7 @@ hw_basin_style = lambda x: {
     "fillColor": "#00000000",
     #'fill_opacity' : .8,
     "color": "brown",
-    "weight": 1,
+    "weight": 1.5,
     # "dashArray": "5, 5",
 }
 
@@ -341,14 +341,14 @@ def create_poi_marker_cluster(
 
     # add POI marker cluster child items for the map
     poi_marker_cluster = MarkerCluster(
-        name="Model poi",
+        name="Model gage",
         overlay=True,
         control=True,
         icon_create_function=None,
         disableClusteringAtZoom=cluster_zoom,
     )
     poi_marker_cluster_label = MarkerCluster(
-        name="Model poi label",
+        name="Model gage ID",
         overlay=True,
         control=True,
         show=False,  # False will not draw the child upon opening the map, but have it to draw in the Layer control.
@@ -397,14 +397,14 @@ def create_non_poi_marker_cluster(
 
     # add non-poi gages marker cluster child items for the map
     non_poi_marker_cluster = MarkerCluster(
-        name="Non-poi",
+        name="Prospective gage",
         overlay=True,
         control=True,
         icon_create_function=None,
         disableClusteringAtZoom=cluster_zoom,
     )
     non_poi_marker_cluster_label = MarkerCluster(
-        name="Non-poi label",
+        name="Prospective gage ID",
         overlay=True,
         control=True,
         show=False,  # False will not draw the child upon opening the map, but have it to draw in the Layer control.
@@ -453,19 +453,20 @@ def create_non_poi_marker_cluster(
 
     return non_poi_marker_cluster, non_poi_marker_cluster_label
 
-def nhru_par_map(
+def create_nhru_par_map(
     param_filename,
     hru_gdf,
     par_sel,
     mo_sel,
     mo_name,
     nhru_params,
+    Folium_maps_dir,
 ):
 
     cp_style_function = lambda feature: {
     "fillColor": linear(par_sel_color_dict[feature["id"]]),
-    "color": "tan",
-    "weight": 1,
+    "color": "black",
+    "weight": 0.25,
     # "dashArray": "5, 5",
     "fillOpacity": 0.3,
 }
@@ -492,6 +493,15 @@ def nhru_par_map(
         value_min = np.round(par_subset_df["par_value"].min(), 8)
         value_max = np.round(par_subset_df["par_value"].max(), 8)
 
+        if value_min == value_max:
+            same_value =  value_min
+            value_min = value_min - 0.001
+            value_max = value_min + 0.001
+            color_bar = False
+        else:
+            color_bar = True
+            same_value = None
+
         par_sel_color_dict = pd.Series(
             par_subset_df.par_value.values, index=par_subset_df.nhm_id
         ).to_dict()
@@ -512,13 +522,38 @@ def nhru_par_map(
             value_max,
         ]
 
+        linear = cm.StepColormap(
+                colors=[
+                    "#8B0000",
+                    "#AC4800",
+                    "#CD9100",
+                    "#EEDA00",
+                    "#DADA13",
+                    "#91913B",
+                    "#484863",
+                    "#00008B",
+                ],
+                index=par_bins,
+                vmin=0.00,
+                vmax=0.05,
+                caption="Total Standard deviation at the point[mm]",
+                # tick_labels= ('0.01', '0.02', '0.03', '0.04')
+            )
+        
         #################################################
-        if value_min != value_max:
-            fig, ax = plt.subplots(figsize=(18, 0.5))
-
+        
+        
+        if not color_bar:
+            fig = None# fig, ax = plt.subplots(figsize=(18, 0.5))
+            val_bar_image = None
+            
+        
+        
+        else:
+            fig, ax = plt.subplots(figsize=(6, 0.75))
             fig.patch.set_linewidth(0.5)
             fig.patch.set_edgecolor('black')
-            fig.subplots_adjust(bottom=0.5)
+            fig.subplots_adjust(bottom=0.65)
 
             cmap = mplib.colors.ListedColormap(
                 [
@@ -537,6 +572,7 @@ def nhru_par_map(
 
             bounds = par_bins
             norm = mplib.colors.BoundaryNorm(bounds, cmap.N)
+            
             cb2 = mplib.colorbar.ColorbarBase(
                 ax,
                 cmap=cmap,
@@ -552,47 +588,64 @@ def nhru_par_map(
                 f'Discrete {par_sel} intervals, {pdb.get(par_sel).meta["units"]}'
             )
 
+            val_bar_file = pl.Path(Folium_maps_dir / "val_bar.png").resolve()
+            fig.savefig(val_bar_file, format="png", )
+            plt.close(fig)
+            
+            with open(val_bar_file, "rb") as lf:
+                # open in binary mode, read bytes, encode, decode obtained bytes as utf-8 string
+                b64_content = base64.b64encode(lf.read()).decode("utf-8")
+                del lf
+            
+            val_bar_image = FloatImage(
+                image="data:image/png;base64,{}".format(b64_content),
+                bottom=1,
+                left=14,
+                style="position:fixed; width:6in; height:0.75in;",
+            )
+            del val_bar_file
             #fig.set_facecolor("lightgray")
             
           
         #######################################################
 
-        if value_min == value_max:
-            linear = cm.StepColormap(
-                colors=[
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                ],
-                index=par_bins,
-                vmin=0.00,
-                vmax=0.05,
-                caption="Total Standard deviation at the point[mm]",
-                # tick_labels= ('0.01', '0.02', '0.03', '0.04')
-            )
-        else:
-            linear = cm.StepColormap(
-                colors=[
-                    "#8B0000",
-                    "#AC4800",
-                    "#CD9100",
-                    "#EEDA00",
-                    "#DADA13",
-                    "#91913B",
-                    "#484863",
-                    "#00008B",
-                ],
-                index=par_bins,
-                vmin=0.00,
-                vmax=0.05,
-                caption="Total Standard deviation at the point[mm]",
-                # tick_labels= ('0.01', '0.02', '0.03', '0.04')
-            )
+        # if value_min == value_max:
+        #     linear = cm.StepColormap(
+        #         colors=[
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #         ],
+        #         index=par_bins,
+        #         vmin=0.00,
+        #         vmax=0.05,
+        #         caption="Total Standard deviation at the point[mm]",
+        #         # tick_labels= ('0.01', '0.02', '0.03', '0.04')
+        #     )
+        # else:
+        #     linear = cm.StepColormap(
+        #         colors=[
+        #             "#8B0000",
+        #             "#AC4800",
+        #             "#CD9100",
+        #             "#EEDA00",
+        #             "#DADA13",
+        #             "#91913B",
+        #             "#484863",
+        #             "#00008B",
+        #         ],
+        #         index=par_bins,
+        #         vmin=0.00,
+        #         vmax=0.05,
+        #         caption="Total Standard deviation at the point[mm]",
+        #         # tick_labels= ('0.01', '0.02', '0.03', '0.04')
+        #     )
+            
         popup_hru = folium.GeoJsonPopup(
             fields=["nhm_id", "hru_segment_nhm", par_sel],
             aliases=["hru", " flows to segment", f"{par_sel}"],
@@ -637,6 +690,15 @@ def nhru_par_map(
         value_min = np.round(par_subset_df["par_value"].min(), 8)
         value_max = np.round(par_subset_df["par_value"].max(), 8)
 
+        if value_min == value_max:
+            same_value =  value_min
+            value_min = value_min - 0.001
+            value_max = value_min + 0.001
+            color_bar = False
+        else:
+            color_bar = True
+            same_value = None
+
         par_sel_color_dict = pd.Series(
             par_subset_df.par_value.values, index=par_subset_df.nhm_id
         ).to_dict()
@@ -657,10 +719,32 @@ def nhru_par_map(
             value_max,
         ]
 
+        linear = cm.StepColormap(
+            colors=[
+                "#8B0000",
+                "#AC4800",
+                "#CD9100",
+                "#EEDA00",
+                "#DADA13",
+                "#91913B",
+                "#484863",
+                "#00008B",
+            ],
+            index=par_bins,
+            vmin=0.00,
+            vmax=0.05,
+            caption="Total Standard deviation at the point[mm]",
+            # tick_labels= ('0.01', '0.02', '0.03', '0.04')
+        )
         #################################################
-        if value_min != value_max:
-            fig, ax = plt.subplots(figsize=(5, 0.5))
-            fig.subplots_adjust(bottom=0.5)
+        if not color_bar:
+            fig = None# fig, ax = plt.subplots(figsize=(6, 0.75))
+            val_bar_image = None
+        else:
+            fig, ax = plt.subplots(figsize=(6, 0.75))
+            fig.patch.set_linewidth(0.5)
+            fig.patch.set_edgecolor('black')
+            fig.subplots_adjust(bottom=0.65) # This moves the axis of the cb closer to the top
 
             cmap = mplib.colors.ListedColormap(
                 [
@@ -696,8 +780,9 @@ def nhru_par_map(
 
             #fig.set_facecolor("lightgray")
 
-            val_bar_file = "val_bar.png"
+            val_bar_file = pl.Path(Folium_maps_dir / "val_bar.png").resolve()
             fig.savefig(val_bar_file, format="png")
+            plt.close(fig)
             
             with open(val_bar_file, "rb") as lf:
                 # open in binary mode, read bytes, encode, decode obtained bytes as utf-8 string
@@ -713,43 +798,43 @@ def nhru_par_map(
             del val_bar_file
 
         #######################################################
-        if value_min == value_max:
-            val_bar_image = None
-            linear = cm.StepColormap(
-                colors=[
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                    "#000000",
-                ],
-                index=par_bins,
-                vmin=0.00,
-                vmax=0.05,
-                caption="Total Standard deviation at the point[mm]",
-                # tick_labels= ('0.01', '0.02', '0.03', '0.04')
-            )
-        else:
-            linear = cm.StepColormap(
-                colors=[
-                    "#8B0000",
-                    "#AC4800",
-                    "#CD9100",
-                    "#EEDA00",
-                    "#DADA13",
-                    "#91913B",
-                    "#484863",
-                    "#00008B",
-                ],
-                index=par_bins,
-                vmin=0.00,
-                vmax=0.05,
-                caption="Total Standard deviation at the point[mm]",
-                # tick_labels= ('0.01', '0.02', '0.03', '0.04')
-            )
+        # if value_min == value_max:
+        #     val_bar_image = None
+        #     linear = cm.StepColormap(
+        #         colors=[
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #             "#000000",
+        #         ],
+        #         index=par_bins,
+        #         vmin=0.00,
+        #         vmax=0.05,
+        #         caption="Total Standard deviation at the point[mm]",
+        #         # tick_labels= ('0.01', '0.02', '0.03', '0.04')
+        #     )
+        # else:
+        #     linear = cm.StepColormap(
+        #         colors=[
+        #             "#8B0000",
+        #             "#AC4800",
+        #             "#CD9100",
+        #             "#EEDA00",
+        #             "#DADA13",
+        #             "#91913B",
+        #             "#484863",
+        #             "#00008B",
+        #         ],
+        #         index=par_bins,
+        #         vmin=0.00,
+        #         vmax=0.05,
+        #         caption="Total Standard deviation at the point[mm]",
+        #         # tick_labels= ('0.01', '0.02', '0.03', '0.04')
+        #     )
         popup_hru = folium.GeoJsonPopup(
             fields=["nhm_id", "hru_segment_nhm", par_mo_sel],
             aliases=["hru", " flows to segment", f"{par_sel} for {mo_name}"],
@@ -786,7 +871,7 @@ def nhru_par_map(
         #                               aliases=["HRU"," flows to segment", "par_value"],
         #                               labels=True)
 
-    return fig, hru_map, value_min, value_max
+    return  hru_map, val_bar_image, value_min, value_max, same_value, color_bar
 
 def create_poi_paramplot_marker_cluster(
     poi_df,
@@ -838,13 +923,19 @@ def create_poi_paramplot_marker_cluster(
         )
 
         # Add the Plots to the popup
-        iframe = folium.IFrame(html=html, width=845, height=475)
+        iframe = folium.IFrame(html=html, 
+                               width=525, 
+                               height=325,
+                              )
         # popup = folium.Popup(iframe, max_width=3250,parse_html=True)
 
         marker = folium.CircleMarker(
             location=[row["latitude"], row["longitude"]],
             name=row["poi_id"],
-            popup=folium.Popup(iframe, max_width=550, max_height=350, parse_html=True),
+            popup=folium.Popup(iframe, 
+                               #max_width=500, 
+                               #max_height=300, 
+                               parse_html=True),
             radius=3,
             weight=2,
             color="black",
@@ -877,12 +968,13 @@ def create_annual_output_var_map(
     output_var_sel,
     sel_year,
     var_units,
+    Folium_maps_dir,
 ):
     
     cp_style_function = lambda feature: {
         "fillColor": linear(var_sel_color_dict[feature["id"]]),
-        "color": "tan",
-        "weight": 1,
+        "color": "black",
+        "weight": 0.25,
         # "dashArray": "5, 5",
         "fillOpacity": 0.3,
     }
@@ -932,7 +1024,7 @@ def create_annual_output_var_map(
     #################################################
 
     if not color_bar:
-        fig = None# fig, ax = plt.subplots(figsize=(18, 0.5))
+        fig = None# fig, ax = plt.subplots(figsize=(6, 0.75))
         val_bar_image = None
     else:
         fig, ax = plt.subplots(figsize=(6, 0.75))
@@ -976,7 +1068,7 @@ def create_annual_output_var_map(
 
         #fig.set_facecolor("lightgray")
         
-        val_bar_file = "val_bar.png"
+        val_bar_file = pl.Path(Folium_maps_dir / "val_bar.png").resolve()
         fig.savefig(val_bar_file, format="png", )
         plt.close(fig)
         
@@ -1046,3 +1138,290 @@ def create_annual_output_var_map(
     # hru_map.add_child(tooltip_hru)
     
     return hru_map, val_bar_image, value_min, value_max, same_value, color_bar
+
+
+def create_streamflow_poi_markers(
+    poi_df,
+    Folium_maps_dir,
+    output_var_sel,
+):
+
+    marker_cluster = folium.FeatureGroup(
+        name="All the POIs",
+        overlay=True,
+        control=True,
+        icon_create_function=None,
+        z_index_offset=5000,
+    )
+
+    marker_cluster_label_poi = folium.FeatureGroup(
+        name="All the POI labels",
+        overlay=True,
+        control=True,
+        show=False,  # False will not draw the child upon opening the map, but have it to draw in the Layer control.
+        icon_create_function=None,
+        z_index_offset=4004,
+    )
+
+    for idx, row in poi_df.iterrows():
+        poi_id = row["poi_id"]
+        var_plot_file = Folium_maps_dir / f"{output_var_sel}_{poi_id}.txt"
+
+        if row["nhm_calib"] == "Y":  # Do this for all the gages used in calibration
+            if row["kge"] >= 0.7:
+
+                marker = folium.CircleMarker(
+                    location=[row["latitude"], row["longitude"]],
+                    name=row["poi_id"],
+                    popup=folium.Popup(
+                        f'Gage <b>{row["poi_id"]}</b>, {row["poi_name"]}<br>',
+                        max_width=150,
+                        max_height=70,
+                    ),
+                    radius=5,
+                    weight=2,
+                    color="Black",
+                    fill=True,
+                    fill_color="Green",
+                    fill_opacity=1.0,
+                    draggable=True,
+                    lazy=True,
+                    z_index_offset=4006,
+                ).add_to(marker_cluster)
+
+                text = f'{row["poi_id"]}'
+                label_lat = row["latitude"]  # -0.005
+                label_lon = row["longitude"]
+
+                marker_label = folium.map.Marker(
+                    [label_lat, label_lon],
+                    z_index_offset=4007,
+                    icon=DivIcon(
+                        icon_size=(150, 36),
+                        icon_anchor=(0, 0),
+                        html='<div style="font-size: 12pt; font-weight: bold">%s</div>'
+                        % text,
+                    ),
+                ).add_to(marker_cluster_label_poi)
+            if (row["kge"] < 0.7) & (row["kge"] >= 0.5):
+
+                marker = folium.CircleMarker(
+                    location=[row["latitude"], row["longitude"]],
+                    name=row["poi_id"],
+                    popup=folium.Popup(
+                        f'Gage <b>{row["poi_id"]}</b>, {row["poi_name"]}<br>',
+                        max_width=150,
+                        max_height=70,
+                    ),
+                    radius=5,
+                    weight=2,
+                    color="Black",
+                    fill=True,
+                    fill_color="Yellow",
+                    fill_opacity=1.0,
+                    draggable=True,
+                    lazy=True,
+                    z_index_offset=4006,
+                ).add_to(marker_cluster)
+
+                # marker_cluster.add_child(marker)
+                text = f'{row["poi_id"]}'
+                label_lat = row["latitude"]  # -0.005
+                label_lon = row["longitude"]
+
+                marker_label = folium.map.Marker(
+                    [label_lat, label_lon],
+                    z_index_offset=4007,
+                    icon=DivIcon(
+                        icon_size=(150, 36),
+                        icon_anchor=(0, 0),
+                        html='<div style="font-size: 12pt; font-weight: bold">%s</div>'
+                        % text,
+                    ),
+                ).add_to(marker_cluster_label_poi)
+            if row["kge"] < 0.5:
+
+                marker = folium.CircleMarker(
+                    location=[row["latitude"], row["longitude"]],
+                    name=row["poi_id"],
+                    popup=folium.Popup(
+                        f'Gage <b>{row["poi_id"]}</b>, {row["poi_name"]}<br>',
+                        max_width=150,
+                        max_height=70,
+                    ),
+                    radius=5,
+                    weight=2,
+                    color="Black",
+                    fill=True,
+                    fill_color="Red",
+                    fill_opacity=1.0,
+                    draggable=True,
+                    lazy=True,
+                    z_index_offset=4006,
+                ).add_to(marker_cluster)
+
+                # marker_cluster.add_child(marker)
+                text = f'{row["poi_id"]}'
+                label_lat = row["latitude"]  # -0.005
+                label_lon = row["longitude"]
+
+                marker_label = folium.map.Marker(
+                    [label_lat, label_lon],
+                    z_index_offset=4007,
+                    icon=DivIcon(
+                        icon_size=(150, 36),
+                        icon_anchor=(0, 0),
+                        html='<div style="font-size: 12pt; font-weight: bold">%s</div>'
+                        % text,
+                    ),
+                ).add_to(marker_cluster_label_poi)
+        ################################################
+
+        ###########
+        if row["nhm_calib"] == "N":
+            if row["kge"] >= 0.7:
+
+                marker = folium.CircleMarker(
+                    location=[row["latitude"], row["longitude"]],
+                    name=row["poi_id"],
+                    popup=folium.Popup(
+                        f'Gage <b>{row["poi_id"]}</b>, {row["poi_name"]}<br>',
+                        max_width=150,
+                        max_height=70,
+                    ),
+                    radius=5,
+                    weight=2,
+                    color=None,
+                    fill=True,
+                    fill_color="Green",
+                    fill_opacity=1.0,
+                    draggable=True,
+                    lazy=True,
+                    z_index_offset=4006,
+                ).add_to(marker_cluster)
+
+                # marker_cluster.add_child(marker)
+                text = f'{row["poi_id"]}'
+                label_lat = row["latitude"]  # -0.005
+                label_lon = row["longitude"]
+
+                marker_label = folium.map.Marker(
+                    [label_lat, label_lon],
+                    z_index_offset=4007,
+                    icon=DivIcon(
+                        icon_size=(150, 36),
+                        icon_anchor=(0, 0),
+                        html='<div style="font-size: 12pt; font-weight: bold">%s</div>'
+                        % text,
+                    ),
+                ).add_to(marker_cluster_label_poi)
+            if (row["kge"] < 0.7) & (row["kge"] >= 0.5):
+
+                marker = folium.CircleMarker(
+                    location=[row["latitude"], row["longitude"]],
+                    name=row["poi_id"],
+                    popup=folium.Popup(
+                        f'Gage <b>{row["poi_id"]}</b>, {row["poi_name"]}<br>',
+                        max_width=150,
+                        max_height=70,
+                    ),
+                    radius=5,
+                    weight=2,
+                    color=None,
+                    fill=True,
+                    fill_color="Yellow",
+                    fill_opacity=1.0,
+                    draggable=True,
+                    lazy=True,
+                    z_index_offset=4006,
+                ).add_to(marker_cluster)
+
+                # marker_cluster.add_child(marker)
+                text = f'{row["poi_id"]}'
+                label_lat = row["latitude"]  # -0.005
+                label_lon = row["longitude"]
+
+                marker_label = folium.map.Marker(
+                    [label_lat, label_lon],
+                    z_index_offset=4007,
+                    icon=DivIcon(
+                        icon_size=(150, 36),
+                        icon_anchor=(0, 0),
+                        html='<div style="font-size: 12pt; font-weight: bold">%s</div>'
+                        % text,
+                    ),
+                ).add_to(marker_cluster_label_poi)
+            if row["kge"] < 0.5:
+
+                marker = folium.CircleMarker(
+                    location=[row["latitude"], row["longitude"]],
+                    name=row["poi_id"],
+                    popup=folium.Popup(
+                        f'Gage <b>{row["poi_id"]}</b>, {row["poi_name"]}<br>',
+                        max_width=150,
+                        max_height=70,
+                    ),
+                    radius=5,
+                    weight=2,
+                    color=None,
+                    fill=True,
+                    fill_color="Red",
+                    fill_opacity=1.0,
+                    draggable=True,
+                    lazy=True,
+                    z_index_offset=4006,
+                ).add_to(marker_cluster)
+
+                # marker_cluster.add_child(marker)
+                text = f'{row["poi_id"]}'
+                label_lat = row["latitude"]  # -0.005
+                label_lon = row["longitude"]
+
+                marker_label = folium.map.Marker(
+                    [label_lat, label_lon],
+                    z_index_offset=4007,
+                    icon=DivIcon(
+                        icon_size=(150, 36),
+                        icon_anchor=(0, 0),
+                        html='<div style="font-size: 12pt; font-weight: bold">%s</div>'
+                        % text,
+                    ),
+                ).add_to(marker_cluster_label_poi)
+            if np.isnan(row["kge"]):
+
+                marker = folium.CircleMarker(
+                    location=[row["latitude"], row["longitude"]],
+                    name=row["poi_id"],
+                    popup=folium.Popup(
+                        f'Gage <b>{row["poi_id"]}</b>, {row["poi_name"]}<br> Gage has less than 2yrs of observations.',
+                        max_width=150,
+                        max_height=70,
+                    ),
+                    radius=2,
+                    weight=2,
+                    color="Black",
+                    fill=True,
+                    fill_color="Black",
+                    fill_opacity=1.0,
+                    draggable=True,
+                    lazy=True,
+                    z_index_offset=4006,
+                ).add_to(marker_cluster)
+
+                # marker_cluster.add_child(marker)
+                text = f'{row["poi_id"]}'
+                label_lat = row["latitude"]  # -0.005
+                label_lon = row["longitude"]
+
+                marker_label = folium.map.Marker(
+                    [label_lat, label_lon],
+                    z_index_offset=4007,
+                    icon=DivIcon(
+                        icon_size=(150, 36),
+                        icon_anchor=(0, 0),
+                        html='<div style="font-size: 12pt; font-weight: bold">%s</div>'
+                        % text,
+                    ),
+                ).add_to(marker_cluster_label_poi)
+
+    return marker_cluster, marker_cluster_label_poi

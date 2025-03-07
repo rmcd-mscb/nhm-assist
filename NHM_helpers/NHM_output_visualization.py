@@ -498,3 +498,63 @@ def create_var_ts_for_poi_basin_df(
 
     return df_basin_plot1  # This will be generic but return depends on the ds you pass
 
+def create_sum_seg_var_dataarrays(
+    out_dir,
+    output_var_sel,
+    plot_start_date,
+    plot_end_date,
+    water_years,
+):
+    """
+    This is meant to return the data arrays for daily, monhtly and annual (WY or cal year) for the selected parameter.
+    These are the data arrays used to make the dataframes in the notebook.
+    More development work may occur in the future to increase data handling efficiency in this notebook.
+    """
+
+    with xr.load_dataarray(out_dir / f"{output_var_sel}.nc") as da:
+        # these machinations are to keep downstream things as they were before some refactoring
+        # da = da.to_dataset().rename_dims({"nhm_id": "nhru"})[da.name]
+        var_units = da.units
+        var_desc = da.desc
+        da = da.swap_dims(nhm_seg="npoi_gages")
+        var_daily = da.sel(time=slice(plot_start_date, plot_end_date))
+        sum_var_monthly = var_daily.resample(time="m").sum()
+
+        if water_years:
+            sum_var_annual = var_daily.resample(time="A-SEP").sum()
+        else:
+            sum_var_annual = var_daily.resample(time="y").sum()
+    del da
+
+    return var_daily, sum_var_monthly, sum_var_annual, var_units, var_desc
+
+
+def create_streamflow_obs_datasets(
+    output_netcdf_filename,
+    plot_start_date,
+    plot_end_date,
+    water_years,
+):
+
+    with xr.open_dataset(
+        output_netcdf_filename,
+    ) as data:
+
+        poi_name_df = data["poi_name"].to_dataframe()
+
+        obs_0 = data.sel(
+            time=slice(plot_start_date, plot_end_date)
+        ).transpose()  # load_dataset will open, read into memory and close the .nc file
+
+        obs_efc = obs_0["efc"]
+        obs = obs_0["discharge"]
+
+        # This is only used later for dropping stats for gages that have less than two complete years of data
+        if water_years:
+            obs_annual = obs.resample(time="A-SEP").mean()
+        else:
+            obs_annual = obs.resample(time="y").mean()
+
+        del data, obs_0
+
+    return poi_name_df, obs, obs_efc, obs_annual
