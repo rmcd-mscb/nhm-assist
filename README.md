@@ -1,4 +1,4 @@
-# NHMassist
+# NHM-Assist
 Collection of python workflows for evaluating, running and interpreting National Hydrologic Model sub-basin extractions (NHMx)
 
 
