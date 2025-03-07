@@ -1,5 +1,5 @@
 # NHM-Assist
-Collection of python workflows for evaluating, running and interpreting National Hydrologic Model sub-basin extractions (NHMx)
+NHM-Assist is a collection of python workflows presented in Jupyter notebooks for evaluating, running and interpreting [National Hydrologic Model](https://www.sciencebase.gov/catalog/item/626c0d67d34e76103cd2ce4a) domains using [pywatershed](https://github.com/EC-USGS/pywatershed)
 
 
 ## Install conda-forge miniforge on your PC
