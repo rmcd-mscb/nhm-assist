@@ -25,7 +25,7 @@ conda remove -y --name nhm --all
 
 Install a fresh env:
 ```
-conda env create -f environment.yml
+conda env create -f environment.yaml
 ```
 ## 1/8/25 note: need to run 'python pull_domain.py --name=willamette_river' in the command window from the repo to get the example/sample model
 
