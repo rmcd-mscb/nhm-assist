@@ -312,7 +312,7 @@ def make_plots_par_vals(
             pdb.get(par).dimensions["nmonths"].size
 
         except:
-            print(f"Checking for {par} dimensioned by nhru.")
+            #print(f"Checking for {par} dimensioned by nhru.")
 
             for idx, poi_id in enumerate(poi_list):
                 par_plot_file = Folium_maps_dir / f"{par}_{poi_id}.txt"
@@ -429,7 +429,7 @@ def make_plots_par_vals(
                     # fig.show()
 
         else:
-            print(f"Checking for {par} dimensioned by nhru and nmonths")
+            #print(f"Checking for {par} dimensioned by nhru and nmonths")
 
             for idx, poi_id in enumerate(poi_list):
 
