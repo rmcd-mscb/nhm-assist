@@ -102,6 +102,14 @@ import jupyter_black
 
 jupyter_black.load()
 
+from IPython.display import display
+from folium.plugins import MeasureControl
+from folium.utilities import Element
+from folium.plugins import FloatImage
+import base64
+import webbrowser
+
+
 crs = 4326
 
 admin_basin_style = lambda x: {'fillColor': '#00000000',
@@ -1425,3 +1433,201 @@ def create_streamflow_poi_markers(
                 ).add_to(marker_cluster_label_poi)
 
     return marker_cluster, marker_cluster_label_poi
+
+def make_hf_map(
+    hru_gdf, HW_basins_gdf, HW_basins, poi_df, poi_id_sel, seg_gdf, nwis_gages_aoi, gages_df, html_maps_dir, param_filename, subbasin
+):
+    """
+    Make dataframe of the parameter file using pyPRMS
+    """
+    prms_meta = MetaData().metadata
+    pdb = ParameterFile(param_filename, metadata=prms_meta, verbose=False)
+
+    pfile_lat, pfile_lon, zoom, cluster_zoom = folium_map_elements(
+        hru_gdf, poi_df, poi_id_sel
+    )
+    USGSHydroCached_layer, USGStopo_layer, Esri_WorldImagery, OpenTopoMap = (
+        folium_map_tiles()
+    )
+    minimap = create_minimap()
+
+    ################################################
+    # Create and add hru map
+    # hru_gdf_map = HW_basins_gdf.to_crs(crs)
+
+    hru_map = create_hru_map(hru_gdf)
+    seg_map_show = create_segment_map_show(seg_gdf)
+
+    poi_marker_cluster, poi_marker_cluster_label = create_poi_marker_cluster(
+        poi_df, cluster_zoom
+    )
+
+    non_poi_marker_cluster, non_poi_marker_cluster_label = (
+        create_non_poi_marker_cluster(poi_df, nwis_gages_aoi, gages_df, cluster_zoom)
+    )
+
+    m2 = folium.Map()
+    m2 = folium.Map(
+        location=[pfile_lat, pfile_lon],
+        tiles=USGSHydroCached_layer,
+        zoom_start=zoom,
+        width="100%",
+        height="100%",
+        control_scale=True,
+    )
+
+    USGStopo_layer.add_to(m2)
+    OpenTopoMap.add_to(m2)
+    Esri_WorldImagery.add_to(m2)
+
+    # Add widgets
+    m2.add_child(minimap)
+    m2.add_child(MeasureControl(position="bottomright"))
+
+    hru_cal_map = folium.GeoJson(
+        HW_basins_gdf,  # hru_gdf_map,
+        style_function=cal_style_function,
+        # highlight_function = highlight_function_hru_map,
+        name="HRU cal level",
+        z_index_offset=40002,
+    ).add_to(m2)
+
+    hru_map.add_to(m2)
+    hw_basins_map = folium.GeoJson(
+        HW_basins, style_function=hw_basin_style, name="HW basin boundary"
+    ).add_to(m2)
+    seg_map_show.add_to(m2)
+
+    poi_marker_cluster.add_to(m2)
+    poi_marker_cluster_label.add_to(m2)
+
+    non_poi_marker_cluster.add_to(m2)
+    non_poi_marker_cluster_label.add_to(m2)
+
+    plugins.Fullscreen(position="bottomleft").add_to(m2)
+    folium.LayerControl(collapsed=True, position="bottomright").add_to(m2)
+
+    ##add Non-poi gage markers and labels using row df.interowss loop
+    gages_list = gages_df.index.to_list()
+    additional_gages = list(set(gages_list) - set(poi_df.poi_id))
+
+    # display(m2)
+    explan_txt = f"nhru (brown): {pdb.dimensions.get('nhru').meta['size']}, nsegment (blue): {pdb.dimensions.get('nsegment').meta['size']},<br>npoigages (black): {pdb.dimensions.get('npoigages').meta['size']}, Additional gages in domain (gray): {len(additional_gages)}"
+    title_html = f"<h1 style='position:absolute;z-index:100000;font-size: 28px;left:26vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '><strong>The {subbasin} Model Hydrofabric</strong><br><h1 style='position:absolute;z-index:100000;font-size: 20px;left:31vw;right:5vw; top:4vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '> {explan_txt}</h1>"
+    # title_html = f"<h1 align='center' style='font-size: 14px;'><strong>NHM simulated {sel_year} {output_var_sel}, {var_units}</strong><br><h1 align='center' style='font-size: 14px;'> {var_desc}. {scale_bar_txt}</h1>"
+    m2.get_root().html.add_child(Element(title_html))
+
+    map_file = f"{html_maps_dir}/hydrofabric_map.html"
+    m2.save(map_file)
+
+    # _ = webbrowser.open(map_file)
+
+    return map_file
+
+def make_par_map(
+    hru_gdf,
+    HW_basins_gdf,
+    HW_basins,
+    poi_df,
+    poi_id_sel,
+    par_sel,
+    mo_sel,
+    mo_name,
+    nhru_params,
+    Folium_maps_dir,
+    seg_gdf,
+    nwis_gages_aoi,
+    gages_df,
+    html_maps_dir,
+    param_filename,
+    subbasin,
+):
+
+    prms_meta = MetaData().metadata
+    pdb = ParameterFile(param_filename, metadata=prms_meta, verbose=False)
+    m3 = folium.Map()
+    
+
+    pfile_lat, pfile_lon, zoom, cluster_zoom = folium_map_elements(hru_gdf, poi_df, "")
+    USGSHydroCached_layer, USGStopo_layer, Esri_WorldImagery, OpenTopoMap = (
+        folium_map_tiles()
+    )
+    minimap = create_minimap()
+
+    m3 = folium.Map(
+        location=[pfile_lat, pfile_lon],
+        # width=1000, height=600,
+        tiles=USGSHydroCached_layer,
+        zoom_start=zoom,
+        control_scale=True,
+    )
+
+    USGStopo_layer.add_to(m3)
+    OpenTopoMap.add_to(m3)
+    Esri_WorldImagery.add_to(m3)
+
+    # Add widgets
+    m3.add_child(minimap)
+    m3.add_child(MeasureControl(position="bottomright"))
+
+    hru_map, val_bar_image, value_min, value_max, same_value, color_bar = (
+        create_nhru_par_map(
+            param_filename,
+            hru_gdf,
+            par_sel,
+            mo_sel,
+            mo_name,
+            nhru_params,
+            Folium_maps_dir,
+        )
+    )
+    # fig.show()
+    marker_cluster_label_hru = create_hru_label(hru_gdf, cluster_zoom)
+    marker_cluster, marker_cluster_label_poi = create_poi_paramplot_marker_cluster(
+        poi_df,
+        hru_gdf,
+        Folium_maps_dir,
+        cluster_zoom,
+        par_sel,
+    )
+
+    hru_map.add_to(m3)
+
+    hw_basins_map = folium.GeoJson(
+        HW_basins, style_function=hw_basin_style, name="HW basin boundary"
+    ).add_to(m3)
+
+    marker_cluster_label_hru.add_to(m3)
+
+    seg_map = create_segment_map_show(seg_gdf)
+    seg_map.add_to(m3)
+    marker_cluster.add_to(m3)
+    marker_cluster_label_poi.add_to(m3)
+
+    plugins.Fullscreen(position="topleft").add_to(m3)
+    folium.LayerControl(collapsed=True, position="bottomright", autoZIndex=True).add_to(
+        m3
+    )
+
+    if not color_bar:
+        scale_bar_txt = f"All {par_sel} values are {same_value} in the model domain. No value scale bar rendered."
+        fig = None  # fig, ax = plt.subplots(figsize=(18, 0.5))
+    else:
+        scale_bar_txt = f"Values for {par_sel} range from {value_min:.2f} to {value_max:.2f} {pdb.get(par_sel).meta['units']} in the model domain."
+
+    if mo_sel is None:
+        mo_txt = " "
+        map_file = f"{html_maps_dir}/{par_sel}_map.html"
+    else:
+        mo_txt = f"{mo_name} "
+        map_file = f"{html_maps_dir}/{par_sel}_{mo_name}_map.html"
+
+    title_html = f"<h1 style='position:absolute;z-index:100000;font-size: 28px;left:26vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '><strong>NHM {mo_txt}{par_sel}</strong><br><h1 style='position:absolute;z-index:100000;font-size: 20px;left:31vw;right:5vw; top:4vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '> {pdb.get(par_sel).meta['help']}. {scale_bar_txt}</h1>"
+    # title_html = f"<h1 align='center' style='font-size: 14px;'><strong>NHM simulated {sel_year} {output_var_sel}, {var_units}</strong><br><h1 align='center' style='font-size: 14px;'> {var_desc}. {scale_bar_txt}</h1>"
+    m3.get_root().html.add_child(Element(title_html))
+
+    m3.add_child(val_bar_image)
+
+    m3.save(map_file)
+
+    return map_file
