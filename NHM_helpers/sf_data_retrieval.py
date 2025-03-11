@@ -85,7 +85,14 @@ import plotly.express as px
 import dataretrieval.nwis as nwis
 
 from NHM_helpers.efc import *
-
+from NHM_helpers.NHM_hydrofabric import (
+    create_hru_gdf,
+    create_segment_gdf,
+    fetch_nwis_gage_info,
+    create_poi_df,
+    create_default_gages_file,
+    read_gages_file,
+)
 
 def owrd_scraper(station_nbr, start_date, end_date):
     # f string the args into the urldf
@@ -844,3 +851,61 @@ def create_sf_efc_df(
         xr_streamflow.to_netcdf(output_netcdf_filename)
 
     return xr_streamflow
+
+def create_hf_map_elements(
+    NHM_dir,
+    model_dir,
+    GIS_format,
+    param_filename,
+    nhru_params,
+    nhru_nmonths_params,
+    control_file_name,
+    nwis_gages_file,
+    nwis_gage_nobs_min,
+    gages_file,
+):
+    hru_gdf, hru_txt, hru_cal_level_txt = create_hru_gdf(
+        NHM_dir,
+        model_dir,
+        GIS_format,
+        param_filename,
+        nhru_params,
+        nhru_nmonths_params,
+    )
+    
+    seg_gdf, seg_txt = create_segment_gdf(
+        model_dir,
+        GIS_format,
+        param_filename,
+    )
+    
+    nwis_gages_aoi = fetch_nwis_gage_info(
+        model_dir,
+        control_file_name,
+        nwis_gage_nobs_min,
+        hru_gdf,
+    )
+    
+    poi_df = create_poi_df(
+        model_dir,
+        param_filename,
+        control_file_name,
+        hru_gdf,
+        nwis_gages_aoi,
+        gages_file,
+    )
+    
+    default_gages_file = create_default_gages_file(
+        model_dir,
+        nwis_gages_aoi,
+        poi_df,
+    )
+    
+    gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
+        model_dir,
+        poi_df,
+        nwis_gages_file,
+        gages_file,
+    )
+
+    return hru_gdf, seg_gdf, poi_df, gages_df
