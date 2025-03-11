@@ -502,9 +502,10 @@ def read_gages_file(
 
     if gages_file.exists():
 
-        gages_df = pd.read_csv(gages_file)
+        gages_df = pd.read_csv(gages_file, dtype=cols)
 
         # Make poi_id the index
+        #gages_df["poi_id"] = gages_df.poi_id.astype(str)
         gages_df.set_index("poi_id", inplace=True)
         exotic_gages = gages_df.loc[gages_df["poi_agency"] != "USGS"]
         gages_agencies_txt = ", ".join(
@@ -533,6 +534,7 @@ def read_gages_file(
         gages_df = pd.read_csv(default_gages_file, dtype=cols)
 
         # Make poi_id the index
+        #gages_df["poi_id"] = gages_df.poi_id.astype(str)
         gages_df.set_index("poi_id", inplace=True)
         exotic_gages = gages_df.loc[gages_df["poi_agency"] != "USGS"]
         gages_agencies_txt = ", ".join(

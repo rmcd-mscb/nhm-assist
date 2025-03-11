@@ -574,6 +574,8 @@ def create_nwis_sf_df(control, model_dir, output_netcdf_filename, gages_df):
             # Change the datatype for 'poi_id' and 'time'
             # dtype_map = {"poi_id": str, "time": "datetime64[ns]"}
             # NWIS_df = NWIS_df.astype(dtype_map)
+
+           
             
             # Write df as netcdf fine (.nc)
             NWIS_ds = xr.Dataset.from_dataframe(NWIS_df)
