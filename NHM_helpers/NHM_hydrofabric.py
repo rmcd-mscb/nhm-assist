@@ -91,6 +91,7 @@ import plotly.express as px
 
 import dataretrieval.nwis as nwis
 
+from NHM_helpers.NHM_Assist_utilities import make_HW_cal_level_files
 
 def create_hru_gdf(NHM_dir,
     model_dir,
@@ -560,4 +561,82 @@ def read_gages_file(
             else:
                 pass
     return gages_df, gages_txt, gages_txt_nb2
+
+
+
+
+def make_hf_map_elements(NHM_dir,
+                            model_dir,
+                            GIS_format,
+                            param_filename,
+                            control_file_name,
+                            nwis_gages_file,
+                            gages_file,
+                            nhru_params,
+                            nhru_nmonths_params,
+                            nwis_gage_nobs_min,
+                         ):
+
+    hru_gdf, hru_txt, hru_cal_level_txt = create_hru_gdf(
+        NHM_dir,
+        model_dir,
+        GIS_format,
+        param_filename,
+        nhru_params,
+        nhru_nmonths_params,
+    )
+
+    seg_gdf, seg_txt = create_segment_gdf(
+        model_dir,
+        GIS_format,
+        param_filename,
+    )
+
+    nwis_gages_aoi = fetch_nwis_gage_info(
+        model_dir,
+        control_file_name,
+        nwis_gage_nobs_min,
+        hru_gdf,
+    )
+
+    poi_df = create_poi_df(
+        model_dir,
+        param_filename,
+        control_file_name,
+        hru_gdf,
+        nwis_gages_aoi,
+        gages_file,
+    )
+
+    default_gages_file = create_default_gages_file(
+        model_dir,
+        nwis_gages_aoi,
+        poi_df,
+    )
+
+    gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
+        model_dir,
+        poi_df,
+        nwis_gages_file,
+        gages_file,
+    )
+
+    HW_basins_gdf, HW_basins = make_HW_cal_level_files(hru_gdf)
+
+    return (
+        hru_gdf,
+        hru_txt,
+        hru_cal_level_txt,
+        seg_gdf,
+        seg_txt,
+        nwis_gages_aoi,
+        poi_df,
+        default_gages_file,
+        gages_df,
+        gages_txt,
+        gages_txt_nb2,
+        HW_basins_gdf,
+        HW_basins,
+    )
+
 
