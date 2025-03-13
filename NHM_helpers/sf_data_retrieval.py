@@ -85,14 +85,8 @@ import plotly.express as px
 import dataretrieval.nwis as nwis
 
 from NHM_helpers.efc import *
-from NHM_helpers.NHM_hydrofabric import (
-    create_hru_gdf,
-    create_segment_gdf,
-    fetch_nwis_gage_info,
-    create_poi_df,
-    create_default_gages_file,
-    read_gages_file,
-)
+from NHM_helpers.NHM_Assist_utilities import fetch_nwis_gage_info
+from NHM_helpers.NHM_hydrofabric import create_hru_gdf, create_segment_gdf, create_poi_df, create_default_gages_file, read_gages_file
 
 def owrd_scraper(station_nbr, start_date, end_date):
     # f string the args into the urldf
@@ -505,8 +499,20 @@ def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_
     con.print(ecy_domain_txt)   
     return ecy_df
 
-def create_nwis_sf_df(control, model_dir, output_netcdf_filename, gages_df):
+def create_nwis_sf_df(control_file_name, model_dir, output_netcdf_filename, hru_gdf, poi_df, nwis_gage_nobs_min): # add neis_gage_nobs_min, hru_gdf, 
     nwis_cache_file = (model_dir / "notebook_output_files" / "nc_files" / "nwis_cache.nc")
+    control = pws.Control.load_prms(pl.Path(model_dir / control_file_name, warn_unused_options=False))
+    nwis_gages_file = model_dir / "NWISgages.csv"
+
+    """
+    Create a dataframe for NWIS gages in the model domain
+
+    """
+    nwis_gage_info_aoi = fetch_nwis_gage_info(model_dir,
+                         control_file_name,
+                         nwis_gage_nobs_min,
+                         hru_gdf,
+)
 
     if output_netcdf_filename.exists():
         NWIS_df = pd.DataFrame()
@@ -532,14 +538,21 @@ def create_nwis_sf_df(control, model_dir, output_netcdf_filename, gages_df):
             NWIS_tmp = []
         
             with Progress() as progress:
-                task = progress.add_task("[red]Downloading...", total=len(gages_df))
+                task = progress.add_task("[red]Downloading...", total=len(nwis_gage_info_aoi))
                 err_list = []
-                for ii in gages_df.index:
+                nobs_min_list =[]
+                for ii in nwis_gage_info_aoi.poi_id:
                     try:
                         NWISgage_data = nwis.get_record(
-                            sites=(str(ii)), service="dv", start=nwis_start, end=nwis_end
+                            sites=(str(ii)), service="dv", start=nwis_start, end=nwis_end, parameterCd='00060',
                         )
-                        NWIS_tmp.append(NWISgage_data)
+                        if len(NWISgage_data.index) >= nwis_gage_nobs_min:
+                            NWIS_tmp.append(NWISgage_data)
+                        elif ii in poi_df['poi_id'].unique().tolist():
+                            NWIS_tmp.append(NWISgage_data)
+                        else:
+                            nobs_min_list.append(ii)
+                            #con.print(f"Gage id {ii} fewer obs than nwis_gage_nobs_min.")
                     except ValueError:
                         err_list.append(ii)
                         # con.print(f"Gage id {ii} not found in NWIS.")
@@ -548,7 +561,11 @@ def create_nwis_sf_df(control, model_dir, output_netcdf_filename, gages_df):
         
             NWIS_df = pd.concat(NWIS_tmp)
             con.print(
-                f"No data for these {len(err_list)} gages, {err_list} were found in NWIS."
+                f"{len(nobs_min_list)} gages had fewer obs than nwis_gage_nobs_min and will be ommited from nwis_gages_cache.nc and NWIS gages.csv unless they appear in the paramter file,",
+                f"\n{nobs_min_list}"
+            )
+            con.print(
+                f"{len(err_list)} gages: {err_list} were **NOT** found in NWIS."
             )
             # we only need site_no and discharge (00060_Mean)
             NWIS_df = NWIS_df[["site_no", "00060_Mean"]].copy()
@@ -621,21 +638,34 @@ def create_nwis_sf_df(control, model_dir, output_netcdf_filename, gages_df):
             }
             
             # Write the dataset to a netcdf file
-            print(
+            con.print(
                 f"NWIS daily streamflow observations retrieved, writing data to {nwis_cache_file}."
             )
             NWIS_ds.to_netcdf(nwis_cache_file)
-   
-        
+
+            nwis_gage_info_aoi = nwis_gage_info_aoi[~nwis_gage_info_aoi['poi_id'].isin(nobs_min_list)]
+            nwis_gage_info_aoi.to_csv(nwis_gages_file, index=False)  # , sep='\t')
+    
     return NWIS_df
 
 def create_sf_efc_df(
+    model_dir,
+    control_file_name,
+    nwis_gage_nobs_min,
+    hru_gdf,
     output_netcdf_filename,
     owrd_df,
     ecy_df,
     NWIS_df,
     gages_df,
 ):
+    nwis_gage_file = fetch_nwis_gage_info(model_dir,
+                         control_file_name,
+                         nwis_gage_nobs_min,
+                         hru_gdf,
+)
+
+    
     """
     Combines daily streamflow dataframes from various database retrievals, currently NWIS, OWRD, and ECY into
     one xarray dataset.
@@ -853,61 +883,3 @@ def create_sf_efc_df(
         xr_streamflow.to_netcdf(output_netcdf_filename)
 
     return xr_streamflow
-
-def create_hf_map_elements(
-    NHM_dir,
-    model_dir,
-    GIS_format,
-    param_filename,
-    nhru_params,
-    nhru_nmonths_params,
-    control_file_name,
-    nwis_gages_file,
-    nwis_gage_nobs_min,
-    gages_file,
-):
-    hru_gdf, hru_txt, hru_cal_level_txt = create_hru_gdf(
-        NHM_dir,
-        model_dir,
-        GIS_format,
-        param_filename,
-        nhru_params,
-        nhru_nmonths_params,
-    )
-    
-    seg_gdf, seg_txt = create_segment_gdf(
-        model_dir,
-        GIS_format,
-        param_filename,
-    )
-    
-    nwis_gages_aoi = fetch_nwis_gage_info(
-        model_dir,
-        control_file_name,
-        nwis_gage_nobs_min,
-        hru_gdf,
-    )
-    
-    poi_df = create_poi_df(
-        model_dir,
-        param_filename,
-        control_file_name,
-        hru_gdf,
-        nwis_gages_aoi,
-        gages_file,
-    )
-    
-    default_gages_file = create_default_gages_file(
-        model_dir,
-        nwis_gages_aoi,
-        poi_df,
-    )
-    
-    gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
-        model_dir,
-        poi_df,
-        nwis_gages_file,
-        gages_file,
-    )
-
-    return hru_gdf, seg_gdf, poi_df, gages_df
