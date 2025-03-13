@@ -1,117 +1,35 @@
-# Import Notebook Packages
 import warnings
-from urllib import request
-from urllib.request import urlopen
-from urllib.error import HTTPError
-
-import re
-from io import StringIO
 import os
-import re
-import sys
-from collections import OrderedDict
-
 os.environ["USE_PYGEOS"] = "0"
-
-import geopandas as gpd
-import xarray as xr
 import pandas as pd
 import pathlib as pl
 import numpy as np
-import pyogrio
-
-import netCDF4
-
-import ipyleaflet
-
-import branca
+import folium
 import branca.colormap as cm
 
-import folium
-from folium import Circle, Marker
 from folium import plugins
 from folium.features import DivIcon
-from folium.plugins import MarkerCluster
-from ipywidgets import widgets
-
-from ipyleaflet import Map, GeoJSON
-
-# PyPRMS needs
-from pyPRMS import Dimensions
+from folium.plugins import MarkerCluster, FloatImage
 from pyPRMS.metadata.metadata import MetaData
-from pyPRMS import ControlFile
-from pyPRMS import Parameters
 from pyPRMS import ParameterFile
-from pyPRMS.prms_helpers import get_file_iter, cond_check
-from pyPRMS.constants import (
-    DIMENSIONS_HDR,
-    PARAMETERS_HDR,
-    VAR_DELIM,
-    PTYPE_TO_PRMS_TYPE,
-    PTYPE_TO_DTYPE,
-)
-
-from folium.plugins import FloatImage
 import base64
-from pyPRMS.Exceptions_custom import ParameterExistsError, ParameterNotValidError
-import networkx as nx
-from collections.abc import KeysView
-
-import pywatershed as pws
-
 from rich.console import Console
-from rich.progress import track
-from rich.progress import Progress
 from rich import pretty
+import matplotlib as mplib
+import matplotlib.pyplot as plt
+# from NHM_helpers.efc import *
+# from NHM_helpers.NHM_Assist_utilities import *
+# from NHM_helpers.NHM_hydrofabric import *
+from NHM_helpers.NHM_output_visualization import create_sum_var_annual_gdf, create_streamflow_obs_datasets, create_sum_seg_var_dataarrays
+from NHM_helpers.output_plots import calculate_monthly_kge_in_poi_df
+import jupyter_black
+from folium.plugins import MeasureControl
+from folium.utilities import Element
 
 pretty.install()
 con = Console()
-
-warnings.filterwarnings("ignore")
-
-#### Adds:
-import matplotlib as mplib
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
-import datetime as dt
-#from datetime import datetime
-
-import ipyleaflet
-from ipyleaflet import Map, GeoJSON
-
-from folium import Choropleth
-from folium.plugins import BeautifyIcon
-
-import branca
-import branca.colormap as cm
-
-import plotly.graph_objects as go
-import plotly
-import plotly.subplots
-import plotly.express as px
-
-import dataretrieval.nwis as nwis
-
-from NHM_helpers.efc import *
-from NHM_helpers import NHM_helpers as helpers
-from NHM_helpers.NHM_Assist_utilities import *
-from NHM_helpers.NHM_hydrofabric import *
-from NHM_helpers.NHM_output_visualization import create_sum_var_annual_gdf, create_streamflow_obs_datasets, create_sum_seg_var_dataarrays
-from NHM_helpers.output_plots import calculate_monthly_kge_in_poi_df
-
-
-import jupyter_black
-
 jupyter_black.load()
-
-from IPython.display import display
-from folium.plugins import MeasureControl
-from folium.utilities import Element
-from folium.plugins import FloatImage
-import base64
-import webbrowser
-
+warnings.filterwarnings("ignore")
 
 crs = 4326
 
