@@ -91,7 +91,7 @@ import plotly.express as px
 
 import dataretrieval.nwis as nwis
 
-from NHM_helpers.NHM_Assist_utilities import make_HW_cal_level_files
+from NHM_helpers.NHM_Assist_utilities import make_HW_cal_level_files, fetch_nwis_gage_info
 
 def create_hru_gdf(NHM_dir,
     model_dir,
@@ -276,14 +276,14 @@ def create_segment_gdf(
 
     return seg_gdf, seg_txt
 
-from NHM_helpers.NHM_Assist_utilities import fetch_nwis_gage_info
 def create_poi_df(
     model_dir,
     param_filename,
     control_file_name,
     hru_gdf,
-    nwis_gages_aoi,
     gages_file,
+    default_gages_file,
+    nwis_gage_nobs_min,
 ):
 
     """
@@ -311,8 +311,8 @@ def create_poi_df(
         pl.Path(model_dir / control_file_name), warn_unused_options=False
     )  # loads the control file for pywatershed functions
     
-    st_date = control.start_time
-    en_date = control.end_time
+    # st_date = '1949-01-01' #must reset this to get infor for gages in the params file that have no data from the simulation period.
+    # en_date = control.end_time
 
     # """
     # Projections are ascribed geometry from the HRUs geodatabase (GIS). 
@@ -334,9 +334,18 @@ def create_poi_df(
 
     """
     Create a dataframe for poi_gages from the parameter file with NWIS gage information data.
+
     """
+    nwis_gage_info_aoi = fetch_nwis_gage_info(model_dir,
+                         control_file_name,
+                         nwis_gage_nobs_min,
+                         hru_gdf,
+)
+
+
+    
     poi = poi.merge(
-        nwis_gages_aoi, left_on="poi_id", right_on="poi_id", how="left"
+        nwis_gage_info_aoi, left_on="poi_id", right_on="poi_id", how="left"
     )
     poi_df = pd.DataFrame(poi)  # Creates a Pandas DataFrame
 
@@ -401,6 +410,28 @@ def create_poi_df(
                 poi_df.loc[idx, "poi_agency"] = new_poi_agency
                 poi_df.loc[idx, "poi_name"] = new_poi_name
 
+    elif default_gages_file.exists():
+        for idx, row in poi_df.iterrows():
+            if pd.isnull(row["poi_id"]):
+                new_poi_id = row["poi_id"]
+                new_lat = gages_df.loc[
+                    gages_df.index == row["poi_id"], "latitude"
+                ].values[0]
+                new_lon = gages_df.loc[
+                    gages_df.index == row["poi_id"], "longitude"
+                ].values[0]
+                new_poi_agency = gages_df.loc[
+                    gages_df.index == row["poi_id"], "poi_agency"
+                ].values[0]
+                new_poi_name = gages_df.loc[
+                    gages_df.index == row["poi_id"], "poi_name"
+                ].values[0]
+
+                poi_df.loc[idx, "latitude"] = new_lat
+                poi_df.loc[idx, "longitude"] = new_lon
+                poi_df.loc[idx, "poi_id"] = new_poi_id
+                poi_df.loc[idx, "poi_agency"] = new_poi_agency
+                poi_df.loc[idx, "poi_name"] = new_poi_name
     else:
         pass
 
@@ -409,9 +440,17 @@ def create_poi_df(
 
 def create_default_gages_file(
     model_dir,
-    nwis_gages_aoi,
+    control_file_name,
+    nwis_gage_nobs_min,
+    hru_gdf,
     poi_df,
 ):
+
+    nwis_gages_aoi = fetch_nwis_gage_info(model_dir,
+                         control_file_name,
+                         nwis_gage_nobs_min,
+                         hru_gdf,
+)
     """
     Create default_gages.csv for your model extraction.
     NHM-Assist notebooks will display gages using the default gages file (default_gages.csv), if a modified gages file (gages.csv) is lacking.
@@ -474,7 +513,6 @@ def create_default_gages_file(
 def read_gages_file(
     model_dir,
     poi_df,
-    nwis_gages_file,
     gages_file,
 ):
 
@@ -484,6 +522,7 @@ def read_gages_file(
     and appended to the "default_gages.csv" file. Once editing is complete, that file can be renamed "gages.csv"and will be used as the gages file. 
     If NO gages.csv is made, the default_gages.csv will be used.
     """
+    
     default_gages_file = model_dir / "default_gages.csv"
 
     # Read in station file columns needed (You may need to tailor this to the particular file.
@@ -564,7 +603,6 @@ def read_gages_file(
 
 
 
-
 def make_hf_map_elements(NHM_dir,
                             model_dir,
                             GIS_format,
@@ -572,6 +610,7 @@ def make_hf_map_elements(NHM_dir,
                             control_file_name,
                             nwis_gages_file,
                             gages_file,
+                            default_gages_file,
                             nhru_params,
                             nhru_nmonths_params,
                             nwis_gage_nobs_min,
@@ -592,6 +631,15 @@ def make_hf_map_elements(NHM_dir,
         param_filename,
     )
 
+    poi_df = create_poi_df(
+        model_dir,
+        param_filename,
+        control_file_name,
+        hru_gdf,
+        gages_file,
+        default_gages_file,
+        nwis_gage_nobs_min,
+    )
     nwis_gages_aoi = fetch_nwis_gage_info(
         model_dir,
         control_file_name,
@@ -599,25 +647,9 @@ def make_hf_map_elements(NHM_dir,
         hru_gdf,
     )
 
-    poi_df = create_poi_df(
-        model_dir,
-        param_filename,
-        control_file_name,
-        hru_gdf,
-        nwis_gages_aoi,
-        gages_file,
-    )
-
-    default_gages_file = create_default_gages_file(
-        model_dir,
-        nwis_gages_aoi,
-        poi_df,
-    )
-
     gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
         model_dir,
         poi_df,
-        nwis_gages_file,
         gages_file,
     )
 
@@ -631,7 +663,6 @@ def make_hf_map_elements(NHM_dir,
         seg_txt,
         nwis_gages_aoi,
         poi_df,
-        default_gages_file,
         gages_df,
         gages_txt,
         gages_txt_nb2,
