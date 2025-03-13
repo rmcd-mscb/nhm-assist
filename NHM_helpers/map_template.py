@@ -347,8 +347,8 @@ def create_segment_map_hide(seg_gdf):
 
 def create_poi_marker_cluster(
     poi_df,
-    cluster_zoom: pd.DataFrame,
-) -> tuple[folium.plugins.MarkerCluster, folium.plugins.MarkerCluster]:
+    cluster_zoom,
+):
 
     # add POI marker cluster child items for the map
     poi_marker_cluster = MarkerCluster(

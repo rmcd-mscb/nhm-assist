@@ -167,7 +167,7 @@ def fetch_nwis_gage_info(model_dir,
     Start date changed because gages were found in the par file that predate 1979 and tossing nan's into poi_df later.
     """
     
-    st_date = "1940-01-01" #pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d")
+    st_date = '1949-01-01'#pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d")
     en_date = pd.to_datetime(str(control.end_time)).strftime("%Y-%m-%d")
     
     if nwis_gages_file.exists():
@@ -210,7 +210,7 @@ def fetch_nwis_gage_info(model_dir,
         #siteINFO_huc = nwis.get_info(huc=model_domain_regions, siteType="ST")
         siteINFO_huc = gpd.GeoDataFrame()
         for i in model_domain_regions:
-            zz = nwis.get_info(huc=i, siteType="ST", agencyCd="USGS")[0]
+            zz = nwis.get_info(huc=i, siteType="ST", agencyCd="USGS",)[0]
             siteINFO_huc = pd.concat([siteINFO_huc, zz])
             
         nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
@@ -274,7 +274,7 @@ def fetch_nwis_gage_info(model_dir,
         nwis_gage_info_aoi.reset_index(inplace=True)
 
         # write out the file for later
-        nwis_gage_info_aoi.to_csv(nwis_gages_file, index=False)  # , sep='\t')
+        #nwis_gage_info_aoi.to_csv(nwis_gages_file, index=False)  # , sep='\t')
     return nwis_gage_info_aoi
 
 def make_plots_par_vals(
