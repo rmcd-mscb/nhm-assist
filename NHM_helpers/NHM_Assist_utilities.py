@@ -1,49 +1,17 @@
-# Import Notebook Packages
 import warnings
-# os.environ["USE_PYGEOS"] = "0"
-
 import geopandas as gpd
 import pandas as pd
 import pathlib as pl
 import numpy as np
-import ipyleaflet
-import branca
-import branca.colormap as cm
-
-from ipyleaflet import Map, GeoJSON
-
-# PyPRMS needs
 from pyPRMS.metadata.metadata import MetaData
 from pyPRMS import ParameterFile
-
-
 import pywatershed as pws
-
 from rich.console import Console
 from rich import pretty
-
-
-
-import matplotlib as mplib
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
-import ipyleaflet
-from ipyleaflet import Map, GeoJSON
-
-from folium import Choropleth
-from folium.plugins import BeautifyIcon
-
-import branca
-import branca.colormap as cm
-
-import plotly.graph_objects as go
 import plotly
 import plotly.subplots
 import plotly.express as px
-
 import dataretrieval.nwis as nwis
-
 from NHM_helpers.NHM_helpers import hrus_by_poi
 
 pretty.install()
@@ -292,7 +260,7 @@ def make_plots_par_vals(
         try:
             pdb.get(par).dimensions["nmonths"].size
 
-        except:
+        except KeyError:
             #print(f"Checking for {par} dimensioned by nhru.")
 
             for idx, poi_id in enumerate(poi_list):
