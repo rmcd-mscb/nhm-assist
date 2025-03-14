@@ -90,7 +90,7 @@ from NHM_helpers.NHM_helpers import (
     subset_stream_network,
     create_poi_group,
 )
-from NHM_helpers.map_template import *
+# from NHM_helpers.map_template import *
 from NHM_helpers.NHM_Assist_utilities import make_plots_par_vals
 
 from NHM_helpers.NHM_output_visualization import (
