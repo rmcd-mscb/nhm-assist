@@ -426,6 +426,7 @@ def read_gages_file(
     """
     
     default_gages_file = model_dir / "default_gages.csv"
+    
 
     # Read in station file columns needed (You may need to tailor this to the particular file.
     col_names = [
@@ -470,7 +471,7 @@ def read_gages_file(
                 gages_txt_nb2 += f" The gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
             else:
                 pass
-    else:
+    elif default_gages_file.exists():
         gages_df = pd.read_csv(default_gages_file, dtype=cols)
 
         # Make poi_id the index
@@ -496,6 +497,8 @@ def read_gages_file(
                 gages_txt_nb2 += f" The gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
             else:
                 pass
+    else:
+        pass
     return gages_df, gages_txt, gages_txt_nb2
 
 

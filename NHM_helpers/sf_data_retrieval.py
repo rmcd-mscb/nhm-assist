@@ -10,12 +10,13 @@ import pathlib as pl
 import numpy as np
 import netCDF4
 import pywatershed as pws
-from rich.console import Console as con
+from rich.console import Console 
+con = Console()
 from rich.progress import Progress
 from rich import pretty
 import dataretrieval.nwis as nwis
 from NHM_helpers.NHM_Assist_utilities import fetch_nwis_gage_info
-from NHM_helpers import efc
+from NHM_helpers.efc import efc
 
 pretty.install()
 warnings.filterwarnings("ignore")
@@ -492,13 +493,8 @@ def create_nwis_sf_df(control_file_name, model_dir, output_netcdf_filename, hru_
                     progress.update(task, advance=1)
         
             NWIS_df = pd.concat(NWIS_tmp)
-            con.print(
-                f"{len(nobs_min_list)} gages had fewer obs than nwis_gage_nobs_min and will be ommited from nwis_gages_cache.nc and NWIS gages.csv unless they appear in the paramter file,",
-                f"\n{nobs_min_list}"
-            )
-            con.print(
-                f"{len(err_list)} gages: {err_list} were **NOT** found in NWIS."
-            )
+            con.print(f"{len(nobs_min_list)} gages had fewer obs than nwis_gage_nobs_min and will be ommited from nwis_gages_cache.nc and NWIS gages.csv unless they appear in the paramter file.\n{nobs_min_list}")
+            con.print(f"{len(err_list)} gages: {err_list} were **NOT** found in NWIS.")
             # we only need site_no and discharge (00060_Mean)
             NWIS_df = NWIS_df[["site_no", "00060_Mean"]].copy()
             NWIS_df["agency_id"] = "USGS"

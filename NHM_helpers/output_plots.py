@@ -3,7 +3,8 @@ import warnings
 import pathlib as pl
 import numpy as np
 import pandas as pd
-from rich.console import Console as con
+from rich.console import Console 
+con = Console()
 from rich import pretty
 import plotly.graph_objects as go
 import plotly
