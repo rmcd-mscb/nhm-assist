@@ -1,97 +1,14 @@
-# Import Notebook Packages
 import warnings
-from urllib import request
-from urllib.request import urlopen
-from urllib.error import HTTPError
-
-import re
-from io import StringIO
-import os
-import re
-import sys
-from collections import OrderedDict
-
-os.environ["USE_PYGEOS"] = "0"
-
 import geopandas as gpd
-import xarray as xr
+#import xarray as xr
 import pandas as pd
-import pathlib as pl
 import numpy as np
-import pyogrio
-
-import netCDF4
-
-import ipyleaflet
-
-import branca
-import branca.colormap as cm
-
-import folium
-from folium import Circle, Marker
-from folium import plugins
-from folium.features import DivIcon
-from folium.plugins import MarkerCluster
-from ipywidgets import widgets
-
-from ipyleaflet import Map, GeoJSON
-
-# PyPRMS needs
-from pyPRMS import Dimensions
 from pyPRMS.metadata.metadata import MetaData
-from pyPRMS import ControlFile
-from pyPRMS import Parameters
 from pyPRMS import ParameterFile
-from pyPRMS.prms_helpers import get_file_iter, cond_check
-from pyPRMS.constants import (
-    DIMENSIONS_HDR,
-    PARAMETERS_HDR,
-    VAR_DELIM,
-    PTYPE_TO_PRMS_TYPE,
-    PTYPE_TO_DTYPE,
-)
-from pyPRMS.Exceptions_custom import ParameterExistsError, ParameterNotValidError
-import networkx as nx
-from collections.abc import KeysView
-
-import pywatershed as pws
-
-from rich.console import Console
-from rich.progress import track
-from rich.progress import Progress
 from rich import pretty
-
-pretty.install()
-con = Console()
-
-warnings.filterwarnings("ignore")
-
-#### Adds:
-import matplotlib as mplib
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
-import datetime as dt
-
-# from datetime import datetime
-
-import ipyleaflet
-from ipyleaflet import Map, GeoJSON
-
-from folium import Choropleth
-from folium.plugins import BeautifyIcon
-
-import branca
-import branca.colormap as cm
-
-import plotly.graph_objects as go
-import plotly
-import plotly.subplots
-import plotly.express as px
-
-import dataretrieval.nwis as nwis
-
 from NHM_helpers.NHM_Assist_utilities import make_HW_cal_level_files, fetch_nwis_gage_info
+pretty.install()
+warnings.filterwarnings("ignore")
 
 def create_hru_gdf(NHM_dir,
     model_dir,
@@ -119,7 +36,6 @@ def create_hru_gdf(NHM_dir,
         "hru_area",
         "hru_segment_nhm",  # The nhm_id of the segment recieving flow from the HRU
     ]
-    cal_hru_params = nhru_params + nhru_nmonths_params
     gdb_hru_params = hru_params + nhru_params + nhru_nmonths_params
 
     """
@@ -307,31 +223,6 @@ def create_poi_df(
 
     poi.rename(columns = {"poi_gage_id": "poi_id"}, inplace=True)
     
-    control = pws.Control.load_prms(
-        pl.Path(model_dir / control_file_name), warn_unused_options=False
-    )  # loads the control file for pywatershed functions
-    
-    # st_date = '1949-01-01' #must reset this to get infor for gages in the params file that have no data from the simulation period.
-    # en_date = control.end_time
-
-    # """
-    # Projections are ascribed geometry from the HRUs geodatabase (GIS). 
-    # The NHM uses the NAD 1983 USGS Contiguous USA Albers projection EPSG# 102039. 
-    # The geometry units of this projection are not useful for many notebook packages. 
-    # The geodatabases are reprojected to World Geodetic System 1984.
-
-    # Options:
-    #     crs = 3857, WGS 84 / Pseudo-Mercator - Spherical Mercator, Google Maps, OpenStreetMap, Bing, ArcGIS, ESRI.
-    #     *crs = 4326, WGS 84 - WGS84 - World Geodetic System 1984, used in GPS
-    # """
-    # crs = 4326
-
-    # """
-    # Make a list if the HUC2 region(s) the subbasin intersects for NWIS queries.
-    # """
-    # huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
-    # model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
-
     """
     Create a dataframe for poi_gages from the parameter file with NWIS gage information data.
 
@@ -347,7 +238,7 @@ def create_poi_df(
     poi = poi.merge(
         nwis_gage_info_aoi, left_on="poi_id", right_on="poi_id", how="left"
     )
-    poi_df = pd.DataFrame(poi)  # Creates a Pandas DataFrame
+    poi_df = pd.DataFrame(poi)# Creates a Pandas DataFrame
 
 
     """
@@ -388,6 +279,12 @@ def create_poi_df(
     """
 
     if gages_file.exists():
+        gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
+            model_dir,
+            poi_df,
+            gages_file,
+        )
+        
         for idx, row in poi_df.iterrows():
             if pd.isnull(row["poi_id"]):
                 new_poi_id = row["poi_id"]
@@ -411,6 +308,11 @@ def create_poi_df(
                 poi_df.loc[idx, "poi_name"] = new_poi_name
 
     elif default_gages_file.exists():
+        gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
+            model_dir,
+            poi_df,
+            gages_file,
+        )
         for idx, row in poi_df.iterrows():
             if pd.isnull(row["poi_id"]):
                 new_poi_id = row["poi_id"]
@@ -524,6 +426,7 @@ def read_gages_file(
     """
     
     default_gages_file = model_dir / "default_gages.csv"
+    
 
     # Read in station file columns needed (You may need to tailor this to the particular file.
     col_names = [
@@ -547,12 +450,10 @@ def read_gages_file(
         # Make poi_id the index
         #gages_df["poi_id"] = gages_df.poi_id.astype(str)
         gages_df.set_index("poi_id", inplace=True)
-        exotic_gages = gages_df.loc[gages_df["poi_agency"] != "USGS"]
+        
         gages_agencies_txt = ", ".join(
             f"{item}" for item in list(set(gages_df.poi_agency))
         )
-
-        exotic_pois = poi_df.loc[poi_df["poi_agency"] != "USGS"]
         pois_agencies_txt = ", ".join(
             f"{item}" for item in list(set(poi_df.poi_agency))
         )
@@ -570,18 +471,15 @@ def read_gages_file(
                 gages_txt_nb2 += f" The gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
             else:
                 pass
-    else:
+    elif default_gages_file.exists():
         gages_df = pd.read_csv(default_gages_file, dtype=cols)
 
         # Make poi_id the index
-        #gages_df["poi_id"] = gages_df.poi_id.astype(str)
         gages_df.set_index("poi_id", inplace=True)
-        exotic_gages = gages_df.loc[gages_df["poi_agency"] != "USGS"]
+        
         gages_agencies_txt = ", ".join(
             f"{item}" for item in list(set(gages_df.poi_agency))
         )
-
-        exotic_pois = poi_df.loc[poi_df["poi_agency"] != "USGS"]
         pois_agencies_txt = ", ".join(
             f"{item}" for item in list(set(poi_df.poi_agency))
         )
@@ -599,6 +497,8 @@ def read_gages_file(
                 gages_txt_nb2 += f" The gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
             else:
                 pass
+    else:
+        pass
     return gages_df, gages_txt, gages_txt_nb2
 
 
