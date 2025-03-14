@@ -1,103 +1,18 @@
 # Import Notebook Packages
 import warnings
-from urllib import request
-from urllib.request import urlopen
-from urllib.error import HTTPError
-
-import re
-from io import StringIO
-import os
-
-# os.environ["USE_PYGEOS"] = "0"
-
-import geopandas as gpd
-import xarray as xr
-import pandas as pd
 import pathlib as pl
 import numpy as np
-import pyogrio
-
-import netCDF4
-
-import ipyleaflet
-
-import branca
-import branca.colormap as cm
-
-import folium
-from folium import Circle, Marker
-from folium import plugins
-from folium.features import DivIcon
-from folium.plugins import MarkerCluster
-from ipywidgets import widgets
-
-from ipyleaflet import Map, GeoJSON
-
-# PyPRMS needs
-from pyPRMS import Dimensions
-from pyPRMS.metadata.metadata import MetaData
-from pyPRMS import ControlFile
-from pyPRMS import Parameters
-from pyPRMS import ParameterFile
-from pyPRMS.prms_helpers import get_file_iter, cond_check
-from pyPRMS.constants import (
-    DIMENSIONS_HDR,
-    PARAMETERS_HDR,
-    VAR_DELIM,
-    PTYPE_TO_PRMS_TYPE,
-    PTYPE_TO_DTYPE,
-)
-from pyPRMS.Exceptions_custom import ParameterExistsError, ParameterNotValidError
-import networkx as nx
-from collections.abc import KeysView
-
-import pywatershed as pws
-
-from rich.console import Console
-from rich.progress import track
-from rich.progress import Progress
-from rich import pretty
-
-pretty.install()
+import pandas as pd
+from rich.console import Console 
 con = Console()
-
-warnings.filterwarnings("ignore")
-
-#### Adds:
-import matplotlib as mplib
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
-import ipyleaflet
-from ipyleaflet import Map, GeoJSON
-
-from folium import Choropleth
-from folium.plugins import BeautifyIcon
-
-import branca
-import branca.colormap as cm
-
+from rich import pretty
 import plotly.graph_objects as go
 import plotly
 import plotly.subplots
-import plotly.express as px
-
-import dataretrieval.nwis as nwis
-
-from NHM_helpers.NHM_helpers import (
-    hrus_by_poi,
-    hrus_by_seg,
-    subset_stream_network,
-    create_poi_group,
-)
-from NHM_helpers.map_template import *
-from NHM_helpers.NHM_Assist_utilities import make_plots_par_vals
-
+from NHM_helpers.NHM_helpers import create_poi_group
 from NHM_helpers.NHM_output_visualization import (
-    retrieve_hru_output_info,
     create_sum_var_dataarrays,
     create_mean_var_dataarrays,
-    create_sum_var_annual_gdf,
     create_sum_var_annual_df,
     create_sum_var_monthly_df,
     create_var_daily_df,
@@ -105,17 +20,15 @@ from NHM_helpers.NHM_output_visualization import (
     create_streamflow_obs_datasets,
     create_sum_seg_var_dataarrays,
 )
-from NHM_helpers.output_plots import * #create_poi_group
-
 import hydroeval as he
-import calendar
 import statistics
 from sklearn.metrics import r2_score
-
 import webbrowser
-
-# HRU color list
 import random
+#from NHM_helpers.output_plots import * #create_poi_group
+
+pretty.install()
+warnings.filterwarnings("ignore")
 
 plot_colors = [
     "aliceblue",
@@ -1002,9 +915,9 @@ def create_streamflow_plot(
             daily_efc_plot_df = obs_with_efc_sel.merge(
                 sim_flow, right_index=True, left_index=True, how="inner"
             )
-            daily = df_sf_data_sel.merge(
-                sim_flow, right_index=True, left_index=True, how="inner"
-            )
+            # daily = df_sf_data_sel.merge(
+            #     sim_flow, right_index=True, left_index=True, how="inner"
+            # )
             # daily_na = daily[daily["discharge"].isnull()]
             # daily_na["discharge"] = 5.0
 
