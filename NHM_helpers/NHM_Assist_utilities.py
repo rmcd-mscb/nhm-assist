@@ -1,69 +1,29 @@
 # Import Notebook Packages
 import warnings
-from urllib import request
-from urllib.request import urlopen
-from urllib.error import HTTPError
-
-import re
-from io import StringIO
-import os
-
 # os.environ["USE_PYGEOS"] = "0"
 
 import geopandas as gpd
-import xarray as xr
 import pandas as pd
 import pathlib as pl
 import numpy as np
-import pyogrio
-
-import netCDF4
-
 import ipyleaflet
-
 import branca
 import branca.colormap as cm
-
-import folium
-from folium import Circle, Marker
-from folium import plugins
-from folium.features import DivIcon
-from folium.plugins import MarkerCluster
-from ipywidgets import widgets
 
 from ipyleaflet import Map, GeoJSON
 
 # PyPRMS needs
-from pyPRMS import Dimensions
 from pyPRMS.metadata.metadata import MetaData
-from pyPRMS import ControlFile
-from pyPRMS import Parameters
 from pyPRMS import ParameterFile
-from pyPRMS.prms_helpers import get_file_iter, cond_check
-from pyPRMS.constants import (
-    DIMENSIONS_HDR,
-    PARAMETERS_HDR,
-    VAR_DELIM,
-    PTYPE_TO_PRMS_TYPE,
-    PTYPE_TO_DTYPE,
-)
-from pyPRMS.Exceptions_custom import ParameterExistsError, ParameterNotValidError
-import networkx as nx
-from collections.abc import KeysView
+
 
 import pywatershed as pws
 
 from rich.console import Console
-from rich.progress import track
-from rich.progress import Progress
 from rich import pretty
 
-pretty.install()
-con = Console()
 
-warnings.filterwarnings("ignore")
 
-#### Adds:
 import matplotlib as mplib
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -85,6 +45,11 @@ import plotly.express as px
 import dataretrieval.nwis as nwis
 
 from NHM_helpers.NHM_helpers import hrus_by_poi
+
+pretty.install()
+con = Console()
+
+warnings.filterwarnings("ignore")
 
 # List of bynhru parameters to retrieve for the Notebook interactive maps.
 hru_params = [
@@ -167,7 +132,7 @@ def fetch_nwis_gage_info(model_dir,
     Start date changed because gages were found in the par file that predate 1979 and tossing nan's into poi_df later.
     """
     
-    st_date = "1940-01-01" #pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d")
+    st_date = '1949-01-01'#pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d")
     en_date = pd.to_datetime(str(control.end_time)).strftime("%Y-%m-%d")
     
     if nwis_gages_file.exists():
@@ -207,19 +172,35 @@ def fetch_nwis_gage_info(model_dir,
             ],
         )
     else:
-        siteINFO_huc = nwis.get_info(huc=model_domain_regions, siteType="ST")
-        nwis_gage_info_gdf = siteINFO_huc[0].set_index("site_no").to_crs(crs)
+        #siteINFO_huc = nwis.get_info(huc=model_domain_regions, siteType="ST")
+        siteINFO_huc = gpd.GeoDataFrame()
+        for i in model_domain_regions:
+            zz = nwis.get_info(huc=i, siteType="ST", agencyCd="USGS",)[0]
+            siteINFO_huc = pd.concat([siteINFO_huc, zz])
+            
+        nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
         nwis_gage_info_aoi = nwis_gage_info_gdf.clip(hru_gdf)
 
         # Make a list of gages in the model domain that have discharge measurements > numer of specifed days
-        siteINFO_huc = nwis.get_info(
-            huc=model_domain_regions,
-            startDt=st_date,
-            endDt=en_date,
-            seriesCatalogOutput=True,
-            parameterCd="00060",
-        )
-        nwis_gage_info_gdf = siteINFO_huc[0].set_index("site_no").to_crs(crs)
+        siteINFO_huc = gpd.GeoDataFrame()
+        for i in model_domain_regions:
+            zz = nwis.get_info(
+                huc=i,
+                startDt=st_date,
+                endDt=en_date,
+                seriesCatalogOutput=True,
+                parameterCd="00060",
+            )[0]
+            siteINFO_huc = pd.concat([siteINFO_huc, zz])
+            
+        # siteINFO_huc = nwis.get_info(
+        #     huc=model_domain_regions,
+        #     startDt=st_date,
+        #     endDt=en_date,
+        #     seriesCatalogOutput=True,
+        #     parameterCd="00060",
+        # )
+        nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
         nwis_gage_nobs_aoi = nwis_gage_info_gdf.clip(hru_gdf)
         nwis_gage_nobs_aoi = nwis_gage_nobs_aoi.loc[
             nwis_gage_nobs_aoi.count_nu > nwis_gage_nobs_min
@@ -258,7 +239,7 @@ def fetch_nwis_gage_info(model_dir,
         nwis_gage_info_aoi.reset_index(inplace=True)
 
         # write out the file for later
-        nwis_gage_info_aoi.to_csv(nwis_gages_file, index=False)  # , sep='\t')
+        #nwis_gage_info_aoi.to_csv(nwis_gages_file, index=False)  # , sep='\t')
     return nwis_gage_info_aoi
 
 def make_plots_par_vals(
@@ -312,7 +293,7 @@ def make_plots_par_vals(
             pdb.get(par).dimensions["nmonths"].size
 
         except:
-            print(f"Checking for {par} dimensioned by nhru.")
+            #print(f"Checking for {par} dimensioned by nhru.")
 
             for idx, poi_id in enumerate(poi_list):
                 par_plot_file = Folium_maps_dir / f"{par}_{poi_id}.txt"
@@ -429,7 +410,7 @@ def make_plots_par_vals(
                     # fig.show()
 
         else:
-            print(f"Checking for {par} dimensioned by nhru and nmonths")
+            #print(f"Checking for {par} dimensioned by nhru and nmonths")
 
             for idx, poi_id in enumerate(poi_list):
 

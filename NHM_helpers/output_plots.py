@@ -90,7 +90,7 @@ from NHM_helpers.NHM_helpers import (
     subset_stream_network,
     create_poi_group,
 )
-from NHM_helpers.map_template import *
+# from NHM_helpers.map_template import *
 from NHM_helpers.NHM_Assist_utilities import make_plots_par_vals
 
 from NHM_helpers.NHM_output_visualization import (
@@ -102,6 +102,8 @@ from NHM_helpers.NHM_output_visualization import (
     create_sum_var_monthly_df,
     create_var_daily_df,
     create_var_ts_for_poi_basin_df,
+    create_streamflow_obs_datasets,
+    create_sum_seg_var_dataarrays,
 )
 from NHM_helpers.output_plots import * #create_poi_group
 
@@ -279,7 +281,6 @@ def make_plot_var_for_hrus_in_poi_basin(
     hru_gdf,
     poi_df,
     output_var_sel,
-    var_units,
     poi_id_sel,
     plot_start_date,
     plot_end_date,
@@ -615,7 +616,6 @@ def oopla(
     poi_df,
     output_var_list,
     output_var_sel,
-    var_units,
     poi_id_sel,
     plot_start_date,
     plot_end_date,
@@ -914,16 +914,13 @@ def calculate_monthly_kge_in_poi_df(
     return poi_df
 
 def create_streamflow_plot(
-    obs_annual,
-    obs,
-    obs_efc,
     poi_id_sel,
+    plot_start_date,
+    plot_end_date,
     water_years,
-    var_daily,
-    var_units,
-    poi_name_df,
     html_plots_dir,
-    Folium_maps_dir,
+    output_netcdf_filename,
+    out_dir,
 ):
     """ """
     plot_file_path = pl.Path(
@@ -934,6 +931,34 @@ def create_streamflow_plot(
         webbrowser.open(f"{plot_file_path}", new=2)
 
     else:
+         # for this function, output_var_sel will always be seg_outflow. Set it and forget it!
+        output_var_sel = "seg_outflow"
+    
+        #### Compute KGE for all gages to color the icon on the map
+        # Read in simulated flows
+    
+        var_daily, sum_var_monthly, sum_var_annual, var_units, var_desc = (
+            create_sum_seg_var_dataarrays(
+                out_dir,
+                output_var_sel,
+                plot_start_date,
+                plot_end_date,
+                water_years,
+            )
+        )
+    
+        # Read in observed flows
+        # Note that the model start and stop times in the control file should be the same as the observation start and stop times.
+    
+        poi_name_df, obs, obs_efc, obs_annual = create_streamflow_obs_datasets(
+            output_netcdf_filename,
+            plot_start_date,
+            plot_end_date,
+            water_years,
+        )
+
+
+        
         # Single request
         if len((obs_annual.sel(poi_id=poi_id_sel)).to_dataframe().dropna()) < 2:
             con.print(

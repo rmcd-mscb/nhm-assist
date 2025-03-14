@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
-import matplotlib as mplib
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
 
 def efc(df, flow_col):
     """Run all the steps for extreme flood classification and return
