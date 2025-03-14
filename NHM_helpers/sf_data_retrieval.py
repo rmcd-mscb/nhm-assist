@@ -1,92 +1,25 @@
-# Import Notebook Packages
 import warnings
 from urllib import request
 from urllib.request import urlopen
 from urllib.error import HTTPError
-
-import re
 from io import StringIO
-import os
-
-# os.environ["USE_PYGEOS"] = "0"
-
 import geopandas as gpd
 import xarray as xr
 import pandas as pd
 import pathlib as pl
 import numpy as np
-import pyogrio
-
 import netCDF4
-
-import ipyleaflet
-
-import branca
-import branca.colormap as cm
-
-import folium
-from folium import Circle, Marker
-from folium import plugins
-from folium.features import DivIcon
-from folium.plugins import MarkerCluster
-from ipywidgets import widgets
-
-from ipyleaflet import Map, GeoJSON
-
-# PyPRMS needs
-from pyPRMS import Dimensions
-from pyPRMS.metadata.metadata import MetaData
-from pyPRMS import ControlFile
-from pyPRMS import Parameters
-from pyPRMS import ParameterFile
-from pyPRMS.prms_helpers import get_file_iter, cond_check
-from pyPRMS.constants import (
-    DIMENSIONS_HDR,
-    PARAMETERS_HDR,
-    VAR_DELIM,
-    PTYPE_TO_PRMS_TYPE,
-    PTYPE_TO_DTYPE,
-)
-from pyPRMS.Exceptions_custom import ParameterExistsError, ParameterNotValidError
-import networkx as nx
-from collections.abc import KeysView
-
 import pywatershed as pws
-
-from rich.console import Console
-from rich.progress import track
+from rich.console import Console 
+con = Console()
 from rich.progress import Progress
 from rich import pretty
+import dataretrieval.nwis as nwis
+from NHM_helpers.NHM_Assist_utilities import fetch_nwis_gage_info
+from NHM_helpers.efc import efc
 
 pretty.install()
-con = Console()
-
 warnings.filterwarnings("ignore")
-
-#### Adds:
-import matplotlib as mplib
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
-
-import ipyleaflet
-from ipyleaflet import Map, GeoJSON
-
-from folium import Choropleth
-from folium.plugins import BeautifyIcon
-
-import branca
-import branca.colormap as cm
-
-import plotly.graph_objects as go
-import plotly
-import plotly.subplots
-import plotly.express as px
-
-import dataretrieval.nwis as nwis
-
-from NHM_helpers.efc import *
-from NHM_helpers.NHM_Assist_utilities import fetch_nwis_gage_info
-from NHM_helpers.NHM_hydrofabric import create_hru_gdf, create_segment_gdf, create_poi_df, create_default_gages_file, read_gages_file
 
 def owrd_scraper(station_nbr, start_date, end_date):
     # f string the args into the urldf
@@ -560,13 +493,8 @@ def create_nwis_sf_df(control_file_name, model_dir, output_netcdf_filename, hru_
                     progress.update(task, advance=1)
         
             NWIS_df = pd.concat(NWIS_tmp)
-            con.print(
-                f"{len(nobs_min_list)} gages had fewer obs than nwis_gage_nobs_min and will be ommited from nwis_gages_cache.nc and NWIS gages.csv unless they appear in the paramter file,",
-                f"\n{nobs_min_list}"
-            )
-            con.print(
-                f"{len(err_list)} gages: {err_list} were **NOT** found in NWIS."
-            )
+            con.print(f"{len(nobs_min_list)} gages had fewer obs than nwis_gage_nobs_min and will be ommited from nwis_gages_cache.nc and NWIS gages.csv unless they appear in the paramter file.\n{nobs_min_list}")
+            con.print(f"{len(err_list)} gages: {err_list} were **NOT** found in NWIS.")
             # we only need site_no and discharge (00060_Mean)
             NWIS_df = NWIS_df[["site_no", "00060_Mean"]].copy()
             NWIS_df["agency_id"] = "USGS"
@@ -659,13 +587,7 @@ def create_sf_efc_df(
     NWIS_df,
     gages_df,
 ):
-    nwis_gage_file = fetch_nwis_gage_info(model_dir,
-                         control_file_name,
-                         nwis_gage_nobs_min,
-                         hru_gdf,
-)
-
-    
+        
     """
     Combines daily streamflow dataframes from various database retrievals, currently NWIS, OWRD, and ECY into
     one xarray dataset.
