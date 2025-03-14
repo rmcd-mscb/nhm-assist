@@ -277,7 +277,7 @@ def create_poi_df(
     """
     Updates the poi_df with user altered metadata in the gages.csv file, if present
     """
-
+    
     if gages_file.exists():
         gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
             model_dir,
@@ -286,7 +286,7 @@ def create_poi_df(
         )
         
         for idx, row in poi_df.iterrows():
-            if pd.isnull(row["poi_id"]):
+            if pd.isnull(row["latitude"]):
                 new_poi_id = row["poi_id"]
                 new_lat = gages_df.loc[
                     gages_df.index == row["poi_id"], "latitude"
@@ -307,14 +307,15 @@ def create_poi_df(
                 poi_df.loc[idx, "poi_agency"] = new_poi_agency
                 poi_df.loc[idx, "poi_name"] = new_poi_name
 
-    elif default_gages_file.exists():
+    else:
         gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
             model_dir,
             poi_df,
             gages_file,
         )
+        
         for idx, row in poi_df.iterrows():
-            if pd.isnull(row["poi_id"]):
+            if pd.isnull(row["latitude"]):
                 new_poi_id = row["poi_id"]
                 new_lat = gages_df.loc[
                     gages_df.index == row["poi_id"], "latitude"
@@ -334,10 +335,7 @@ def create_poi_df(
                 poi_df.loc[idx, "poi_id"] = new_poi_id
                 poi_df.loc[idx, "poi_agency"] = new_poi_agency
                 poi_df.loc[idx, "poi_name"] = new_poi_name
-    else:
-        pass
-
-    
+        
     return poi_df
 
 def create_default_gages_file(
@@ -471,7 +469,7 @@ def read_gages_file(
                 gages_txt_nb2 += f" The gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
             else:
                 pass
-    elif default_gages_file.exists():
+    else:
         gages_df = pd.read_csv(default_gages_file, dtype=cols)
 
         # Make poi_id the index
@@ -497,8 +495,7 @@ def read_gages_file(
                 gages_txt_nb2 += f" The gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
             else:
                 pass
-    else:
-        pass
+    
     return gages_df, gages_txt, gages_txt_nb2
 
 
