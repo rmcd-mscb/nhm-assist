@@ -308,6 +308,8 @@ def create_poi_df(
                 poi_df.loc[idx, "poi_name"] = new_poi_name
 
     else:
+        pass
+    if default_gages_file.exists():
         gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
             model_dir,
             poi_df,
@@ -335,6 +337,8 @@ def create_poi_df(
                 poi_df.loc[idx, "poi_id"] = new_poi_id
                 poi_df.loc[idx, "poi_agency"] = new_poi_agency
                 poi_df.loc[idx, "poi_name"] = new_poi_name
+    else:
+        pass
         
     return poi_df
 
