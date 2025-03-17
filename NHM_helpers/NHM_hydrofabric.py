@@ -286,27 +286,16 @@ def create_poi_df(
         )
         
         for idx, row in poi_df.iterrows():
-            if pd.isnull(row["latitude"]):
-                new_poi_id = row["poi_id"]
-                new_lat = gages_df.loc[
-                    gages_df.index == row["poi_id"], "latitude"
-                ].values[0]
-                new_lon = gages_df.loc[
-                    gages_df.index == row["poi_id"], "longitude"
-                ].values[0]
-                new_poi_agency = gages_df.loc[
-                    gages_df.index == row["poi_id"], "poi_agency"
-                ].values[0]
-                new_poi_name = gages_df.loc[
-                    gages_df.index == row["poi_id"], "poi_name"
-                ].values[0]
-
-                poi_df.loc[idx, "latitude"] = new_lat
-                poi_df.loc[idx, "longitude"] = new_lon
-                poi_df.loc[idx, "poi_id"] = new_poi_id
-                poi_df.loc[idx, "poi_agency"] = new_poi_agency
-                poi_df.loc[idx, "poi_name"] = new_poi_name
-
+            """
+            Checks the gages_df for missing meta data and replace.
+            """
+            columns = ["latitude", "longitude", "poi_name", "poi_agency"]
+            for item in columns:
+                if pd.isnull(row[item]):
+                    new_poi_id = row["poi_id"]
+                    new_item = gages_df.loc[gages_df.index == row["poi_id"], item].values[0]
+                    poi_df.loc[idx, item] = new_item
+                
     else:
         pass
     if default_gages_file.exists():
@@ -317,26 +306,16 @@ def create_poi_df(
         )
         
         for idx, row in poi_df.iterrows():
-            if pd.isnull(row["latitude"]):
-                new_poi_id = row["poi_id"]
-                new_lat = gages_df.loc[
-                    gages_df.index == row["poi_id"], "latitude"
-                ].values[0]
-                new_lon = gages_df.loc[
-                    gages_df.index == row["poi_id"], "longitude"
-                ].values[0]
-                new_poi_agency = gages_df.loc[
-                    gages_df.index == row["poi_id"], "poi_agency"
-                ].values[0]
-                new_poi_name = gages_df.loc[
-                    gages_df.index == row["poi_id"], "poi_name"
-                ].values[0]
-
-                poi_df.loc[idx, "latitude"] = new_lat
-                poi_df.loc[idx, "longitude"] = new_lon
-                poi_df.loc[idx, "poi_id"] = new_poi_id
-                poi_df.loc[idx, "poi_agency"] = new_poi_agency
-                poi_df.loc[idx, "poi_name"] = new_poi_name
+            """
+            Checks the gages_df for missing meta data and replace.
+            """
+            columns = ["latitude", "longitude", "poi_name", "poi_agency"]
+            for item in columns:
+                if pd.isnull(row[item]):
+                    new_poi_id = row["poi_id"]
+                    new_item = gages_df.loc[gages_df.index == row["poi_id"], item].values[0]
+                    poi_df.loc[idx, item] = new_item
+                
     else:
         pass
         
