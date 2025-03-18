@@ -275,7 +275,7 @@ def create_poi_df(
     
 
     """
-    Updates the poi_df with user altered metadata in the gages.csv file, if present
+    Updates the poi_df with user altered metadata in the gages.csv file, if present, or the default_gages.csv file
     """
     
     if gages_file.exists():
