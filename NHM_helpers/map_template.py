@@ -1431,7 +1431,7 @@ def make_hf_map(
     additional_gages = list(set(gages_list) - set(poi_df.poi_id))
 
     # display(m2)
-    explan_txt = f"nhru (brown): {pdb.dimensions.get('nhru').meta['size']}, nsegment (blue): {pdb.dimensions.get('nsegment').meta['size']},<br>npoigages (black): {pdb.dimensions.get('npoigages').meta['size']}, Additional gages in domain (gray): {len(additional_gages)}"
+    explan_txt = f"nhru (brown): {pdb.dimensions.get('nhru').meta['size']}, nsegment (blue): {pdb.dimensions.get('nsegment').meta['size']},<br>npoigages (black): {pdb.dimensions.get('npoigages').meta['size']}, Prospective gages in domain (gray): {len(additional_gages)}"
     title_html = f"<h1 style='position:absolute;z-index:100000;font-size: 28px;left:26vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '><strong>The {subbasin} Model Hydrofabric</strong><br><h1 style='position:absolute;z-index:100000;font-size: 20px;left:31vw;right:5vw; top:4vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '> {explan_txt}</h1>"
     # title_html = f"<h1 align='center' style='font-size: 14px;'><strong>NHM simulated {sel_year} {output_var_sel}, {var_units}</strong><br><h1 align='center' style='font-size: 14px;'> {var_desc}. {scale_bar_txt}</h1>"
     m2.get_root().html.add_child(Element(title_html))
