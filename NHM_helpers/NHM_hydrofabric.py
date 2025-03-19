@@ -439,7 +439,7 @@ def read_gages_file(
             f"{item}" for item in list(set(poi_df.poi_agency))
         )
 
-        gages_txt_nb2 = f"This notebook will display {len(gages_df)} [bold]gages managed by {gages_agencies_txt}[/bold] from the [bold]modified gages file (gages.csv)[/bold]."
+        gages_txt_nb2 = f"NHM-Assist notebook 2_Model_Hydrofabric_Visualization.ipynb will display {len(gages_df)} [bold]gages managed by {gages_agencies_txt}[/bold] from the [bold]modified gages file (gages.csv)[/bold]."
         gages_txt = f"The parameter file contains {len(poi_df.index)} [bold]gages[/bold] managed by {pois_agencies_txt}"
 
         """
@@ -465,17 +465,21 @@ def read_gages_file(
             f"{item}" for item in list(set(poi_df.poi_agency))
         )
 
-        gages_txt_nb2 = f"This notebook will display [bold]{len(gages_df)} gages managed by {gages_agencies_txt}[/bold] from the [bold]default gages file (default_gages.csv)[/bold]."
+        gages_txt_nb2 = f"NHM-Assist notebook 2_Model_Hydrofabric_Visualization.ipynb will display [bold]{len(gages_df)} gages managed by {gages_agencies_txt}[/bold] from the [bold]default gages file (default_gages.csv)[/bold]."
         gages_txt = f"The parameter file contains {len(poi_df.index)} [bold]gages[/bold] managed by {pois_agencies_txt}"
 
         """
         Checks the gages_df for missing meta data.
         """
         columns = ["latitude", "longitude", "poi_name", "poi_agency"]
+        gages_txt_nb2 = f" All gages have required metadata in the default_gages.csv."
         for item in columns:
             if pd.isnull(gages_df[item]).values.any():
-                subset = gages_df.loc[pd.isnull(gages_df[item])]
-                gages_txt_nb2 += f" The gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
+                gages_txt_nb2 = f" Gages in the default_gages.csv are missing metadata. Add missing data to the file and rename to gages.csv before running NHM-Assist notebook 2_Model_Hydrofabric_Visualization.ipynb."
+                #subset = gages_df.loc[pd.isnull(gages_df[item])]
+                #items_list += f"{item},"
+                #subset_txt += f"{subset},"
+                #gages_txt_nb2 += f" The default_gages.csv is missing {item} data for {len(subset)} gages. Add missing data to the file and rename gages.csv."
             else:
                 pass
     
