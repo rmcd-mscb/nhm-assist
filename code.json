@@ -10,30 +10,28 @@
       "licenses": [
         {
           "name": "Public Domain, CC0-1.0",
-          "URL": "https://code.usgs.gov/iwaas-ilrb/model-assessment/calibrate_prms/-/raw/main/LICENSE.md"
+          "URL": "https://code.usgs.gov/wma/hytest/nhm-assist/-/raw/main/LICENSE.md"
         }
       ]
     },
 
-    "homepageURL": "https://code.usgs.gov/iwaas-ilrb/model-assessment/calibrate_prms",
-    "downloadURL": "https://code.usgs.gov/iwaas-ilrb/model-assessment/calibrate_prms/-/archive/main/calibrate_prms-main.zip",
-    "disclaimerURL": "https://code.usgs.gov/iwaas-ilrb/model-assessment/calibrate_prms/-/raw/main/DISCLAIMER.md",
-    "repositoryURL": "https://code.usgs.gov/iwaas-ilrb/model-assessment/calibrate_prms.git",
+    "homepageURL": "https://code.usgs.gov/wma/hytest/nhm-assist",
+    "downloadURL": "https://code.usgs.gov/wma/hytest/nhm-assist/-/archive/main/nhm-assist.zip",
+    "disclaimerURL": "https://code.usgs.gov/wma/hytest/nhm-assist/-/raw/main/DISCLAIMER.md",
+    "repositoryURL": "https://code.usgs.gov/wma/hytest/nhm-assist.git",
     "vcs": "git",
 
     "laborHours": 1200,
 
-    "tags": ["NHM",
+    "tags": [
+      "NHM",
       "pywatershed",
       "PRMS"
     ],
 
     "languages": [
       "markdown",
-      "python",
-      "fortran",
-      "jupyter notebook",
-      "C"
+      "python"
     ],
 
     "contact": {
@@ -42,7 +40,7 @@
     },
 
     "date": {
-      "metadataLastUpdated": "2025-04-01"
+      "metadataLastUpdated": "2025-03-19"
     }
   }
 ]
