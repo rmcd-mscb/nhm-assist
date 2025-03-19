@@ -305,13 +305,12 @@ def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_
     model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
 
     if any(item in ecy_regions for item in model_domain_regions):
-        ecy_domain_txt = "The model domain intersects the Washington state boundary. "
+        ecy_domain_txt = "The model domain intersects the Washington state boundary."
         if output_netcdf_filename.exists():
-            ecy_domain_txt += "All available streamflow observations for gages in the gages file were previously retrieved from ECY database and included in the sf_efc.nc file. [bold]To update ECY data, delete sf_efc.nc and ecy_cache.nc [/bold]and rerun 1_Create_Streamflow_Observations.ipynb."
+            ecy_domain_txt += " All available streamflow observations for gages in the gages file were previously retrieved from ECY database and included in the sf_efc.nc file. [bold]To update ECY data, delete sf_efc.nc and ecy_cache.nc [/bold]and rerun 1_Create_Streamflow_Observations.ipynb."
             pass
         else:
             """Check the gages_df for ECY gages."""
-            
             ecy_gages = []
             gage_list = gages_df.index.to_list()
             for i in gage_list:
@@ -322,7 +321,7 @@ def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_
                     pass
         
             if ecy_gages:
-                print("Retrieving all available streamflow observations from ECY database for ECY gages in the gages file.")
+                con.print(f"{ecy_domain_txt} Retrieving all available streamflow observations from ECY database for ECY gages in the gages file.")
                 ecy_df = pd.DataFrame()
                 ecy_df_list = []
                 ecy_cache_file = (
