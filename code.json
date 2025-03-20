@@ -3,8 +3,8 @@
     "name": "NHM-Assist",
     "organization": "U.S. Geological Survey",
     "description": "Python workflows for evaluating, running and interpreting National Hydrologic Model results using pywatershed.",
-    "version": "main",
-    "status": "Release Candidate",
+    "version": "1.0.0",
+    "status": "Production",
     "permissions": {
       "usageType": "openSource",
       "licenses": [
@@ -16,8 +16,8 @@
     },
 
     "homepageURL": "https://code.usgs.gov/wma/hytest/nhm-assist",
-    "downloadURL": "https://code.usgs.gov/wma/hytest/nhm-assist/-/archive/main/nhm-assist.zip",
-    "disclaimerURL": "https://code.usgs.gov/wma/hytest/nhm-assist/-/raw/main/DISCLAIMER.md",
+    "downloadURL": "https://code.usgs.gov/wma/hytest/nhm-assist/-/archive/1.0.0/nhm-assist.zip",
+    "disclaimerURL": "https://code.usgs.gov/wma/hytest/nhm-assist/-/raw/1.0.0/DISCLAIMER.md",
     "repositoryURL": "https://code.usgs.gov/wma/hytest/nhm-assist.git",
     "vcs": "git",
 
@@ -40,7 +40,7 @@
     },
 
     "date": {
-      "metadataLastUpdated": "2025-03-19"
+      "metadataLastUpdated": "2025-03-20"
     }
   }
 ]
