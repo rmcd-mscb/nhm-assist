@@ -42,7 +42,8 @@ In the miniforge prompt, navigate to the NHM-Assist folder, and run
 `activate nhm`
 
 ## Launch Jupyter
-In the miniforge prompt, navigate to the NHM-Assist folder, and run 
+In the miniforge prompt, navigate to the NHM-Assist folder, and run
+ 
 `jupyter lab`
 
 Ready to go! :+1:
