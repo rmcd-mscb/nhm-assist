@@ -42,3 +42,6 @@ jupyter lab
 ```
 
 Ready to go! :+1:
+
+## Citation
+Haj, A.E., Barker, M.I., Norton, P.A., McCreight, J.L., and Ludden, L.L., 2025, NHM-Assist: a collection of python workflows presented in Jupyter notebooks for evaluating, running and interpreting National Hydrologic Model (NHM) domains, version 1.0.0: U.S. Geological Survey software release, https://doi.org/10.5066/P1NMW6US.
