@@ -60,7 +60,7 @@ def rm_test_output_files_from_cache(name: str = None, verbose: bool = True):
 
     Examples:
       >>> from rm_test_output_files_from_cache import rm_test_output_files_from_cache
-      >>> rm_test_output_files_from_cache("willamette_river")
+      >>> rm_test_output_files_from_cache("willamette_river_ci")
 
     """
     domain_dir = all_domains_dir / name
