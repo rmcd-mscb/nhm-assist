@@ -10,10 +10,18 @@ all_domains_dir = (this_dir / "./domain_data").resolve()
 
 domain_names_dict = {
     "willamette_river": "20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test",
+    "willamette_river_ci": "20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test",
 }
 
 domain_files_dict = {
-    "20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test": [
+    "willamette_river": [
+        "https://usgs.osn.mghpcc.org/hytest/tutorials/NHM-Assist/20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test/cbh.nc",
+        "https://usgs.osn.mghpcc.org/hytest/tutorials/NHM-Assist/20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test/control.default.bandit",
+        "https://usgs.osn.mghpcc.org/hytest/tutorials/NHM-Assist/20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test/myparam.param",
+        "https://usgs.osn.mghpcc.org/hytest/tutorials/NHM-Assist/20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test/sf_data",
+        "https://usgs.osn.mghpcc.org/hytest/tutorials/NHM-Assist/20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test/GIS/model_layers.gpkg",
+    ],
+    "willamette_river_ci": [
         # "https://usgs.osn.mghpcc.org/hytest/tutorials/NHM-Assist/20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test/bandit.cfg",  # noqa: E501
         # "https://usgs.osn.mghpcc.org/hytest/tutorials/NHM-Assist/20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test/bandit.log",
         "https://usgs.osn.mghpcc.org/hytest/tutorials/NHM-Assist/20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test/cbh.nc",
@@ -2713,7 +2721,7 @@ def pull_domain(name: str = None, verbose: bool = True):
         return
 
     domain_url_base = domain_names_dict[name]
-    domain_url_list = domain_files_dict[domain_url_base]
+    domain_url_list = domain_files_dict[name]
     domain_dir = all_domains_dir / name
     if not domain_dir.exists():
         domain_dir.mkdir(parents=True)
