@@ -70,7 +70,7 @@ def rm_test_output_files_from_cache(name: str = None, verbose: bool = True):
     """
     domain_dir = all_domains_dir / local_domain_dir[name]
     domain_url_base = domain_names_dict[name]
-    domain_url_list = domain_files_dict[domain_url_base]
+    domain_url_list = domain_files_dict[name]
 
     if not domain_dir.exists():
         "Requested domain directory does not exist: {domain_dir}"
