@@ -47,7 +47,7 @@ This will create a domain_data folder and add the example subdomain for the Will
 
 In the miniforge prompt, navigate to the nhm-assist folder, and run
 
-`activate nhm`
+`mamba activate nhm`
 
 ## Launch Jupyter
 
