@@ -5,10 +5,17 @@ import sys
 sys.path.append("../..")
 
 from pull_domain import (
+<<<<<<< HEAD
      all_domains_dir,
      domain_files_dict, 
      domain_names_dict,
      local_domain_dir,
+=======
+    all_domains_dir,
+    domain_files_dict, 
+    domain_names_dict,
+    local_domain_dir,
+>>>>>>> 9d50122ff01ae78545837837ec42ea85341f33ba
 )
 
 
