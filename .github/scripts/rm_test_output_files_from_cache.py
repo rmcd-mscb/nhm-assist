@@ -4,7 +4,12 @@ import sys
 
 sys.path.append("../..")
 
-from pull_domain import all_domains_dir, domain_files_dict, domain_names_dict
+from pull_domain import (
+     all_domains_dir,
+     domain_files_dict, 
+     domain_names_dict,
+     local_domain_dir,
+)
 
 
 def parse_args():
@@ -63,9 +68,9 @@ def rm_test_output_files_from_cache(name: str = None, verbose: bool = True):
       >>> rm_test_output_files_from_cache("willamette_river_ci")
 
     """
-    domain_dir = all_domains_dir / name
+    domain_dir = all_domains_dir / local_domain_dir[name]
     domain_url_base = domain_names_dict[name]
-    domain_url_list = domain_files_dict[domain_url_base]
+    domain_url_list = domain_files_dict[name]
 
     if not domain_dir.exists():
         "Requested domain directory does not exist: {domain_dir}"

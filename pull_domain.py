@@ -12,6 +12,10 @@ domain_names_dict = {
     "willamette_river": "20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test",
     "willamette_river_ci": "20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test",
 }
+local_domain_dir = {
+     "willamette_river": "willamette_river",
+     "willamette_river_ci": "willamette_river",
+}
 
 domain_files_dict = {
     "willamette_river": [
@@ -2722,7 +2726,7 @@ def pull_domain(name: str = None, verbose: bool = True):
 
     domain_url_base = domain_names_dict[name]
     domain_url_list = domain_files_dict[name]
-    domain_dir = all_domains_dir / name
+    domain_dir = all_domains_dir / local_domain_dir[name]
     if not domain_dir.exists():
         domain_dir.mkdir(parents=True)
 
