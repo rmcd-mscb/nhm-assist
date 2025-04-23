@@ -27,11 +27,11 @@ Open a miniforge prompt.
 
 If the `nhm` environment already exists, then remove it:
 
-`conda remove -y --name nhm --all`
+`mamba remove -y --name nhm --all`
 
 Install a fresh env:
 
-`conda env create -f environment.yaml`
+`mamba env create -f environment.yaml`
 
 ## Retrieve a provided NHM subdomain model (USGS personnel only)
 
