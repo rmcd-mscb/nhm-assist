@@ -13,13 +13,8 @@ domain_names_dict = {
     "willamette_river_ci": "20240524_v1.1_gm_byHWobs_willamette_river_NHMAssist_test",
 }
 local_domain_dir = {
-<<<<<<< HEAD
      "willamette_river": "willamette_river",
      "willamette_river_ci": "willamette_river",
-=======
-     "willamette_river": "willamette_river",
-     "willamette_river_ci": "willamette_river",
->>>>>>> 9d50122ff01ae78545837837ec42ea85341f33ba
 }
 
 domain_files_dict = {
