@@ -78,7 +78,7 @@ Additionally, nhm-assist interactive maps are created using [folium v0.18.0](htt
 
 1. Maps contain a thumbnail regional map in the upper left-hand corner that can be collapsed by left-clicking on the upper left corner of the thumbnail map. Below the thumbnail map are tools to zoom in/zoom out or expand the map to full screen.
 1. Left-click map on hydrofabric elements (HRU's, gages, segments) to display a pop-up with more detail regarding the element. The displayed information will vary with the type of hydrofabric element that the user clicks and the active notebook.
-1. Click the layer button to bring up the layer control. Here, users can select a basemap, activate/hide specific map layer, and turn labels on or off. **Note** As a user toggles layers on/off, they are redrawn in order of activation, e.g., the first layer a user activates will be rendered on the bottom. Layer order may affect pop-up display. When viewed in a browser tab, refresh the tab to reset layer order.
+1. Click the layer control button in the lower right-hand corner to bring up the layer control. Here, users can select a basemap, activate/hide specific map layer, and turn labels on or off. **Note** As a user toggles layers on/off, they are redrawn in order of activation, e.g., the first layer a user activates will be rendered on the bottom. Layer order may affect pop-up display. When viewed in a browser tab, refresh the tab to reset layer order.
 1. Left-click the measure tool and trace lines or polygons to estimate distances or areas.
 1. Left-click and drag the map to pan. Use the scroll wheel to zoom in or out.
 
