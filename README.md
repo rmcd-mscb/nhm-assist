@@ -33,7 +33,7 @@ Install a fresh env:
 
 `mamba env create -f environment.yaml`
 
-## Retrieve a provided NHM subdomain model (USGS personnel only)
+## Retrieve a provided NHM subdomain model
 
 If you have been provided a NHM subdomain model, it can be downloaded from the USGS [HyTEST](https://hytest-org.github.io/hytest/doc/About.html) OSN storage pod by following these steps.
 
