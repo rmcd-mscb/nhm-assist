@@ -795,15 +795,17 @@ def create_sf_efc_df(
             # Drop duplicated indexes, keeping the first occurence (USGS occurs first)
             # try following this thing: https://saturncloud.io/blog/how-to-drop-duplicated-index-in-a-pandas-dataframe-a-complete-guide/#:~:text=Pandas%20provides%20the%20drop_duplicates(),names%20to%20the%20subset%20parameter.
             streamflow_df = streamflow_df[~streamflow_df.index.duplicated(keep="first")]
+        else:
+            pass
 
-        elif (
+        if (
             not ecy_df.empty
         ):  # If there is an ecy_df, it will be combined with streamflow_df and rewrite the streamflow_df
             streamflow_df = pd.concat([streamflow_df, ecy_df])
             streamflow_df = streamflow_df[~streamflow_df.index.duplicated(keep="last")]
-
         else:
             pass
+            
         xr_station_info = xr.Dataset.from_dataframe(
             gages_df
         )  # gages_df is the new source of gage metadata
