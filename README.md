@@ -21,7 +21,7 @@ Navigate to the desired location in the miniforge prompt and then type:
 
 `git clone https://code.usgs.gov/wma/hytest/nhm-assist.git`
 
-**NOTE**: When you clone this repository, you will be on the `main` branch, which includes active development work. If you want to use the officially released version of this code, you should switch over to one of the versioned branches that have been officially released (e.g. `git checkout 1.0.0`).**
+**NOTE**: When you clone this repository, you will be on the `main` branch, which includes active development work. If you want to use the officially released version of this code, you should switch over to one of the versioned branches that have been officially released (e.g. `git checkout 1.0.0`).
 
 ## Build the environment
 
