@@ -16,7 +16,7 @@
     },
 
     "homepageURL": "https://code.usgs.gov/wma/hytest/nhm-assist",
-    "downloadURL": "https://code.usgs.gov/wma/hytest/nhm-assist/-/archive/main/nhm-assist.zip",
+    "downloadURL": "https://code.usgs.gov/wma/hytest/nhm-assist/-/archive/main/nhm-assist-main.zip",
     "disclaimerURL": "https://code.usgs.gov/wma/hytest/nhm-assist/-/raw/main/DISCLAIMER.md",
     "repositoryURL": "https://code.usgs.gov/wma/hytest/nhm-assist.git",
     "vcs": "git",
