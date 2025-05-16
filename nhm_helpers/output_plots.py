@@ -182,6 +182,15 @@ leg_only_dict = {
 }
 
 def is_wsl():
+    """
+    Check if the code is running in Windows Subsystem for Linux (WSL).
+
+    Returns
+    -------
+    bool
+        True if running in WSL, False otherwise.
+    """
+
     try:
         with open('/proc/version', 'r') as f:
             return 'microsoft' in f.read().lower()
@@ -190,7 +199,22 @@ def is_wsl():
 
 def make_webbrowser_map(map_file):
     """
+    Open a map file in a web browser.
+    
+    If running in Nebari, print the URL to open the map.
+    If running in WSL, convert the path to a Windows path before opening it.
+
+    Parameters
+    ----------
+    map_file : str or pathlib.Path
+        Path to the map file to be opened.
+
+    Returns
+    -------
+    None
+        This function does not return anything.
     """
+
     # create string of map file path
     map_file_str = f"{map_file}"
     
