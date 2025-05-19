@@ -598,7 +598,8 @@ def make_plot_var_for_hrus_in_poi_basin(
             for t in daily_fig.data:
                 fig.append_trace(t, row=3, col=1)
 
-            plotly.offline.plot(fig, filename=f"{plot_file_path}")
+            plotly.offline.plot(fig, filename=f"{plot_file_path}", auto_open=False)
+            make_webbrowser_map(plot_file_path)
 
     return plot_file_path
 
@@ -858,7 +859,8 @@ def oopla(
         for t in daily_fig.data:
             fig.append_trace(t, row=3, col=1)
 
-        plotly.offline.plot(fig, filename=f"{plot_file_path}")
+        plotly.offline.plot(fig, filename=f"{plot_file_path}", auto_open=False)
+        make_webbrowser_map(plot_file_path)
 
     return plot_file_path
 
@@ -1562,6 +1564,7 @@ def create_streamflow_plot(
             # with open(Folium_maps_dir / f"streamflow_{poi_id_sel}.txt", "w") as f:
             #     f.write(text_div)
 
-            plotly.offline.plot(fig, filename=f"{plot_file_path}")
+            plotly.offline.plot(fig, filename=f"{plot_file_path}", auto_open=False)
+            make_webbrowser_map(plot_file_path)
 
     return plot_file_path
