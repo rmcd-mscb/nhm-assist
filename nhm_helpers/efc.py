@@ -89,9 +89,11 @@ def compute_efc(df, flow_col):
     numdays = len(df.index)
 
     # Initialize the efc array
-    efc_arr = np.zeros(numdays, dtype="int")
-    efc_arr[:] = -1
-
+    efc_arr = np.ones(numdays, dtype="int") * -1
+    
+    # pull out the flow arrays to evaluate
+    high_low = df["high_low"].values
+    ri = df["ri"].values
     ts_q = df.loc[:, flow_col]
 
     # 10th percentile of the streamflow obs
@@ -99,15 +101,15 @@ def compute_efc(df, flow_col):
 
     for dd in range(0, numdays):
         if ts_q.iloc[dd] >= 0.0:
-            if df.iloc[dd]["high_low"] > 1:
+            if high_low[dd] > 1:
                 # High flows
-                if df.iloc[dd]["ri"] > 10.0:
+                if ri[dd] > 10.0:
                     efc_arr[dd] = 1  # Large flood
-                elif df.iloc[dd]["ri"] > 2.0:
+                elif ri[dd] > 2.0:
                     efc_arr[dd] = 2  # Small flood
                 else:
                     efc_arr[dd] = 3  # Default to high flow pulse
-            elif df.iloc[dd]["high_low"] == 1:
+            elif high_low[dd] == 1:
                 # Low flow events
                 if ts_q.iloc[dd] < p10_q:
                     # Extreme low flow event
@@ -144,8 +146,7 @@ def compute_high_low(df):
     ts_q = df
 
     # Setup array for high/low flow classifications
-    high_low = np.zeros(numdays, dtype="int")
-    high_low[:] = -1
+    high_low = np.ones(numdays, dtype="int") * -1
 
     # Median and 75th percentile of the streamflow obs
     median_q = ts_q[ts_q > 0.0].quantile(q=0.5, interpolation="nearest").item()
