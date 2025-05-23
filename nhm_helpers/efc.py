@@ -89,27 +89,29 @@ def compute_efc(df, flow_col):
     numdays = len(df.index)
 
     # Initialize the efc array
-    efc_arr = np.zeros(numdays, dtype="int")
-    efc_arr[:] = -1
-
+    efc_arr = np.ones(numdays, dtype="int") * -1
+    
+    # pull out the flow arrays to evaluate
+    high_low = df["high_low"].values
+    ri = df["ri"].values
     ts_q = df.loc[:, flow_col]
 
     # 10th percentile of the streamflow obs
     p10_q = ts_q[ts_q > 0.0].quantile(q=0.1, interpolation="nearest").item()
 
     for dd in range(0, numdays):
-        if ts_q[dd] >= 0.0:
-            if df["high_low"][dd] > 1:
+        if ts_q.iloc[dd] >= 0.0:
+            if high_low[dd] > 1:
                 # High flows
-                if df["ri"][dd] > 10.0:
+                if ri[dd] > 10.0:
                     efc_arr[dd] = 1  # Large flood
-                elif df["ri"][dd] > 2.0:
+                elif ri[dd] > 2.0:
                     efc_arr[dd] = 2  # Small flood
                 else:
                     efc_arr[dd] = 3  # Default to high flow pulse
-            elif df["high_low"][dd] == 1:
+            elif high_low[dd] == 1:
                 # Low flow events
-                if ts_q[dd] < p10_q:
+                if ts_q.iloc[dd] < p10_q:
                     # Extreme low flow event
                     efc_arr[dd] = 5
                 else:
@@ -144,8 +146,7 @@ def compute_high_low(df):
     ts_q = df
 
     # Setup array for high/low flow classifications
-    high_low = np.zeros(numdays, dtype="int")
-    high_low[:] = -1
+    high_low = np.ones(numdays, dtype="int") * -1
 
     # Median and 75th percentile of the streamflow obs
     median_q = ts_q[ts_q > 0.0].quantile(q=0.5, interpolation="nearest").item()
@@ -159,25 +160,25 @@ def compute_high_low(df):
     for cday in range(1, numdays):
         prior_day = cday - 1
 
-        if ts_q[cday] >= 0.0:
+        if ts_q.iloc[cday] >= 0.0:
             if has_gap:
                 # Initialize the first two valid days to a low flow
                 high_low[cday] = 1
                 high_low[cday + 1] = 1
 
                 # Compute the 25% greater and 25% lesser flows
-                qq125 = ts_q[cday] * 1.25  # 25% greater
-                qq75 = ts_q[cday] * 0.75  # 25% less
+                qq125 = ts_q.iloc[cday] * 1.25  # 25% greater
+                qq75 = ts_q.iloc[cday] * 0.75  # 25% less
 
                 # Check if the flow in day 1 greater than the median or if the flow on day 2 is
                 # 25% greater than on day 1
-                if (ts_q[cday] > median_q) or (ts_q[cday + 1] >= qq125):
+                if (ts_q.iloc[cday] > median_q) or (ts_q.iloc[cday + 1] >= qq125):
                     # Classify as ascending
                     high_low[cday] = 2
                     high_low[cday + 1] = 2
 
                 # If day 2 flow drops by more than 25% compared to day 1 then it is descending
-                if ts_q[cday + 1] < qq75:
+                if ts_q.iloc[cday + 1] < qq75:
                     high_low[cday] = 3
                     high_low[cday + 1] = 3
 
@@ -185,11 +186,11 @@ def compute_high_low(df):
                 continue
 
             # Compute the 25% greater, 25% lesser and 10% lesser prior day flows
-            qq125 = ts_q[prior_day] * 1.25  # 25% greater
+            qq125 = ts_q.iloc[prior_day] * 1.25  # 25% greater
             # qq75 = ts_q[prior_day] * .75   # 25% less
-            qq90 = ts_q[prior_day] * 0.9  # 10% less
+            qq90 = ts_q.iloc[prior_day] * 0.9  # 10% less
 
-            if ts_q[cday] < median_q:
+            if ts_q.iloc[cday] < median_q:
                 # Classify as a low flow day
                 high_low[cday] = 1
                 continue
@@ -197,7 +198,7 @@ def compute_high_low(df):
             if high_low[prior_day] == 1:
                 # The prior day was a low flow day, check if today is still a
                 # low flow or an ascending limb
-                if ts_q[cday] > p75_q or (ts_q[cday] > median_q and ts_q[cday] > qq125):
+                if ts_q.iloc[cday] > p75_q or (ts_q.iloc[cday] > median_q and ts_q.iloc[cday] > qq125):
                     # Ascending flow if Q > 75th percentile
                     high_low[cday] = 2
                 else:
@@ -206,14 +207,14 @@ def compute_high_low(df):
                 # The prior day is an ascending limb (2) so continue ascending
                 # until daily flow decreases by more than 10% at which time
                 # descending (3) limb is initiated.
-                if ts_q[cday] > qq90:
+                if ts_q.iloc[cday] > qq90:
                     high_low[cday] = 2  # Ascending
                 else:
                     high_low[cday] = 3  # Descending
             elif high_low[prior_day] == 3:
                 # If the prior day is descending then ascending is restarted if
                 # current day flow increases by more than 25%.
-                if ts_q[cday] > qq125:
+                if ts_q.iloc[cday] > qq125:
                     high_low[cday] = 2  # Ascending
                 else:
                     high_low[cday] = 3  # Descending
@@ -221,10 +222,10 @@ def compute_high_low(df):
                 # If the rate of decrease drops below 10% per day
                 # then event is ended unless the flow is still greater
                 # than the 75th percentile.
-                if ts_q[cday] > p75_q:
+                if ts_q.iloc[cday] > p75_q:
                     high_low[cday] = 3  # Descending
                 else:
-                    if ts_q[cday] < qq90:
+                    if ts_q.iloc[cday] < qq90:
                         high_low[cday] = 1  # Low flow
                     else:
                         high_low[cday] = 3  # Descending
