@@ -2,6 +2,7 @@ import warnings
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import xarray as xr
 from pyPRMS import ParameterFile
 from pyPRMS.metadata.metadata import MetaData
 from rich import pretty
@@ -245,6 +246,7 @@ def create_poi_df(
     gages_file,
     default_gages_file,
     nwis_gage_nobs_min,
+    seg_gdf,
 ):
     """
     Create dataframe containing gages listed in parameter file.
@@ -304,6 +306,7 @@ def create_poi_df(
         control_file_name,
         nwis_gage_nobs_min,
         hru_gdf,
+        seg_gdf,
     )
 
     poi = poi.merge(nwis_gage_info_aoi, left_on="poi_id", right_on="poi_id", how="left")
@@ -401,6 +404,7 @@ def create_default_gages_file(
     nwis_gage_nobs_min,
     hru_gdf,
     poi_df,
+    seg_gdf,
 ):
 
     nwis_gages_aoi = fetch_nwis_gage_info(
@@ -408,7 +412,9 @@ def create_default_gages_file(
         control_file_name,
         nwis_gage_nobs_min,
         hru_gdf,
+        seg_gdf,
     )
+
     """
     Create default_gages.csv for your subdomain model.
     NHM-Assist notebooks will display gages using the default gages file (default_gages.csv), if a modified gages file (gages.csv) is lacking.
@@ -440,6 +446,17 @@ def create_default_gages_file(
         Path to file containing gage information from NWIS for the gages in the parameter file.
         
     """
+    """ Remove NWIS gages with no daily streamflow data after the st_date in the control file """
+    nwis_cache_file = model_dir / "notebook_output_files" / "nc_files" / "nwis_cache.nc"
+    with xr.open_dataset(nwis_cache_file) as NWIS_ds:
+        NWIS_df = NWIS_ds.to_dataframe()
+        NWIS_obs_list = list(NWIS_df.index.get_level_values(0).unique())
+        # print(NWIS_obs_list)
+        del NWIS_ds
+    """ But we need to add gages without obs back in to the list, if they are in the param file """
+    keep_list = list(set(NWIS_obs_list + poi_df.poi_id.to_list()))
+    
+    _nwis_gages_aoi = nwis_gages_aoi.loc[nwis_gages_aoi["poi_id"].isin(keep_list)]
 
     """
     First, select only gages from the gages file NOT in NWIS (to preserve NWIS metadata values in default_gages.csv)
@@ -449,6 +466,7 @@ def create_default_gages_file(
         columns=["nhm_seg", "poi_gage_segment", "poi_type"], inplace=True
     )
     # non_NWIS_gages_from_poi_df.rename(columns={"poi_gage_id": "poi_id"}, inplace=True)
+   
 
     """
     Projections are ascribed geometry from the HRUs geodatabase (GIS).
@@ -474,12 +492,12 @@ def create_default_gages_file(
     ]
     if pd.isnull(poi_df["poi_agency"]).values.any():
         temp = pd.concat(
-            [nwis_gages_aoi, non_NWIS_gages_from_poi_df], ignore_index=True
+            [_nwis_gages_aoi, non_NWIS_gages_from_poi_df], ignore_index=True
         )
         temp2 = temp[sta_file_col_order]
 
     else:
-        temp = nwis_gages_aoi.copy()
+        temp = _nwis_gages_aoi.copy()
         temp2 = temp[sta_file_col_order]
 
     default_gages_file = model_dir / "default_gages.csv"
@@ -690,12 +708,14 @@ def make_hf_map_elements(
         gages_file,
         default_gages_file,
         nwis_gage_nobs_min,
+        seg_gdf,
     )
     nwis_gages_aoi = fetch_nwis_gage_info(
         model_dir,
         control_file_name,
         nwis_gage_nobs_min,
         hru_gdf,
+        seg_gdf,
     )
 
     gages_df, gages_txt, gages_txt_nb2 = read_gages_file(

@@ -556,6 +556,7 @@ def create_nwis_sf_df(
     hru_gdf,
     poi_df,
     nwis_gage_nobs_min,
+    seg_gdf,
 ):  # add neis_gage_nobs_min, hru_gdf,
     nwis_cache_file = model_dir / "notebook_output_files" / "nc_files" / "nwis_cache.nc"
     control = pws.Control.load_prms(
@@ -593,6 +594,7 @@ def create_nwis_sf_df(
         control_file_name,
         nwis_gage_nobs_min,
         hru_gdf,
+        seg_gdf,
     )
 
     if output_netcdf_filename.exists():
