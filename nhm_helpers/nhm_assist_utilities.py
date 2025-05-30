@@ -3,11 +3,13 @@ import warnings
 import dataretrieval.nwis as nwis
 import geopandas as gpd
 import numpy as np
+import os
 import pandas as pd
 import plotly
 import plotly.express as px
 import plotly.subplots
 import pywatershed as pws
+from shapely.geometry import Point, LineString
 from pyPRMS import ParameterFile
 from pyPRMS.metadata.metadata import MetaData
 from rich import pretty
@@ -109,6 +111,7 @@ def fetch_nwis_gage_info(
     control_file_name,
     nwis_gage_nobs_min,
     hru_gdf,
+    seg_gdf
 ):
     """
     This function creates a pandas DataFrame of information for all gages in the model domain that
@@ -156,9 +159,7 @@ def fetch_nwis_gage_info(
     Start date changed because gages were found in the par file that predate 1979 and tossing nan's into poi_df later.
     """
 
-    st_date = (
-        "1949-01-01"  # pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d")
-    )
+    st_date = "1940-01-01"#(pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d"))
     en_date = pd.to_datetime(str(control.end_time)).strftime("%Y-%m-%d")
 
     if nwis_gages_file.exists():
@@ -211,6 +212,8 @@ def fetch_nwis_gage_info(
         nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
         nwis_gage_info_aoi = nwis_gage_info_gdf.clip(hru_gdf)
 
+        
+
         # Make a list of gages in the model domain that have discharge measurements > numer of specifed days
         siteINFO_huc = gpd.GeoDataFrame()
         for i in model_domain_regions:
@@ -224,6 +227,7 @@ def fetch_nwis_gage_info(
             siteINFO_huc = pd.concat([siteINFO_huc, zz])
 
         nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
+        
         nwis_gage_nobs_aoi = nwis_gage_info_gdf.clip(hru_gdf)
         nwis_gage_nobs_aoi = nwis_gage_nobs_aoi.loc[
             nwis_gage_nobs_aoi.count_nu > nwis_gage_nobs_min
@@ -233,7 +237,38 @@ def fetch_nwis_gage_info(
         nwis_gage_info_aoi = nwis_gage_info_aoi.loc[
             nwis_gage_info_aoi.index.isin(nwis_gage_nobs_aoi_list)
         ]
+        #########
+        '''Drop gages that are more than 1000m from a NHM segment
+        '''
+             
+        # Sample DataFrames
+        points_gdf = nwis_gage_info_aoi.to_crs(crs=3857)
+        lines_gdf = seg_gdf.to_crs(crs=3857)
+        
+        
+        # Step 1: Calculate minimum distance from each point to the nearest line
+        def nearest_line_distance(point):
+            return lines_gdf.geometry.distance(point).min()
+        
+        
+        # Apply the distance calculation to points
+        points_gdf["distance_to_line"] = points_gdf.geometry.apply(nearest_line_distance)
+        
+        # Step 2: Filter points that are within 1000 meters of the nearest line
+        filtered_points_gdf = points_gdf[points_gdf["distance_to_line"] <= 1000]
+        
+        # Drop the distance column if no longer needed
+        filtered_points_gdf = filtered_points_gdf.drop(columns="distance_to_line")
+        
+        # Print the original and filtered GeoDataFrames
+        # print("Original Points GeoDataFrame:")
+        # print(len(points_gdf))
+        # print("\nFiltered Points GeoDataFrame (NWIS gags within 100 meters of a NHM segment):")
+        # print(len(filtered_points_gdf))
+        nwis_gage_info_aoi = filtered_points_gdf.copy().to_crs(crs)
 
+
+        #########
         nwis_gage_info_aoi.reset_index(inplace=True)
         field_map = {
             "agency_cd": "poi_agency",
@@ -567,3 +602,185 @@ def make_HW_cal_level_files(hru_gdf):
     HW_basins = HW_basins_gdf.boundary
 
     return HW_basins_gdf, HW_basins
+
+def make_obs_plot_files(control, gages_df, xr_streamflow, Folium_maps_dir):
+    """This function makes plots and saved with as html.txt files to be embedded in the hf_map
+    by notebook 2_model_hydrofabric_visualization.ipynb used to evaluate ti gages shown in the
+    map have desirable lengths of record to include the gage as a poi in the parameter file.
+    """
+
+    start_date = pd.to_datetime(str(control.start_time)).strftime("%m/%d/%Y")
+    end_date = pd.to_datetime(str(control.end_time)).strftime("%m/%d/%Y")
+
+    for cpoi in gages_df.index:
+        obs_plot_file = Folium_maps_dir / f"{cpoi}_streamflow_obs.txt"
+        if obs_plot_file.exists():
+            con.print(
+                f"{cpoi}_streamflow_obs.txt file exists. To make a new plot, delete the existing plot and rerun this cell."
+            )
+        else:
+            ds_sub = xr_streamflow.sel(poi_id=cpoi, time=slice(start_date, end_date))
+            ds_sub_df = ds_sub.to_dataframe()
+            # ds_sub_df.dropna(subset=["discharge"], inplace=True)
+            ds_sub_df.reset_index(inplace=True, drop=False)
+            # print(ds_sub_df)
+
+            fig = px.line(
+                ds_sub_df,
+                x="time",
+                y="discharge",
+                markers=False,
+                # custom_data=nhru_params_nmonths_sel_plot_df[["nhm_id"]],
+                # color="nhm_id",
+                labels={
+                    "discharge": "Discharge",
+                    "time": "Date",
+                },
+            )
+
+            fig.update_layout(
+                title_text=f"{cpoi} daily streamflow observations",
+                width=500,
+                height=300,
+                showlegend=True,
+                # legend=dict(orientation="h",yanchor="bottom",y=1.02, xanchor="right", x=1),
+                font=dict(family="Arial", size=10, color="#7f7f7f"),  # font color
+                paper_bgcolor="linen",
+                plot_bgcolor="white",
+            )
+
+            fig.update_yaxes(title_text="Discharge, cfs")
+            fig.update_xaxes(title_text="Date")
+
+            fig.update_xaxes(ticks="inside", tickwidth=2, tickcolor="black", ticklen=10)
+            fig.update_yaxes(ticks="inside", tickwidth=2, tickcolor="black", ticklen=10)
+
+            fig.update_xaxes(
+                showline=True,
+                linewidth=2,
+                linecolor="black",
+                gridcolor="lightgrey",
+            )
+            fig.update_yaxes(
+                showline=True,
+                linewidth=2,
+                linecolor="black",
+                gridcolor="lightgrey",
+            )
+
+            fig.update_xaxes(autorange=True)
+
+            # fig.show()
+
+            # Creating the html code for the plotly plot
+            text_div = plotly.offline.plot(
+                fig, include_plotlyjs=False, output_type="div"
+            )
+
+            # Saving the plot as txt file with the html code
+            with open(obs_plot_file, "w") as f:
+                f.write(text_div)
+
+def create_append_gages_to_param_file(
+    gages_df,
+    seg_gdf,
+    poi_df,
+    model_dir,
+):
+    """
+    Make an editable .csv file from the gages_df, so that users can append new poigage (dimensioned) parameters to
+    the myparam.param file, and returns a pandas DataFrame of the written .csv.
+
+    First, a geopandas GeoDataFrame is made for the gages_df using the lat/lon from the gages_df (NWIS or user supplied).
+    Projection is set to crs=4326 and may introduce some spatial innaccuracy for older gages.
+    """
+    gages_gdf = gpd.GeoDataFrame(
+        gages_df,
+        geometry=gpd.points_from_xy(gages_df.longitude, gages_df.latitude),
+        crs=4326,
+    )
+    """ Gages_gdf (points_gdf) and seg_gdf (lines_gdf) projections changed for geo distance calculation. """
+    _points_gdf = gages_gdf.to_crs("ESRI:102039")
+    _lines_gdf = seg_gdf.to_crs("ESRI:102039")
+
+    _poi_max_distance = 1000  # spatial units of projections, meters for ESRI:102039
+
+    """ A spatial join for the nearest segment to a gage yields a likely candidate poi_gage_segment for each poi_gage_id 
+        and the distance from the gage to the segment. """
+    append_gages_to_param_file_df = gpd.sjoin_nearest(
+        _points_gdf,
+        _lines_gdf,
+        max_distance=_poi_max_distance,
+        distance_col="distance",
+        how="left",
+    )
+    """ Cleanup """
+    append_gages_to_param_file_df = append_gages_to_param_file_df[
+        gages_df.columns.to_list() + ["nhm_seg", "model_idx", "distance"]
+    ]
+    append_gages_to_param_file_df = append_gages_to_param_file_df[
+        ["nhm_seg", "poi_name", "poi_agency", "distance"]
+    ].reset_index(drop=False)
+    append_gages_to_param_file_df.rename(
+        columns={"poi_id": "poi_gage_id"},
+        inplace=True,
+    )
+    """ Set an attribute "in_param_file" to show user which gages in the gages_df are in the myparam.param file. """
+    append_gages_to_param_file_df["in_param_file"] = "no"
+    param_file_gages = poi_df.poi_id.to_list()
+    append_gages_to_param_file_df.loc[
+        append_gages_to_param_file_df["poi_gage_id"].isin(param_file_gages),
+        "in_param_file",
+    ] = "yes"
+
+    """ Write new param file to the subdomain model directory. """
+    append_gages_to_param_file_df.to_csv(
+        model_dir / "append_gages_to_param_file.csv", index=False
+    )
+
+def make_myparam_addl_gages_param_file(
+    model_dir,
+    pdb,
+):
+    """Read back in the modified gages to add file"""
+    col_names = [
+        "poi_gage_id",
+        "nhm_seg",
+    ]
+    col_types = [
+        np.str_,
+        "int32",
+    ]
+    cols = dict(zip(col_names, col_types))
+
+    addl_gages_df = pd.read_csv(
+        model_dir / "append_gages_to_param_file.csv",
+        dtype=cols,
+        usecols=[
+            "poi_gage_id",
+            "nhm_seg",
+        ],
+    )
+
+    nhm_seg_to_idx1 = {kk: vv + 1 for kk, vv in pdb.get("nhm_seg").index_map.items()}
+
+    addl_gages_df["poi_gage_segment"] = addl_gages_df["nhm_seg"].map(nhm_seg_to_idx1)
+
+    addl_gages = dict(
+        zip(
+            addl_gages_df["poi_gage_id"].to_list(),
+            addl_gages_df["poi_gage_segment"].to_list(),
+        )
+    )
+
+    pdb.add_poi(addl_gages)
+    new_par_file = model_dir / "myparam_addl_gages.param"
+    if new_par_file.exists():
+        con.print(f"The new parameter file {new_par_file.name} already exists and will NOT be overwritten. Please rename that file and rerun this cell.")
+    else:
+        pdb.write_parameter_file(model_dir / "myparam_addl_gages.param")
+        os.remove(model_dir / "append_gages_to_param_file.csv")
+        del pdb
+        con.print("New paramter file `myparam_addl_gages.param` created in the model directory.")
+
+    return 

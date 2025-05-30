@@ -1570,6 +1570,7 @@ def make_hf_map(
     nwis_gages_aoi,
     gages_df,
     html_maps_dir,
+    Folium_maps_dir,
     param_filename,
     subdomain,
 ):
@@ -1623,12 +1624,12 @@ def make_hf_map(
     hru_map = create_hru_map(hru_gdf)
     seg_map_show = create_segment_map_show(seg_gdf)
 
-    poi_marker_cluster, poi_marker_cluster_label = create_poi_marker_cluster(
-        poi_df, cluster_zoom
+    poi_marker_cluster, poi_marker_cluster_label = create_poi_obs_marker_cluster(
+        poi_df, cluster_zoom, Folium_maps_dir
     )
 
     non_poi_marker_cluster, non_poi_marker_cluster_label = (
-        create_non_poi_marker_cluster(poi_df, nwis_gages_aoi, gages_df, cluster_zoom)
+        create_non_poi_obs_marker_cluster(poi_df, nwis_gages_aoi, gages_df, Folium_maps_dir, param_filename, cluster_zoom)
     )
 
     m2 = folium.Map()
@@ -2211,3 +2212,242 @@ def make_streamflow_map(
     make_webbrowser_map(map_file)
     
     return map_file
+
+def create_poi_obs_marker_cluster(
+    poi_df,
+    cluster_zoom,
+    Folium_maps_dir,
+):
+    """
+    Creates a folium.map marker cluster object for pois(gages) and for lables, so that these two groups can be displayed and hidden in the map from the interactive legend. These are gages found in the parameter file.
+    
+    Parameters
+    ----------
+    poi_df : pandas DataFrame()
+        First parameter; Pandas DataFrame() containing gages from the parameter file.
+    cluster_zoom: int
+        Second parameter; The zoom (out) level at whcih gages get clustered on the folium maps.
+        
+
+    Returns
+    -------
+    poi_marker_cluster: a folium MarkerCluster() object
+        Gages from the parameter file.
+    poi_marker_cluster_label: a folium MarkerCluster() object
+        Gage id as labels for gages from the parameter file.
+    """
+
+    # add POI marker cluster child items for the map
+    poi_marker_cluster = MarkerCluster(
+        name="Model gage",
+        overlay=True,
+        control=True,
+        icon_create_function=None,
+        disableClusteringAtZoom=cluster_zoom,
+    )
+    poi_marker_cluster_label = MarkerCluster(
+        name="Model gage ID",
+        overlay=True,
+        control=True,
+        show=False,  # False will not draw the child upon opening the map, but have it to draw in the Layer control.
+        icon_create_function=None,
+        disableClusteringAtZoom=cluster_zoom,
+    )
+    ##add POI markers and labels using row df.interowss loop
+    for idx, row in poi_df.iterrows():
+
+##############        #####
+        #for idx, row in poi_df.iterrows():
+        poi_id = row["poi_id"]
+        obs_plot_file = Folium_maps_dir / f"{poi_id}_streamflow_obs.txt"
+        # Read ploty plot of each poi
+        with open(obs_plot_file, "r") as f:
+            div_txt = f.read()
+    
+        # Create html code to insert the plotly plot to the folium pop up
+        html = (
+            """
+        <html>
+        <head>
+             <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+        </head>
+        <body>
+             <!-- Output from the Python script above: -->"""
+            + div_txt
+            + """</body>
+        </html>"""
+        )
+    
+        # Add the Plots to the popup
+        iframe = folium.IFrame(
+            html=html,
+            width=525,
+            height=325,
+        )
+        # popup = folium.Popup(iframe, max_width=3250,parse_html=True)
+
+##############
+        
+        text = f'{row["poi_id"]}'
+        label_lat = row["latitude"]  # -0.01
+        label_lon = row["longitude"]
+
+        marker_label = folium.map.Marker(
+            [label_lat, label_lon],
+            icon=DivIcon(
+                icon_size=(10, 10),  # (150,36),
+                icon_anchor=(0, 0),
+                html='<div style="font-size: 12pt; font-weight: bold">%s</div>' % text,
+            ),
+        ).add_to(poi_marker_cluster_label)
+
+        marker = folium.CircleMarker(
+            location=[row["latitude"], row["longitude"]],
+            name=row["poi_id"],
+            popup=folium.Popup(
+                iframe,
+                # max_width=500,
+                # max_height=300,
+                parse_html=True,
+            ),
+            tooltip= f'<font size="3px">{row["poi_id"]} ({row["poi_agency"]}) on segment: {row["nhm_seg"]}<br>{row["poi_name"]}<br></font>',
+            # popup=folium.Popup(
+            #     f'<font size="3px">{row["poi_id"]} ({row["poi_agency"]})<br>{row["poi_name"]}<br> on <b>segment </b>{row["nhm_seg"]}</font>',
+            #     max_width=280,
+            #     max_height=2000,
+            # ),
+            radius=3,
+            weight=2,
+            color="black",
+            fill=True,
+            fill_color="Black",
+            fill_opacity=1.0,
+        ).add_to(poi_marker_cluster)
+
+    return poi_marker_cluster, poi_marker_cluster_label
+
+def create_non_poi_obs_marker_cluster(
+    poi_df,
+    nwis_gages_aoi,
+    gages_df,
+    Folium_maps_dir,
+    param_filename,
+    cluster_zoom: pd.DataFrame,
+) -> tuple[folium.plugins.MarkerCluster, folium.plugins.MarkerCluster]:
+
+    """
+    Creates a folium.map marker cluster object for pois(gages) and for gage id lables, so that these two groups can be displayed and hidden in the map from the interactive legend. These gages are gages NOT in the parameter file.
+    
+    Parameters
+    ----------
+    poi_df : pandas DataFrame()
+        Pandas DataFrame() containing gages from the parameter file.
+    nwis_gages_aoi : Pandas DataFrame()
+        Pandas DataFrame() containing gages from NWIS in the subdomain.
+    gages_df : pandas DataFrame() 
+        Represents data pertaining to subdomain gages in parameter file, NWIS, and others. 
+    cluster_zoom : int
+        Second parameter; The zoom (out) level at whcih gages get clustered on the folium maps.
+        
+    Returns
+    -------
+    non_poi_marker_cluster : a folium MarkerCluster() object
+        Gages in the subdomain NOT in the parameter file.
+    non_poi_marker_cluster_label : a folium MarkerCluster() object
+        Gage id as labels for gages in the subdomain NOT in the parameter file.
+    """
+
+    # add non-poi gages marker cluster child items for the map
+    non_poi_marker_cluster = MarkerCluster(
+        name="Prospective gage",
+        overlay=True,
+        control=True,
+        icon_create_function=None,
+        disableClusteringAtZoom=cluster_zoom,
+    )
+    non_poi_marker_cluster_label = MarkerCluster(
+        name="Prospective gage ID",
+        overlay=True,
+        control=True,
+        show=False,  # False will not draw the child upon opening the map, but have it to draw in the Layer control.
+        icon_create_function=None,
+        disableClusteringAtZoom=cluster_zoom,
+    )
+
+    ##add Non-poi gage markers and labels using row df.interowss loop
+    gages_list = gages_df.index.to_list()
+    additional_gages = list(set(gages_list) - set(poi_df.poi_id))
+    gages_df.reset_index(inplace=True, drop=False)
+
+    for idx, row in gages_df.iterrows():
+        if row["poi_id"] in additional_gages:
+#########
+            poi_id = row["poi_id"]
+            obs_plot_file = Folium_maps_dir / f"{poi_id}_streamflow_obs.txt"
+            # Read ploty plot of each poi
+            with open(obs_plot_file, "r") as f:
+                div_txt = f.read()
+        
+            # Create html code to insert the plotly plot to the folium pop up
+            html = (
+                """
+            <html>
+            <head>
+                 <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+            </head>
+            <body>
+                 <!-- Output from the Python script above: -->"""
+                + div_txt
+                + """</body>
+            </html>"""
+            )
+        
+            # Add the Plots to the popup
+            iframe = folium.IFrame(
+                html=html,
+                width=525,
+                height=325,
+            )
+            # popup = folium.Popup(iframe, max_width=3250,parse_html=True)
+    ######
+
+            text = f'{row["poi_id"]}'
+            label_lat = row["latitude"]  # -0.01
+            label_lon = row["longitude"]
+
+            marker_label = folium.map.Marker(
+                [label_lat, label_lon],
+                icon=DivIcon(
+                    icon_size=(10, 10),  # (150,36),
+                    icon_anchor=(0, 0),
+                    html='<div style="font-size: 12pt; font-weight: bold">%s</div>'
+                    % text,
+                ),
+            ).add_to(non_poi_marker_cluster_label)
+
+            marker = folium.CircleMarker(
+                location=[row["latitude"], row["longitude"]],
+                name=row["poi_id"],
+                popup=folium.Popup(
+                iframe,
+                # max_width=500,
+                # max_height=300,
+                parse_html=True,
+                ),
+                # popup=folium.Popup(
+                #     f'<font size="3px">{row["poi_id"]} ({row["poi_agency"]})<br>{row["poi_name"]}<br></font>',
+                #     max_width=280,
+                #     max_height=2000,
+                # ),
+                tooltip= f'<font size="3px">{row["poi_id"]} ({row["poi_agency"]}--Not in {param_filename.name})<br>{row["poi_name"]}<br></font>',
+                radius=3,
+                weight=2,
+                color="gray",
+                fill=True,
+                fill_color="Gray",
+                fill_opacity=1.0,
+            ).add_to(non_poi_marker_cluster)
+        else:
+            pass
+
+    return non_poi_marker_cluster, non_poi_marker_cluster_label
