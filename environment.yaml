@@ -14,4 +14,4 @@ dependencies:
   - pip:
       - hydroeval==0.1
       - jupyter_black
-      - git+https://github.com/EC-USGS/pyPRMS.git@development
+      - git+https://github.com/DOI-USGS/pyPRMS.git
