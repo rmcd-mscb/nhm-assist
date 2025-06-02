@@ -225,6 +225,7 @@ def fetch_nwis_gage_info(
                 parameterCd="00060",
             )[0]
             siteINFO_huc = pd.concat([siteINFO_huc, zz])
+            time.sleep(0.25)
 
         nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
         
