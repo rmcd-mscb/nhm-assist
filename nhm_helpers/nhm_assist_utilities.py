@@ -15,6 +15,7 @@ from pyPRMS.metadata.metadata import MetaData
 from rich import pretty
 from rich.console import Console
 from nhm_helpers.nhm_helpers import hrus_by_poi
+import time
 
 pretty.install()
 con = Console()
