@@ -4,10 +4,10 @@ on:
   # this time is checked below for certain actions: change everywhere if you change
   schedule:
     - cron: "0 6 * * *"
-  push:
-    paths-ignore:
-      - "**.md"
-      - ".gitignore"
+  # push:
+  #   paths-ignore:
+  #     - "**.md"
+  #     - ".gitignore"
   pull_request:
     paths-ignore:
       - "**.md"
