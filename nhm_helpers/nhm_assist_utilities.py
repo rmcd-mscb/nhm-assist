@@ -200,46 +200,33 @@ def fetch_nwis_gage_info(
         )
     else:
 
-        # # siteINFO_huc = nwis.get_info(huc=model_domain_regions, siteType="ST")
-        # siteINFO_huc = gpd.GeoDataFrame()
-        # for i in model_domain_regions:
-        #     zz = nwis.get_info(
-        #         huc=i,
-        #         siteType="ST",
-        #         agencyCd="USGS",
-        #     )[0]
-        #     siteINFO_huc = pd.concat([siteINFO_huc, zz])
-        #     time.sleep(0.25)
+        # siteINFO_huc = nwis.get_info(huc=model_domain_regions, siteType="ST")
+        siteINFO_huc = gpd.GeoDataFrame()
 
-        # nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
-        # nwis_gage_info_aoi = nwis_gage_info_gdf.clip(hru_gdf)
-
-        
-
-        # # Make a list of gages in the model domain that have discharge measurements > numer of specifed days
-        # siteINFO_huc = gpd.GeoDataFrame()
-        # for i in model_domain_regions:
-        #     zz = nwis.get_info(
-        #         huc=i,
-        #         startDt=st_date,
-        #         endDt=en_date,
-        #         seriesCatalogOutput=True,
-        #         parameterCd="00060",
-        #     )[0]
-        #     siteINFO_huc = pd.concat([siteINFO_huc, zz])
-        #     time.sleep(0.25)
         bounds = hru_gdf.total_bounds.tolist()
         bounds = [round(bound, 6) for bound in bounds]
-        siteINFO_huc = nwis.get_info(
+        
+        zz = nwis.get_info(
+            bBox=bounds,
+            siteType="ST",
+            agencyCd="USGS",
+        )[0]
+        siteINFO_huc = pd.concat([siteINFO_huc, zz])
+        nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
+        nwis_gage_info_aoi = nwis_gage_info_gdf.clip(hru_gdf)
+
+        # Make a list of gages in the model domain that have discharge measurements > numer of specifed days
+        siteINFO_huc = gpd.GeoDataFrame()
+        kk = nwis.get_info(
             bBox=bounds,
             startDt=st_date,
             endDt=en_date,
             seriesCatalogOutput=True,
             parameterCd="00060",
         )[0]
+        siteINFO_huc = pd.concat([siteINFO_huc, kk])
         nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
         nwis_gage_nobs_aoi = nwis_gage_info_gdf.clip(hru_gdf)
-        nwis_gage_info_aoi = nwis_gage_info_gdf.clip(hru_gdf)
         
         nwis_gage_nobs_aoi = nwis_gage_nobs_aoi.loc[
             nwis_gage_nobs_aoi.count_nu > nwis_gage_nobs_min
