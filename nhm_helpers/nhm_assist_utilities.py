@@ -15,7 +15,6 @@ from pyPRMS.metadata.metadata import MetaData
 from rich import pretty
 from rich.console import Console
 from nhm_helpers.nhm_helpers import hrus_by_poi
-import time
 
 pretty.install()
 con = Console()
@@ -209,7 +208,6 @@ def fetch_nwis_gage_info(
                 agencyCd="USGS",
             )[0]
             siteINFO_huc = pd.concat([siteINFO_huc, zz])
-            time.sleep(0.25)
 
         nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
         nwis_gage_info_aoi = nwis_gage_info_gdf.clip(hru_gdf)
@@ -227,7 +225,6 @@ def fetch_nwis_gage_info(
                 parameterCd="00060",
             )[0]
             siteINFO_huc = pd.concat([siteINFO_huc, zz])
-            time.sleep(0.25)
 
         nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
         
