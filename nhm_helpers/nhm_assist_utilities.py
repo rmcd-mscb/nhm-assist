@@ -238,9 +238,9 @@ def fetch_nwis_gage_info(
             parameterCd="00060",
         )[0]
         nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
+        nwis_gage_nobs_aoi = nwis_gage_info_gdf.clip(hru_gdf)
         nwis_gage_info_aoi = nwis_gage_info_gdf.clip(hru_gdf)
         
-        nwis_gage_info_aoi = nwis_gage_info_gdf.clip(hru_gdf)
         nwis_gage_nobs_aoi = nwis_gage_nobs_aoi.loc[
             nwis_gage_nobs_aoi.count_nu > nwis_gage_nobs_min
         ]
