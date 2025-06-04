@@ -1,7 +1,6 @@
 <img src="./doc/assets/nhm-assist-logo.jpg" width="100" align="left">
 
 <br>
-<br>
 
 # nhm-assist
 
