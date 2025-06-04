@@ -1,7 +1,5 @@
 <img src="./doc/assets/nhm-assist-logo.jpg" width="100" align="left">
 
-<br>
-
 # nhm-assist
 
 nhm-assist is a collection of python workflows presented in Jupyter notebooks for evaluating, running and interpreting [National Hydrologic Model (NHM)](https://www.sciencebase.gov/catalog/item/626c0d67d34e76103cd2ce4a) subdomain models using [`pywatershed`](https://github.com/EC-USGS/pywatershed), a python package for simulating hydrologic processes motivated by the need to modernize important, legacy hydrologic models at the USGS, particularly the Precipitation-Runoff Modeling System (PRMS, Markstrom et al., 2015). nhm-assist allows users to:
