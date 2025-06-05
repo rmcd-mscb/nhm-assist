@@ -455,53 +455,101 @@ def create_default_gages_file(
         del NWIS_ds
     """ But we need to add gages without obs back in to the list, if they are in the param file """
     keep_list = list(set(NWIS_obs_list + poi_df.poi_id.to_list()))
+    print(keep_list)
     
-    _nwis_gages_aoi = nwis_gages_aoi.loc[nwis_gages_aoi["poi_id"].isin(keep_list)]
+    #_nwis_gages_aoi = nwis_gages_aoi.loc[nwis_gages_aoi["poi_id"].isin(keep_list)]
 
+    
+    """Read in additional non-nwis gages from the resource gage file. These are a list of user requested gages that may or may not be in the parameter file or the nwis gage file, and likely include non NWIS gages.
     """
-    First, select only gages from the gages file NOT in NWIS (to preserve NWIS metadata values in default_gages.csv)
-    """
-    non_NWIS_gages_from_poi_df = poi_df.loc[poi_df["poi_agency"] != "USGS"]
-    non_NWIS_gages_from_poi_df.drop(
-        columns=["nhm_seg", "poi_gage_segment", "poi_type"], inplace=True
-    )
-    # non_NWIS_gages_from_poi_df.rename(columns={"poi_gage_id": "poi_id"}, inplace=True)
-   
+    resource_gages_file = model_dir / "resource_gages.csv"
 
-    """
-    Projections are ascribed geometry from the HRUs geodatabase (GIS).
-    The NHM uses the NAD 1983 USGS Contiguous USA Albers projection EPSG# 102039.
-    The geometry units of this projection are not useful for many notebook packages.
-    The geodatabases are reprojected to World Geodetic System 1984.
-
-    Options:
-        crs = 3857, WGS 84 / Pseudo-Mercator - Spherical Mercator, Google Maps, OpenStreetMap, Bing, ArcGIS, ESRI.
-        *crs = 4326, WGS 84 - WGS84 - World Geodetic System 1984, used in GPS
-    """
-    crs = 4326
-
-    sta_file_col_order = [
-        "poi_id",
-        "poi_agency",
-        "poi_name",
-        "latitude",
-        "longitude",
-        "drainage_area",
-        "drainage_area_contrib",
-        #'nhm_seg', 'poi_gage_segment', 'poi_type'
-    ]
-    if pd.isnull(poi_df["poi_agency"]).values.any():
-        temp = pd.concat(
-            [_nwis_gages_aoi, non_NWIS_gages_from_poi_df], ignore_index=True
+    #if len(drop_list) > 0:
+    nan_list = [np.nan] * len(keep_list)
+    default_gages_df = pd.DataFrame({'poi_id': keep_list,
+                                     'poi_agency': nan_list,
+                                     'poi_name': nan_list,
+                                     'latitude': nan_list, 
+                                     'longitude': nan_list,
+                                     'drainage_area': nan_list,
+                                     'drainage_area_contrib': nan_list}
+                                                  )
+    
+    if resource_gages_file.exists():
+        col_names = [
+            "poi_id",
+            "poi_agency",
+            "poi_name",
+            "latitude",
+            "longitude",
+            "drainage_area",
+            "drainage_area_contrib",
+        ]
+        col_types = [np.str_, np.str_, np.str_, float, float, float, float]
+        cols = dict(
+            zip(col_names, col_types)
         )
-        temp2 = temp[sta_file_col_order]
+        resource_gages_file_df = pd.read_csv(resource_gages_file, dtype=cols)
 
-    else:
-        temp = _nwis_gages_aoi.copy()
-        temp2 = temp[sta_file_col_order]
+    else:    
+        resource_gages_file_df = pd.DataFrame({'poi_id': [np.nan],
+                                               'poi_agency': [np.nan],
+                                               'poi_name': [np.nan],
+                                               'latitude': [np.nan], 
+                                               'longitude': [np.nan],
+                                               'drainage_area': [np.nan],
+                                               'drainage_area_contrib': [np.nan]}
+                                                    )
+        print(resource_gages_file_df)
+    
+    for idx, row in default_gages_df.iterrows():
+        columns = ["latitude", "longitude", "poi_name", "poi_agency"]
+        check_list = nwis_gages_aoi["poi_id"].to_list()
+        for item in columns:
+            if pd.isnull(row[item]):
+                new_poi_id = row["poi_id"]
+                if new_poi_id in check_list:
+                    new_item = nwis_gages_aoi.loc[
+                        nwis_gages_aoi.poi_id == new_poi_id, item].values[0]
+                    default_gages_df.loc[idx, item] = new_item
+       
+    for idx, row in default_gages_df.iterrows():
+        columns = ["latitude", "longitude", "poi_name", "poi_agency"]
+        check_list = resource_gages_file_df["poi_id"].to_list()
+        print(check_list)
+        for item in columns:
+            if pd.isnull(row[item]):
+                new_poi_id = row["poi_id"]
+                if new_poi_id in check_list:
+                    new_item = resource_gages_file_df.loc[
+                        resource_gages_file_df.poi_id == new_poi_id, item
+                    ].values[0]
+                    default_gages_df.loc[idx, item] = new_item
+                else:
+                    pass #print(f"Gage {new_poi_id} is not in the resource_gages.csv.")
 
+    for idx, row in default_gages_df.iterrows():
+        columns = ["latitude", "longitude", "poi_name", "poi_agency"]
+        for item in columns:
+            if pd.isnull(row[item]):
+                new_poi_id = row["poi_id"]
+                default_gages_df.drop(idx)
+                print(f"Gage {new_poi_id} was dropped from the default_gages.csv due to missing metadata. Add to {resource_gages_file.end} and rerun notebook.")
+                if resource_gages_file_df.loc[resource_gages_file_df["poi_id"] == new_poi_id]:
+                    pass
+                else:
+                    resource_gages_file_df.poi_id = new_poi_id
+
+        
+        
+
+        #non_NWIS_gages_from_par_file_df = non_NWIS_gages_from_par_file_df.join(non_NWIS_gages_from_resource_gages_df) 
+
+    #temp2 = pd.concat([_nwis_gages_aoi,non_NWIS_gages_from_par_file_df])
+            
     default_gages_file = model_dir / "default_gages.csv"
-    temp2.to_csv(default_gages_file, index=False)
+    default_gages_df.to_csv(default_gages_file, index=False)
+    resource_gages_file_df.to_csv(resource_gages_file, index=False)
 
     return default_gages_file
 
