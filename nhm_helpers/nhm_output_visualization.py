@@ -53,6 +53,7 @@ def retrieve_hru_output_info(out_dir, water_years):
             output = model_output.sel(time=slice(plot_start_date, plot_end_date))
 
             year_list = list(set(((output.time.dt.year).values).ravel().tolist()))
+            year_list.sort()
             year_list.remove(
                 year_list[0]
             )  # Note: remove first year from the list to show available WY's in the data
