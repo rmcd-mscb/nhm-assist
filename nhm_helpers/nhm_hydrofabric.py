@@ -455,7 +455,7 @@ def create_default_gages_file(
         del NWIS_ds
     """ But we need to add gages without obs back in to the list, if they are in the param file """
     keep_list = list(set(NWIS_obs_list + poi_df.poi_id.to_list()))
-    print(keep_list)
+    #print(keep_list)
     
     #_nwis_gages_aoi = nwis_gages_aoi.loc[nwis_gages_aoi["poi_id"].isin(keep_list)]
 
@@ -500,7 +500,7 @@ def create_default_gages_file(
                                                'drainage_area': [np.nan],
                                                'drainage_area_contrib': [np.nan]}
                                                     )
-        print(resource_gages_file_df)
+        #print(resource_gages_file_df)
     
     for idx, row in default_gages_df.iterrows():
         columns = ["latitude", "longitude", "poi_name", "poi_agency"]
@@ -516,7 +516,7 @@ def create_default_gages_file(
     for idx, row in default_gages_df.iterrows():
         columns = ["latitude", "longitude", "poi_name", "poi_agency"]
         check_list = resource_gages_file_df["poi_id"].to_list()
-        print(check_list)
+        #print(check_list)
         for item in columns:
             if pd.isnull(row[item]):
                 new_poi_id = row["poi_id"]
