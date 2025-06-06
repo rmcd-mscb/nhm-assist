@@ -534,10 +534,11 @@ def create_default_gages_file(
             if pd.isnull(row[item]):
                 new_poi_id = row["poi_id"]
                 default_gages_df.drop(idx)
-                print(f"Gage {new_poi_id} was dropped from the default_gages.csv due to missing metadata. Add to {resource_gages_file.end} and rerun notebook.")
-                if resource_gages_file_df.loc[resource_gages_file_df["poi_id"] == new_poi_id]:
-                    pass
-                else:
+                print(f"Gage {new_poi_id} was dropped from the default_gages.csv due to missing metadata. Add to resource_gages_file.csv and rerun notebook.")
+                try:
+                    resource_gages_file_df.loc[resource_gages_file_df["poi_id"]] == new_poi_id
+                    
+                except KeyError:
                     resource_gages_file_df.poi_id = new_poi_id
 
         
