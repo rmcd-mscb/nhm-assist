@@ -14,7 +14,7 @@ from pyPRMS import ParameterFile
 from pyPRMS.metadata.metadata import MetaData
 from rich import pretty
 from rich.console import Console
-import shutil
+import glob
 from nhm_helpers.nhm_helpers import hrus_by_poi
 
 pretty.install()
@@ -795,11 +795,16 @@ def delete_notebook_output_files(
     model_dir,
 ):
     """ """
-    if notebook_output_dir.exists():
-        shutil.rmtree(notebook_output_dir)
 
-    file_list =['default_gages.csv', 'NWISgages.csv', 'append_gages_to_param_file.csv', 'default_gages_file.csv']
-    for file in file_list:
+    subfolders = ['Folium_maps', 'html_maps', 'html_plots', 'nc_files']
+    for subfolder in subfolders:
+        path = f"{notebook_output_dir}\{subfolder}\*"
+        files = glob.glob(path)
+        for f in files:
+            os.remove(f)
+    
+    files =['default_gages.csv', 'NWISgages.csv', 'append_gages_to_param_file.csv', 'default_gages_file.csv']
+    for file in files:
         if (model_dir / file).exists():
             os.remove(model_dir / file)
     return
