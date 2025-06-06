@@ -14,6 +14,7 @@ from pyPRMS import ParameterFile
 from pyPRMS.metadata.metadata import MetaData
 from rich import pretty
 from rich.console import Console
+import glob
 from nhm_helpers.nhm_helpers import hrus_by_poi
 
 pretty.install()
@@ -285,8 +286,6 @@ def fetch_nwis_gage_info(
         nwis_gage_info_aoi = nwis_gage_info_aoi.sort_index()
         nwis_gage_info_aoi.reset_index(inplace=True)
 
-        # write out the file for later
-        # nwis_gage_info_aoi.to_csv(nwis_gages_file, index=False)  # , sep='\t')
     return nwis_gage_info_aoi
 
 
@@ -732,8 +731,15 @@ def create_append_gages_to_param_file(
         "in_param_file",
     ] = "yes"
 
+    yes_list = list(append_gages_to_param_file_df.loc[append_gages_to_param_file_df['in_param_file'] == 'yes', 'nhm_seg'])
+    no_list = list(append_gages_to_param_file_df.loc[append_gages_to_param_file_df['in_param_file'] == 'no', 'nhm_seg'])
+    yes_only_list = list(set(yes_list) - set(no_list))
+    print(yes_only_list)
+
+    append_gages_to_param_file_df_new = append_gages_to_param_file_df[~append_gages_to_param_file_df.nhm_seg.isin(yes_only_list)]
+    append_gages_to_param_file_df_new.sort_values(by=['nhm_seg', 'in_param_file'], ascending=[True, True], inplace=True)
     """ Write new param file to the subdomain model directory. """
-    append_gages_to_param_file_df.to_csv(
+    append_gages_to_param_file_df_new.to_csv(
         model_dir / "append_gages_to_param_file.csv", index=False
     )
 
@@ -748,7 +754,7 @@ def make_myparam_addl_gages_param_file(
     ]
     col_types = [
         np.str_,
-        "int32",
+        "Int32",
     ]
     cols = dict(zip(col_names, col_types))
 
@@ -760,7 +766,7 @@ def make_myparam_addl_gages_param_file(
             "nhm_seg",
         ],
     )
-
+    addl_gages_df.dropna(how= 'all', inplace=True)
     nhm_seg_to_idx1 = {kk: vv + 1 for kk, vv in pdb.get("nhm_seg").index_map.items()}
 
     addl_gages_df["poi_gage_segment"] = addl_gages_df["nhm_seg"].map(nhm_seg_to_idx1)
@@ -783,3 +789,22 @@ def make_myparam_addl_gages_param_file(
         con.print("New paramter file `myparam_addl_gages.param` created in the model directory.")
 
     return 
+
+def delete_notebook_output_files(
+    notebook_output_dir,
+    model_dir,
+):
+    """ """
+
+    subfolders = ['Folium_maps', 'html_maps', 'html_plots', 'nc_files']
+    for subfolder in subfolders:
+        path = f"{notebook_output_dir}\{subfolder}\*"
+        files = glob.glob(path)
+        for f in files:
+            os.remove(f)
+    
+    files =['default_gages.csv', 'NWISgages.csv', 'append_gages_to_param_file.csv', 'default_gages_file.csv']
+    for file in files:
+        if (model_dir / file).exists():
+            os.remove(model_dir / file)
+    return
