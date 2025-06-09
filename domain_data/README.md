@@ -1,0 +1,1 @@
+Place the directory containing your model extraction in this folder. Each extraction that you work with should be in its own directory (inside this one) with a descriptive name. 
