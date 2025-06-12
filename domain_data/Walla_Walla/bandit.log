@@ -1,0 +1,36 @@
+INFO: Bandit.bandit: ========== START 2024-06-19T15:28:34.171676 ==========
+INFO: Bandit.bandit: Using parameter database from: 
+INFO: Bandit.bandit: Repo branch: 
+INFO: Bandit.bandit: Repo commit: 
+INFO: Bandit.bandit: Number of segments in subset: 44
+INFO: Bandit.bandit: Number of NHM hru_segment entries: 114958
+INFO: Bandit.bandit: Number of HRUs in subset: 87
+INFO: Bandit.bandit: Size of hru_segment for subset: 87
+INFO: Bandit.bandit_helpers: Size of NHM poi_gage_segment: 8708
+INFO: Bandit.bandit: Retrieving POIs from local HYDAT and NWIS netcdf files
+INFO: Bandit.points_of_interest: POI netcdf instance
+WARNING: fiona._env: Normalized/laundered field name: 'model_hru_idx' to 'model_hru_'
+WARNING: fiona._env: Normalized/laundered field name: 'model_seg_idx' to 'model_seg_'
+INFO: Bandit.bandit: ========== END 2024-06-19T15:30:44.501230 ==========
+INFO: Bandit.bandit: ========== START 2024-06-19T15:32:19.061514 ==========
+INFO: Bandit.bandit: Using parameter database from: 
+INFO: Bandit.bandit: Repo branch: 
+INFO: Bandit.bandit: Repo commit: 
+INFO: Bandit.bandit: Number of segments in subset: 44
+INFO: Bandit.bandit: Number of NHM hru_segment entries: 114958
+INFO: Bandit.bandit: Number of HRUs in subset: 87
+INFO: Bandit.bandit: Size of hru_segment for subset: 87
+INFO: Bandit.bandit_helpers: Size of NHM poi_gage_segment: 8708
+INFO: Bandit.bandit: Retrieving POIs from local HYDAT and NWIS netcdf files
+INFO: Bandit.points_of_interest: POI netcdf instance
+INFO: Bandit.bandit: ========== END 2024-06-19T15:34:03.236491 ==========
+INFO: Bandit.bandit: ========== START 2024-06-19T15:34:50.822028 ==========
+INFO: Bandit.bandit: Using parameter database from: 
+INFO: Bandit.bandit: Repo branch: 
+INFO: Bandit.bandit: Repo commit: 
+INFO: Bandit.bandit: Number of segments in subset: 44
+INFO: Bandit.bandit: Number of NHM hru_segment entries: 114958
+INFO: Bandit.bandit: Number of HRUs in subset: 87
+INFO: Bandit.bandit: Size of hru_segment for subset: 87
+INFO: Bandit.bandit_helpers: Size of NHM poi_gage_segment: 8708
+INFO: Bandit.bandit: ========== END 2024-06-19T15:34:59.835890 ==========
