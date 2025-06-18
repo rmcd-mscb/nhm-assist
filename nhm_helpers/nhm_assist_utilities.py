@@ -156,11 +156,14 @@ def fetch_nwis_gage_info(
     huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
     model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
 
+    # Make a list of the state abbreviations the subdomain intersects for NWIS queries
+    states_gdf = gpd.read_file("./data_dependencies/US_states/tl_2017_us_state.shp").to_crs(crs)
+    states = list((states_gdf.clip(hru_gdf).loc[:]["STUSPS"]).values)
     """
     Start date changed because gages were found in the par file that predate 1979 and tossing nan's into poi_df later.
     """
 
-    st_date = "1940-01-01"#(pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d"))
+    st_date = "1942-01-01"#(pd.to_datetime(str(control.start_time)).strftime("%Y-%m-%d"))
     en_date = pd.to_datetime(str(control.end_time)).strftime("%Y-%m-%d")
 
     if nwis_gages_file.exists():
@@ -200,32 +203,53 @@ def fetch_nwis_gage_info(
             ],
         )
     else:
-
-        # siteINFO_huc = nwis.get_info(huc=model_domain_regions, siteType="ST")
         siteINFO_huc = gpd.GeoDataFrame()
-
-        bounds = hru_gdf.total_bounds.tolist()
-        bounds = [round(bound, 6) for bound in bounds]
+        for i in states:
+            kk = nwis.get_info(
+                stateCd=i,
+                siteType="ST",
+                agencyCd="USGS",
+            )[0]
+            siteINFO_huc = pd.concat([siteINFO_huc, kk])
+         
         
-        zz = nwis.get_info(
-            bBox=bounds,
-            siteType="ST",
-            agencyCd="USGS",
-        )[0]
-        siteINFO_huc = pd.concat([siteINFO_huc, zz])
+        
+        # siteINFO_huc = nwis.get_info(huc=model_domain_regions, siteType="ST")
+        # siteINFO_huc = gpd.GeoDataFrame()
+
+        # bounds = hru_gdf.total_bounds.tolist()
+        # bounds = [round(bound, 6) for bound in bounds]
+        
+        # zz = nwis.get_info(
+        #     bBox=bounds,
+        #     siteType="ST",
+        #     agencyCd="USGS",
+        # )[0]
+        # siteINFO_huc = pd.concat([siteINFO_huc, zz])
         nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
         nwis_gage_info_aoi = nwis_gage_info_gdf.clip(hru_gdf)
 
         # Make a list of gages in the model domain that have discharge measurements > numer of specifed days
+        # siteINFO_huc = gpd.GeoDataFrame()
+        # kk = nwis.get_info(
+        #     bBox=bounds,
+        #     startDt=st_date,
+        #     endDt=en_date,
+        #     seriesCatalogOutput=True,
+        #     parameterCd="00060",
+        # )[0]
+        # siteINFO_huc = pd.concat([siteINFO_huc, kk])
         siteINFO_huc = gpd.GeoDataFrame()
-        kk = nwis.get_info(
-            bBox=bounds,
-            startDt=st_date,
-            endDt=en_date,
-            seriesCatalogOutput=True,
-            parameterCd="00060",
-        )[0]
-        siteINFO_huc = pd.concat([siteINFO_huc, kk])
+        for i in states:
+            kk = nwis.get_info(
+                stateCd=i,
+                startDt=st_date,
+                endDt=en_date,
+                seriesCatalogOutput=True,
+                parameterCd="00060",
+            )[0]
+            siteINFO_huc = pd.concat([siteINFO_huc, kk])
+            
         nwis_gage_info_gdf = siteINFO_huc.set_index("site_no").to_crs(crs)
         nwis_gage_nobs_aoi = nwis_gage_info_gdf.clip(hru_gdf)
         
