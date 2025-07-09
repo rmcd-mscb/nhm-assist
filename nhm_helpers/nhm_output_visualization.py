@@ -662,7 +662,9 @@ def create_streamflow_obs_datasets(
 
         obs_0 = data.sel(
             time=slice(plot_start_date, plot_end_date)
-        ).transpose()  # load_dataset will open, read into memory and close the .nc file
+        )
+        obs_0['agency_id'] = obs_0['agency_id'].astype('U') #fix for xarray issue
+        obs_0 = obs_0.transpose()  # load_dataset will open, read into memory and close the .nc file
 
         obs_efc = obs_0["efc"]
         obs = obs_0["discharge"]
