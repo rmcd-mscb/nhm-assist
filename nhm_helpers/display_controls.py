@@ -1,18 +1,82 @@
 from ipywidgets import widgets
 from IPython.display import display
+from nhm_helpers.map_template import make_var_map
+from nhm_helpers.nhm_hydrofabric import make_hf_map_elements
+from nhm_helpers.nhm_output_visualization import retrieve_hru_output_info
 from ipywidgets import VBox
+from nhm_helpers.output_plots import plot_colors
+from nhm_helpers.output_plots import (
+    var_colors_dict,
+    leg_only_dict,
+    make_plot_var_for_hrus_in_poi_basin,
+    oopla,
+)
 
 
+# ─── Styles ─────────────────────────────────────────────────────────────
+style_var = {"description_width": "initial"}
+layout = widgets.Layout(width="25%")
+
+# ─── 1. Controls ────────────────────────────────────────────────────────
+# Variable selector
+v = widgets.Dropdown(
+    options=output_var_list,
+    value=output_var_list[8],
+    description="Output variable:",
+    layout=layout,
+    style=style_var,
+)
+
+# Year selector
+years = year_list.copy() + ["mean_annual"]
+yr = widgets.Dropdown(
+    options=years,
+    value=years[-1],
+    description="Time step (year):",
+    layout=layout,
+    style=style_var,
+)
+
+# Gage combobox
+v2 = widgets.Combobox(
+    options=poi_df.poi_id.tolist(),
+    placeholder="(optional) Enter gage id",
+    description="Zoom to gage:",
+    ensure_option=True,
+    disabled=False,
+    layout=layout,
+    style=style_var,
+)
+
+# Checkboxes for plot types
+cb_map = widgets.Checkbox(value=False, description="Include Map")
+cb_summary = widgets.Checkbox(value=False, description="Include Summary TS")
+cb_flux = widgets.Checkbox(value=False, description="Include Flux TS")
+plot_checks = HBox([cb_map, cb_summary, cb_flux])
+
+# Generate button
+btn_generate = Button(description="Show Plots", button_style="primary")
+
+# Output areas
+out_map = widgets.Output()
+out_summary = widgets.Output()
+out_flux = widgets.Output()
 
 
+# ─── 2. Helper functions ────────────────────────────────────────────────
 def _get_valid_poi() -> str:
+    """
+    Return a valid POI identifier: the combobox value if valid,
+    otherwise the first available POI from poi_df.
+    """
     ids = poi_df.poi_id.values
     return v2.value if v2.value in ids else ids[0]
 
 
-
-
 def generate_map() -> None:
+    """
+    Generate and display the Folium map for the selected variable, year, and POI.
+    """
     poi_id = _get_valid_poi()
     fmap = make_var_map(
         out_dir,
@@ -34,9 +98,11 @@ def generate_map() -> None:
     display(fmap)
 
 
-
-
 def generate_summary() -> None:
+    """
+    Generate and display the summary time-series plot of HRU contributions
+    for the selected variable and POI.
+    """
     poi_id = _get_valid_poi()
     fig1 = make_plot_var_for_hrus_in_poi_basin(
         out_dir,
@@ -55,9 +121,11 @@ def generate_summary() -> None:
     display(fig1)
 
 
-
-
 def generate_flux() -> None:
+    """
+    Generate and display the flux rates time-series plot for the selected
+    variable and POI.
+    """
     poi_id = _get_valid_poi()
     fig2 = oopla(
         out_dir,
@@ -79,79 +147,34 @@ def generate_flux() -> None:
     display(fig2)
 
 
-
-
+# ─── 3. Button callback ─────────────────────────────────────────────────
 def on_generate_clicked(b: widgets.Button) -> None:
+    """
+    When the Generate button is clicked, clear all outputs and
+    create only the selected plots.
+    """
     clear_output(wait=True)
     display(
         VBox([v, yr, v2, plot_checks, btn_generate, out_map, out_summary, out_flux])
     )
 
-
+    # Map
     if cb_map.value:
         with out_map:
             clear_output(wait=True)
             generate_map()
 
-
+    # Summary TS
     if cb_summary.value:
         with out_summary:
             clear_output(wait=True)
             generate_summary()
 
-
+    # Flux TS
     if cb_flux.value:
         with out_flux:
             clear_output(wait=True)
             generate_flux()
 
 
-def on_plot_clicked(b: widgets.Button) -> None:
-    with plot_out:
-        clear_output(wait=True)
-        poi_id_sel = gage_txt.value.strip() or poi_df.poi_id.tolist()[0]
-        fplot = create_streamflow_plot(
-            poi_id_sel,
-            plot_start_date,
-            plot_end_date,
-            water_years,
-            html_plots_dir,
-            output_netcdf_filename,
-            out_dir,
-            subdomain,
-        )
-        display(fplot)
-
-
-
-
-def on_map_clicked(b: widgets.Button) -> None:
-    with map_out:
-        clear_output(wait=True)
-        poi_id_sel = gage_txt.value.strip() or poi_df.poi_id.tolist()[0]
-        map_file = make_streamflow_map(
-            out_dir,
-            plot_start_date,
-            plot_end_date,
-            water_years,
-            hru_gdf,
-            poi_df,
-            poi_id_sel,
-            seg_gdf,
-            html_maps_dir,
-            subdomain,
-            HW_basins_gdf,
-            HW_basins,
-            output_netcdf_filename,
-        )
-        if isinstance(map_file, str):
-            display(IFrame(src=map_file, width="100%", height="500px"))
-        else:
-            display(map_file)
-
-
-
-
-
-
-
+btn_generate.on_click(on_generate_clicked)
