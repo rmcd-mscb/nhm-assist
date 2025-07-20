@@ -1,5 +1,5 @@
 from ipywidgets import widgets
-from IPython.display import display
+from IPython.display import display, clear_output
 from nhm_helpers.map_template import make_var_map
 from nhm_helpers.nhm_hydrofabric import make_hf_map_elements
 from nhm_helpers.nhm_output_visualization import retrieve_hru_output_info
@@ -12,55 +12,6 @@ from nhm_helpers.output_plots import (
     oopla,
 )
 
-
-# ─── Styles ─────────────────────────────────────────────────────────────
-style_var = {"description_width": "initial"}
-layout = widgets.Layout(width="25%")
-
-# ─── 1. Controls ────────────────────────────────────────────────────────
-# Variable selector
-v = widgets.Dropdown(
-    options=output_var_list,
-    value=output_var_list[8],
-    description="Output variable:",
-    layout=layout,
-    style=style_var,
-)
-
-# Year selector
-years = year_list.copy() + ["mean_annual"]
-yr = widgets.Dropdown(
-    options=years,
-    value=years[-1],
-    description="Time step (year):",
-    layout=layout,
-    style=style_var,
-)
-
-# Gage combobox
-v2 = widgets.Combobox(
-    options=poi_df.poi_id.tolist(),
-    placeholder="(optional) Enter gage id",
-    description="Zoom to gage:",
-    ensure_option=True,
-    disabled=False,
-    layout=layout,
-    style=style_var,
-)
-
-# Checkboxes for plot types
-cb_map = widgets.Checkbox(value=False, description="Include Map")
-cb_summary = widgets.Checkbox(value=False, description="Include Summary TS")
-cb_flux = widgets.Checkbox(value=False, description="Include Flux TS")
-plot_checks = HBox([cb_map, cb_summary, cb_flux])
-
-# Generate button
-btn_generate = Button(description="Show Plots", button_style="primary")
-
-# Output areas
-out_map = widgets.Output()
-out_summary = widgets.Output()
-out_flux = widgets.Output()
 
 
 # ─── 2. Helper functions ────────────────────────────────────────────────
@@ -177,4 +128,3 @@ def on_generate_clicked(b: widgets.Button) -> None:
             generate_flux()
 
 
-btn_generate.on_click(on_generate_clicked)
