@@ -11,10 +11,12 @@ from nhm_helpers.output_plots import (
     make_plot_var_for_hrus_in_poi_basin,
     oopla,
 )
+from nhm_helpers.output_plots import create_streamflow_plot
+from nhm_helpers.map_template import make_streamflow_map
+from nhm_helpers.nhm_output_visualization import retrieve_hru_output_info
 
 
 
-# ─── 2. Helper functions ────────────────────────────────────────────────
 def _get_valid_poi() -> str:
     """
     Return a valid POI identifier: the combobox value if valid,
@@ -98,7 +100,6 @@ def generate_flux() -> None:
     display(fig2)
 
 
-# ─── 3. Button callback ─────────────────────────────────────────────────
 def on_generate_clicked(b: widgets.Button) -> None:
     """
     When the Generate button is clicked, clear all outputs and
@@ -127,4 +128,50 @@ def on_generate_clicked(b: widgets.Button) -> None:
             clear_output(wait=True)
             generate_flux()
 
+def on_map_clicked(b: widgets.Button) -> None:
+    """
+    When clicked, clear previous map, default to first POI if none entered,
+    then generate and display the streamflow map.
+    """
+    with map_out:
+        clear_output(wait=True)
+        poi_id_sel = gage_txt.value.strip() or poi_df.poi_id.tolist()[0]
+        map_file = make_streamflow_map(
+            out_dir,
+            plot_start_date,
+            plot_end_date,
+            water_years,
+            hru_gdf,
+            poi_df,
+            poi_id_sel,
+            seg_gdf,
+            html_maps_dir,
+            subdomain,
+            HW_basins_gdf,
+            HW_basins,
+            output_netcdf_filename,
+        )
+        if isinstance(map_file, str):
+            display(IFrame(src=map_file, width="100%", height="500px"))
+        else:
+            display(map_file)
 
+def on_plot_clicked(b: widgets.Button) -> None:
+    """
+    When clicked, clear previous plot, default to first POI if none entered,
+    then generate and display the streamflow plot.
+    """
+    with plot_out:
+        clear_output(wait=True)
+        poi_id_sel = gage_txt.value.strip() or poi_df.poi_id.tolist()[0]
+        fplot = create_streamflow_plot(
+            poi_id_sel,
+            plot_start_date,
+            plot_end_date,
+            water_years,
+            html_plots_dir,
+            output_netcdf_filename,
+            out_dir,
+            subdomain,
+        )
+        display(fplot)
