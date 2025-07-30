@@ -8,6 +8,10 @@ import pandas as pd
 import plotly
 import plotly.express as px
 import plotly.subplots
+# from contextlib import redirect_stdout
+# import io
+# f = io.StringIO()
+# with redirect_stdout(f):
 import pywatershed as pws
 from shapely.geometry import Point, LineString
 from pyPRMS import ParameterFile
@@ -16,6 +20,7 @@ from rich import pretty
 from rich.console import Console
 import glob
 from nhm_helpers.nhm_helpers import hrus_by_poi
+import yaml
 
 pretty.install()
 con = Console()
@@ -108,6 +113,7 @@ def bynsegment_parameter_list(param_filename):
 
 # Reads/Creates NWIS stations file if not already created
 def fetch_nwis_gage_info(
+    root_dir,
     model_dir,
     control_file_name,
     nwis_gage_nobs_min,
@@ -153,11 +159,11 @@ def fetch_nwis_gage_info(
     crs = 4326
 
     # Make a list if the HUC2 region(s) the subdomain intersects for NWIS queries
-    huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
-    model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
+    #huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
+    #model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
 
     # Make a list of the state abbreviations the subdomain intersects for NWIS queries
-    states_gdf = gpd.read_file("./data_dependencies/US_states/tl_2017_us_state.shp").to_crs(crs)
+    states_gdf = gpd.read_file(root_dir / "data_dependencies/US_states/tl_2017_us_state.shp").to_crs(crs)
     states = list((states_gdf.clip(hru_gdf).loc[:]["STUSPS"]).values)
     """
     Start date changed because gages were found in the par file that predate 1979 and tossing nan's into poi_df later.
@@ -822,13 +828,78 @@ def delete_notebook_output_files(
 
     subfolders = ['Folium_maps', 'html_maps', 'html_plots', 'nc_files']
     for subfolder in subfolders:
-        path = f"{notebook_output_dir}\{subfolder}\*"
-        files = glob.glob(path)
-        for f in files:
-            os.remove(f)
+        folder_path = notebook_output_dir / subfolder   
+        for file_name in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, file_name)
+            if os.path.isfile(file_path):  # Ensure it's a file
+                os.remove(file_path)
+                print(f"Deleted: {file_path}")
+
+        
+        # path = r"{notebook_output_dir}\{subfolder}"
+        # files = glob.glob(path)
+        # for f in files:
+        #     os.remove(f)
     
     files =['default_gages.csv', 'NWISgages.csv', 'append_gages_to_param_file.csv', 'default_gages_file.csv']
     for file in files:
         if (model_dir / file).exists():
             os.remove(model_dir / file)
     return
+
+def load_subdomain_config(root_dir):
+    """ """
+    with open(root_dir / "subdomain_config.yaml") as file:
+        pp = yaml.load(file, Loader=yaml.FullLoader)
+
+    Folium_maps_dir = pl.Path(pp["Folium_maps_dir"])
+    model_dir = pl.Path(pp["model_dir"])
+    param_filename = pl.Path(pp["param_filename"])
+    gages_file = pl.Path(pp["gages_file"])
+    default_gages_file = pl.Path(pp["default_gages_file"])
+    nwis_gages_file = pl.Path(pp["nwis_gages_file"])
+    output_netcdf_filename = pl.Path(pp["output_netcdf_filename"])
+    NHM_dir = pl.Path(pp["NHM_dir"])
+    out_dir = pl.Path(pp["out_dir"])
+    notebook_output_dir = pl.Path(pp["notebook_output_dir"])
+    Folium_maps_dir = pl.Path(pp["Folium_maps_dir"])
+    html_maps_dir = pl.Path(pp["html_maps_dir"])
+    html_plots_dir = pl.Path(pp["html_plots_dir"])
+    nc_files_dir = pl.Path(pp["nc_files_dir"])
+    subdomain = pp["subdomain"]
+    GIS_format = pp["GIS_format"]
+    param_file = pp["param_file"]
+    control_file_name = pp["control_file_name"]
+    nwis_gage_nobs_min = pp["nwis_gage_nobs_min"]
+    nhru_nmonths_params = pp["nhru_nmonths_params"]
+    nhru_params = pp["nhru_params"]
+    selected_output_variables = pp["selected_output_variables"]
+    water_years = pp["water_years"]
+    workspace_txt = pp["workspace_txt"]
+
+    return (
+        Folium_maps_dir,
+        model_dir,
+        param_filename,
+        gages_file,
+        default_gages_file,
+        nwis_gages_file,
+        output_netcdf_filename,
+        NHM_dir,
+        out_dir,
+        notebook_output_dir,
+        Folium_maps_dir,
+        html_maps_dir,
+        html_plots_dir,
+        nc_files_dir,
+        subdomain,
+        GIS_format,
+        param_file,
+        control_file_name,
+        nwis_gage_nobs_min,
+        nhru_nmonths_params,
+        nhru_params,
+        selected_output_variables,
+        water_years,
+        workspace_txt,
+    )

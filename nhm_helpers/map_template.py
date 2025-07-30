@@ -1561,6 +1561,7 @@ def create_streamflow_poi_markers(
 
 
 def make_hf_map(
+    root_dir,
     hru_gdf,
     HW_basins_gdf,
     HW_basins,
@@ -1681,7 +1682,7 @@ def make_hf_map(
     title_html = f"<h1 style='position:absolute;z-index:100000;font-size: 28px;left:26vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '><strong>The NHM {subdomain} model: hydrofabric elements</strong><br><h1 style='position:absolute;z-index:100000;font-size: 20px;left:31vw;right:5vw; top:4vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '> {explan_txt}</h1>"
 
     #add custom legend
-    legend_file = pl.Path("./data_dependencies/map_custom_explanations/nb_2.png").resolve()
+    legend_file = pl.Path(root_dir / "data_dependencies/map_custom_explanations/nb_2.png").resolve()
     with open(legend_file, "rb") as lf:
         # open in binary mode, read bytes, encode, decode obtained bytes as utf-8 string
         b64_content = base64.b64encode(lf.read()).decode("utf-8")
@@ -1705,6 +1706,7 @@ def make_hf_map(
 
 
 def make_par_map(
+    root_dir,
     hru_gdf,
     HW_basins,
     poi_df,
@@ -1835,7 +1837,7 @@ def make_par_map(
     title_html = f"<h1 style='position:absolute;z-index:100000;font-size: 28px;left:26vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '><strong>The NHM {subdomain} model: {mo_txt}{par_sel}</strong><br><h1 style='position:absolute;z-index:100000;font-size: 20px;left:31vw;right:5vw; top:4vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '> {pdb.get(par_sel).meta['help']}. {scale_bar_txt}</h1>"
 
     #add custom legend
-    legend_file = pl.Path("./data_dependencies/map_custom_explanations/nb_5.png").resolve()
+    legend_file = pl.Path(root_dir/"data_dependencies/map_custom_explanations/nb_5.png").resolve()
     with open(legend_file, "rb") as lf:
         # open in binary mode, read bytes, encode, decode obtained bytes as utf-8 string
         b64_content = base64.b64encode(lf.read()).decode("utf-8")
@@ -1859,6 +1861,7 @@ def make_par_map(
 
 
 def make_var_map(
+    root_dir,
     out_dir,
     output_var_sel,
     plot_start_date,
@@ -2006,7 +2009,7 @@ def make_var_map(
     title_html = f"<h1 style='position:absolute;z-index:100000;font-size: 28px;left:26vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '><strong>The NHM {subdomain} model: {sel_year} {output_var_sel}</strong><br><h1 style='position:absolute;z-index:100000;font-size: 20px;left:31vw;right:5vw; top:4vw;text-shadow: 3px  3px  3px white,-3px -3px  3px white,3px -3px  3px white,-3px  3px  3px white; '> {var_desc}. {scale_bar_txt}</h1>"
     
     #add custom legend
-    legend_file = pl.Path("./data_dependencies/map_custom_explanations/nb_5.png").resolve()
+    legend_file = pl.Path(root_dir / "data_dependencies/map_custom_explanations/nb_5.png").resolve()
     with open(legend_file, "rb") as lf:
         # open in binary mode, read bytes, encode, decode obtained bytes as utf-8 string
         b64_content = base64.b64encode(lf.read()).decode("utf-8")
@@ -2032,6 +2035,7 @@ def make_var_map(
 
 
 def make_streamflow_map(
+    root_dir,
     out_dir,
     plot_start_date,
     plot_end_date,
@@ -2191,7 +2195,7 @@ def make_streamflow_map(
 
 
     #add custom legend
-    legend_file = pl.Path("./data_dependencies/map_custom_explanations/nb_6.png").resolve()
+    legend_file = pl.Path(root_dir/"data_dependencies/map_custom_explanations/nb_6.png").resolve()
     with open(legend_file, "rb") as lf:
         # open in binary mode, read bytes, encode, decode obtained bytes as utf-8 string
         b64_content = base64.b64encode(lf.read()).decode("utf-8")

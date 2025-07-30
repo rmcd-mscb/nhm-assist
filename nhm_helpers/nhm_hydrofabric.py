@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 
 
 def create_hru_gdf(
-    NHM_dir,
+    root_dir,
     model_dir,
     GIS_format,
     param_filename,
@@ -136,7 +136,7 @@ def create_hru_gdf(
     """
 
     #### READ table (.csv) of HRU calibration level file
-    hru_cal_levels_df = pd.read_csv(f"{NHM_dir}/nhm_v1_1_HRU_cal_levels.csv").fillna(0)
+    hru_cal_levels_df = pd.read_csv(f"{root_dir}/data_dependencies/NHM_v1_1/nhm_v1_1_HRU_cal_levels.csv").fillna(0)
     hru_cal_levels_df["hw_id"] = hru_cal_levels_df.hw_id.astype("int32")
 
     hru_gdf = hru_gdf.merge(hru_cal_levels_df, on="nhm_id")
@@ -239,6 +239,7 @@ def create_segment_gdf(
 
 
 def create_poi_df(
+    root_dir,
     model_dir,
     param_filename,
     control_file_name,
@@ -302,6 +303,7 @@ def create_poi_df(
 
     """
     nwis_gage_info_aoi = fetch_nwis_gage_info(
+        root_dir,
         model_dir,
         control_file_name,
         nwis_gage_nobs_min,
@@ -337,7 +339,7 @@ def create_poi_df(
     )  # Creates a dictionary of column header and datatype called below.
 
     byHWobs_poi_df = pd.read_csv(
-        r"data_dependencies/NHM_v1_1/nhm_v1_1_byhwobs_cal_gages.csv",
+        root_dir / "data_dependencies/NHM_v1_1/nhm_v1_1_byhwobs_cal_gages.csv",
         sep="\t",
         dtype=cols,
     ).fillna(0)
@@ -399,6 +401,7 @@ def create_poi_df(
 
 
 def create_default_gages_file(
+    root_dir,
     model_dir,
     control_file_name,
     nwis_gage_nobs_min,
@@ -408,6 +411,7 @@ def create_default_gages_file(
 ):
 
     nwis_gages_aoi = fetch_nwis_gage_info(
+        root_dir,
         model_dir,
         control_file_name,
         nwis_gage_nobs_min,
@@ -666,7 +670,7 @@ def read_gages_file(
 
 
 def make_hf_map_elements(
-    NHM_dir,
+    root_dir,
     model_dir,
     GIS_format,
     param_filename,
@@ -735,7 +739,7 @@ def make_hf_map_elements(
     
     """
     hru_gdf, hru_txt, hru_cal_level_txt = create_hru_gdf(
-        NHM_dir,
+        root_dir,
         model_dir,
         GIS_format,
         param_filename,
@@ -750,6 +754,7 @@ def make_hf_map_elements(
     )
 
     poi_df = create_poi_df(
+        root_dir,
         model_dir,
         param_filename,
         control_file_name,
@@ -760,6 +765,7 @@ def make_hf_map_elements(
         seg_gdf,
     )
     nwis_gages_aoi = fetch_nwis_gage_info(
+        root_dir,
         model_dir,
         control_file_name,
         nwis_gage_nobs_min,

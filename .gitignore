@@ -6,6 +6,7 @@ domain_data/
 *-checkpoint.ipynb
 .ipynb_checkpoints/
 
-
+# Jupyter Notebooks (ipynb files)
+*.ipynb
 
 

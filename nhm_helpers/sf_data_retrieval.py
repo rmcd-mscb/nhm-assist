@@ -96,7 +96,7 @@ def owrd_scraper(station_nbr, start_date, end_date):
     return df
 
 
-def create_OR_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_df):
+def create_OR_sf_df(root_dir, control_file_name, model_dir, output_netcdf_filename, hru_gdf, gages_df):
     """
     Determines whether the subdomain intersects OR and proceeds to call owrd_scraper to generate owrd_df. 
     Exports OR streamflow data as cached netCDF file for faster dataframe access.
@@ -120,7 +120,9 @@ def create_OR_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_d
         Dataframe containing OWRD mean daily streamflow data for the specified gage and date range.
     
     """
-    
+    control = pws.Control.load_prms(
+    model_dir / control_file_name, warn_unused_options=False
+)
 
     start_date = pd.to_datetime(str(control.start_time)).strftime("%m/%d/%Y")
     end_date = pd.to_datetime(str(control.end_time)).strftime("%m/%d/%Y")
@@ -143,7 +145,7 @@ def create_OR_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_d
     crs = 4326
 
     # Make a list if the HUC2 region(s) the subdomain intersects for NWIS queries.
-    huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
+    huc2_gdf = gpd.read_file(root_dir/"data_dependencies/HUC2/HUC2.shp").to_crs(crs)
     model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
 
     if any(item in owrd_regions for item in model_domain_regions):
@@ -363,7 +365,7 @@ def ecy_scrape(station, ecy_years, ecy_start_date, ecy_end_date):
         return None
 
 
-def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_df):
+def create_ecy_sf_df(root_dir, control_file_name, model_dir, output_netcdf_filename, hru_gdf, gages_df):
     """
     Determines whether the subdomain intersects WA and proceeds to call ecy_scrape to generate ecy_df. 
     Exports WA streamflow data as cached netCDF file for faster dataframe access.
@@ -387,7 +389,9 @@ def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_
         Dataframe containing ECY mean daily streamflow data for the specified gage and date range.
         
     """
-    
+    control = pws.Control.load_prms(
+    model_dir / control_file_name, warn_unused_options=False
+)
     ecy_regions = ["17"]
 
     """
@@ -403,7 +407,7 @@ def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_
     crs = 4326
 
     # Make a list if the HUC2 region(s) the subdomain intersects for NWIS queries.
-    huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
+    huc2_gdf = gpd.read_file(root_dir/"data_dependencies/HUC2/HUC2.shp").to_crs(crs)
     model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
     ecy_df = pd.DataFrame()
 
@@ -550,6 +554,7 @@ def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_
 
 
 def create_nwis_sf_df(
+    root_dir,
     control_file_name,
     model_dir,
     output_netcdf_filename,
@@ -590,6 +595,7 @@ def create_nwis_sf_df(
     """
     
     nwis_gage_info_aoi = fetch_nwis_gage_info(
+        root_dir,
         model_dir,
         control_file_name,
         nwis_gage_nobs_min,
