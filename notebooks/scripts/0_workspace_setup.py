@@ -33,7 +33,7 @@ con = Console()
 
 import sys
 import os
-root_folder = "nhm_pest_ies"
+root_folder = "nhm-assist"
 root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
 print(root_dir)
 

@@ -850,59 +850,92 @@ def delete_notebook_output_files(
             os.remove(model_dir / file)
     return
 
+# def load_subdomain_config(root_dir):
+#     """ """
+#     with open(root_dir / "subdomain_config.yaml") as file:
+#         pp = yaml.load(file, Loader=yaml.FullLoader)
+
+#     Folium_maps_dir = pl.Path(pp["Folium_maps_dir"])
+#     model_dir = pl.Path(pp["model_dir"])
+#     param_filename = pl.Path(pp["param_filename"])
+#     gages_file = pl.Path(pp["gages_file"])
+#     default_gages_file = pl.Path(pp["default_gages_file"])
+#     nwis_gages_file = pl.Path(pp["nwis_gages_file"])
+#     output_netcdf_filename = pl.Path(pp["output_netcdf_filename"])
+#     NHM_dir = pl.Path(pp["NHM_dir"])
+#     out_dir = pl.Path(pp["out_dir"])
+#     notebook_output_dir = pl.Path(pp["notebook_output_dir"])
+#     Folium_maps_dir = pl.Path(pp["Folium_maps_dir"])
+#     html_maps_dir = pl.Path(pp["html_maps_dir"])
+#     html_plots_dir = pl.Path(pp["html_plots_dir"])
+#     nc_files_dir = pl.Path(pp["nc_files_dir"])
+#     subdomain = pp["subdomain"]
+#     GIS_format = pp["GIS_format"]
+#     param_file = pp["param_file"]
+#     control_file_name = pp["control_file_name"]
+#     nwis_gage_nobs_min = pp["nwis_gage_nobs_min"]
+#     nhru_nmonths_params = pp["nhru_nmonths_params"]
+#     nhru_params = pp["nhru_params"]
+#     selected_output_variables = pp["selected_output_variables"]
+#     water_years = pp["water_years"]
+#     workspace_txt = pp["workspace_txt"]
+
+#     return (
+#         Folium_maps_dir,
+#         model_dir,
+#         param_filename,
+#         gages_file,
+#         default_gages_file,
+#         nwis_gages_file,
+#         output_netcdf_filename,
+#         NHM_dir,
+#         out_dir,
+#         notebook_output_dir,
+#         Folium_maps_dir,
+#         html_maps_dir,
+#         html_plots_dir,
+#         nc_files_dir,
+#         subdomain,
+#         GIS_format,
+#         param_file,
+#         control_file_name,
+#         nwis_gage_nobs_min,
+#         nhru_nmonths_params,
+#         nhru_params,
+#         selected_output_variables,
+#         water_years,
+#         workspace_txt,
+#     )
+
 def load_subdomain_config(root_dir):
-    """ """
+    """Loads subdomain config and returns a dictionary of processed keys/values."""
     with open(root_dir / "subdomain_config.yaml") as file:
         pp = yaml.load(file, Loader=yaml.FullLoader)
 
-    Folium_maps_dir = pl.Path(pp["Folium_maps_dir"])
-    model_dir = pl.Path(pp["model_dir"])
-    param_filename = pl.Path(pp["param_filename"])
-    gages_file = pl.Path(pp["gages_file"])
-    default_gages_file = pl.Path(pp["default_gages_file"])
-    nwis_gages_file = pl.Path(pp["nwis_gages_file"])
-    output_netcdf_filename = pl.Path(pp["output_netcdf_filename"])
-    NHM_dir = pl.Path(pp["NHM_dir"])
-    out_dir = pl.Path(pp["out_dir"])
-    notebook_output_dir = pl.Path(pp["notebook_output_dir"])
-    Folium_maps_dir = pl.Path(pp["Folium_maps_dir"])
-    html_maps_dir = pl.Path(pp["html_maps_dir"])
-    html_plots_dir = pl.Path(pp["html_plots_dir"])
-    nc_files_dir = pl.Path(pp["nc_files_dir"])
-    subdomain = pp["subdomain"]
-    GIS_format = pp["GIS_format"]
-    param_file = pp["param_file"]
-    control_file_name = pp["control_file_name"]
-    nwis_gage_nobs_min = pp["nwis_gage_nobs_min"]
-    nhru_nmonths_params = pp["nhru_nmonths_params"]
-    nhru_params = pp["nhru_params"]
-    selected_output_variables = pp["selected_output_variables"]
-    water_years = pp["water_years"]
-    workspace_txt = pp["workspace_txt"]
-
-    return (
-        Folium_maps_dir,
-        model_dir,
-        param_filename,
-        gages_file,
-        default_gages_file,
-        nwis_gages_file,
-        output_netcdf_filename,
-        NHM_dir,
-        out_dir,
-        notebook_output_dir,
-        Folium_maps_dir,
-        html_maps_dir,
-        html_plots_dir,
-        nc_files_dir,
-        subdomain,
-        GIS_format,
-        param_file,
-        control_file_name,
-        nwis_gage_nobs_min,
-        nhru_nmonths_params,
-        nhru_params,
-        selected_output_variables,
-        water_years,
-        workspace_txt,
-    )
+    # Map YAML keys to their processed Python values
+    config = {
+        "Folium_maps_dir": pl.Path(pp["Folium_maps_dir"]),
+        "model_dir": pl.Path(pp["model_dir"]),
+        "param_filename": pl.Path(pp["param_filename"]),
+        "gages_file": pl.Path(pp["gages_file"]),
+        "default_gages_file": pl.Path(pp["default_gages_file"]),
+        "nwis_gages_file": pl.Path(pp["nwis_gages_file"]),
+        "output_netcdf_filename": pl.Path(pp["output_netcdf_filename"]),
+        "NHM_dir": pl.Path(pp["NHM_dir"]),
+        "out_dir": pl.Path(pp["out_dir"]),
+        "notebook_output_dir": pl.Path(pp["notebook_output_dir"]),
+        "html_maps_dir": pl.Path(pp["html_maps_dir"]),
+        "html_plots_dir": pl.Path(pp["html_plots_dir"]),
+        "nc_files_dir": pl.Path(pp["nc_files_dir"]),
+        "subdomain": pp["subdomain"],
+        "GIS_format": pp["GIS_format"],
+        "param_file": pp["param_file"],
+        "control_file_name": pp["control_file_name"],
+        "nwis_gage_nobs_min": pp["nwis_gage_nobs_min"],
+        "nhru_nmonths_params": pp["nhru_nmonths_params"],
+        "nhru_params": pp["nhru_params"],
+        "selected_output_variables": pp["selected_output_variables"],
+        "water_years": pp["water_years"],
+        "workspace_txt": pp["workspace_txt"],
+    }
+    return config

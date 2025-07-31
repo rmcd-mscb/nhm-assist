@@ -670,6 +670,7 @@ def read_gages_file(
 
 
 def make_hf_map_elements(
+    *,
     root_dir,
     model_dir,
     GIS_format,
