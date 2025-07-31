@@ -31,6 +31,10 @@ warnings.filterwarnings("ignore")
 
 crs = 4326
 
+import pathlib as pl
+import os
+root_dir = pl.Path(os.getcwd().rsplit("nhm-assist", 1)[0] + "nhm-assist")
+
 admin_basin_style = lambda x: {
     "fillColor": "#00000000",
     #'fill_opacity' : .8,

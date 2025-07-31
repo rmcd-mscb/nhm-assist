@@ -15,26 +15,32 @@
 # %%
 import warnings
 import pandas as pd
+
 # import pathlib as pl
 # from pyPRMS.metadata.metadata import MetaData
 # from pyPRMS import ParameterFile
 from contextlib import redirect_stdout
 import io
+
 f = io.StringIO()
 with redirect_stdout(f):
     import pywatershed as pws
 from rich.console import Console
+
 # from rich import pretty
 warnings.filterwarnings("ignore")
 import jupyter_black
-#pretty.install()
+
+# pretty.install()
 con = Console()
 jupyter_black.load()
 import sys
-#sys.path.append('../')
+
+# sys.path.append('../')
 import pathlib as pl
 import os
-root_folder = "nhm_pest_ies"
+
+root_folder = "nhm-assist"
 root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
 print(root_dir)
 sys.path.append(str(root_dir))
@@ -121,8 +127,11 @@ delete_notebook_output_files(notebook_output_dir, model_dir)
 # The cell below reads the NHM subdomain model hydrofabric elements for mapping HRUs and gages.
 
 # %%
+root_dir
+
+# %%
 hru_gdf, hru_txt, hru_cal_level_txt = create_hru_gdf(
-    NHM_dir,
+    root_dir,
     model_dir,
     GIS_format,
     param_filename,

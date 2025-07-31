@@ -141,8 +141,9 @@ map_file = make_streamflow_map(
     output_netcdf_filename,
 )
 
-# %%
-poi_df
+# %% [markdown]
+# ## Make an interactive plot of simulated and observed streamflow and table of streamflow statistics for selected gage
+# This plot is interactive, and made with [plotly](https://plotly.com/) (see [README](./README.md) for basic plot interactive functionality), and shows subplots of simulated and observed streamflow at daily, monthly, and annual timesteps for the selected gage. Note: the date that appears in popup window when hovering over plotted data reflects the last day of the timestep displayed in the plot. A flow exceedance curve and table of summary statistics is also provided in the plot for streamflow evaluation purposes. 
 
 # %% [markdown]
 # ## Select a gage to evaluate simulated and observed streamflow time-series and streamflow statistics
@@ -150,45 +151,39 @@ poi_df
 # <font size=3> If no gage is selected (default), the first gage listed in the parameter file will be used. The drop-down box selection can be changed and additional plots will be displayed and exported (html files) to<br> `<NHM subdomain model folder>/notebook_output_files/html_plots`.
 
 # %%
-if poi_id_sel is None:
-    poi_id_sel = poi_df.poi_id.tolist()[0]
+# %matplotlib inline
+import ipywidgets as widgets
+from IPython.display import display, clear_output, IFrame
+import nhm_helpers.display_controls as dc
 
-v = widgets.Combobox(
-    # value='John',
-    placeholder="(optional) Enter Gage ID here",
-    options=poi_df.poi_id.tolist(),
-    value=poi_id_sel,
-    description="Plot Gage:",
-    ensure_option=True,
-    disabled=False,
+gage_txt = widgets.Text(
+    description="Streamgage ID:",
+    placeholder="(optional) Enter gage id",
+    layout=widgets.Layout(width="40%"),
+    style={"description_width": "initial"},
 )
 
+btn_plot = widgets.Button(
+    description="Generate Plot",
+    button_style="primary",
+)
 
-def on_change(change):
-    global poi_id_sel, fig
-    if change["type"] == "change" and change["name"] == "value":
-        poi_id_sel = v.value
+btn_map = widgets.Button(
+    description="Generate Map",
+    button_style="primary",
+)
+
+dc.gage_txt = gage_txt
+dc.btn_plot = btn_plot
+dc.btn_map = btn_map
 
 
-v.observe(on_change)
-display(v)
+controls = widgets.HBox([gage_txt, btn_plot, btn_map])
 
-# %% [markdown]
-# <font size=4> &#x1F6D1;If a new selection is made above,</font><br>
-# <font color='green' size = '3'>**select this cell**</font>, then select <font color='green'>**Run Selected Cell and All Below**</font> from the Run menu in the toolbar.
-
-# %% [markdown]
-# ## Make an interactive plot of simulated and observed streamflow and table of streamflow statistics for selected gage
-# This plot is interactive, and made with [plotly](https://plotly.com/) (see [README](./README.md) for basic plot interactive functionality), and shows subplots of simulated and observed streamflow at daily, monthly, and annual timesteps for the selected gage. Note: the date that appears in popup window when hovering over plotted data reflects the last day of the timestep displayed in the plot. A flow exceedance curve and table of summary statistics is also provided in the plot for streamflow evaluation purposes. 
+plot_out = widgets.Output()
+map_out = widgets.Output()
+btn_plot.on_click(dc.on_plot_clicked)
+btn_map.on_click(dc.on_map_clicked)
+display(widgets.VBox([controls, plot_out, map_out]))
 
 # %%
-plot_file_path = create_streamflow_plot(
-    poi_id_sel,
-    plot_start_date,
-    plot_end_date,
-    water_years,
-    html_plots_dir,
-    output_netcdf_filename,
-    out_dir,
-    subdomain,
-)

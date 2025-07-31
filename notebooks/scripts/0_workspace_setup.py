@@ -26,10 +26,10 @@ with redirect_stdout(f):
 from rich.console import Console
 from rich import pretty
 warnings.filterwarnings("ignore")
-import jupyter_black
+#import jupyter_black
 pretty.install()
 con = Console()
-jupyter_black.load()
+#jupyter_black.load()
 
 import sys
 import os
@@ -37,40 +37,6 @@ root_folder = "nhm_pest_ies"
 root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
 print(root_dir)
 
-
-# %%
-import geopandas as gpd
-from shapely.geometry import LineString
-
-lines = [
-    LineString([(0, 0), (1, 1)]),
-    LineString([(1.05, 1.05), (2, 2)]),  # Intentional small gap
-    LineString([(2.1, 2.1), (3, 3)]),    # Intentional small gap
-    LineString([(3, 3), (4, 4)])
-]
-gdf = gpd.GeoDataFrame({'geometry': lines})
-
-# %%
-gdf
-
-# %%
-gdf.plot()
-
-# %%
-from shapely.ops import snap
-
-# Choose a tolerance slightly larger than your largest gap
-tolerance = 0.15
-
-# Snap each geometry to all others to close small endpoint gaps
-snapped = gdf.copy()
-for idx, row in gdf.iterrows():
-    for idx2, target in gdf.iterrows():
-        if idx != idx2:
-            snapped.at[idx, 'geometry'] = snap(snapped.at[idx, 'geometry'], target['geometry'], tolerance)
-
-print(snapped)
-snapped.plot()
 
 # %% [markdown]
 # ## Introduction
@@ -345,94 +311,3 @@ dict_file = {
 
 with open(r"..\subdomain_config.yaml", "w") as file:
     documents = yaml.dump(dict_file, file)
-
-# %%
-dict_file
-
-# %%
-# def load_subdomain_config():
-#     """ """
-#     with open(r"..\..\subdomain_config.yaml") as file:
-#         pp = yaml.load(file, Loader=yaml.FullLoader)
-
-#     Folium_maps_dir = pl.Path(pp["Folium_maps_dir"])
-#     param_filename = pl.Path(pp["param_filename"])
-#     gages_file = pl.Path(pp["gages_file"])
-#     default_gages_file = pl.Path(pp["default_gages_file"])
-#     nwis_gages_file = pl.Path(pp["nwis_gages_file"])
-#     output_netcdf_filename = pl.Path(pp["output_netcdf_filename"])
-#     NHM_dir = pl.Path(pp["NHM_dir"])
-#     out_dir = pl.Path(pp["out_dir"])
-#     notebook_output_dir = pl.Path(pp["notebook_output_dir"])
-#     Folium_maps_dir = pl.Path(pp["Folium_maps_dir"])
-#     html_maps_dir = pl.Path(pp["html_maps_dir"])
-#     html_plots_dir = pl.Path(pp["html_plots_dir"])
-#     nc_files_dir = pl.Path(pp["nc_files_dir"])
-#     subdomain = pp["subdomain"]
-#     GIS_format = pp["GIS_format"]
-#     param_file = pp["param_file"]
-#     control_file_name = pp["control_file_name"]
-#     nwis_gage_nobs_min = pp["nwis_gage_nobs_min"]
-#     nhru_nmonths_params = pp["nhru_nmonths_params"]
-#     nhru_params = pp["nhru_params"]
-#     selected_output_variables = pp["selected_output_variables"]
-#     water_years = pp["water_years"]
-#     workspace_txt = pp["workspace_txt"]
-
-#     return (
-#         Folium_maps_dir,
-#         param_filename,
-#         gages_file,
-#         default_gages_file,
-#         nwis_gages_file,
-#         output_netcdf_filename,
-#         NHM_dir,
-#         out_dir,
-#         notebook_output_dir,
-#         Folium_maps_dir,
-#         html_maps_dir,
-#         html_plots_dir,
-#         nc_files_dir,
-#         subdomain,
-#         GIS_format,
-#         param_file,
-#         control_file_name,
-#         nwis_gage_nobs_min,
-#         nhru_nmonths_params,
-#         nhru_params,
-#         selected_output_variables,
-#         water_years,
-#         workspace_txt,
-#     )
-
-# %%
-(
-    Folium_maps_dir,
-    param_filename,
-    gages_file,
-    default_gages_file,
-    nwis_gages_file,
-    output_netcdf_filename,
-    NHM_dir,
-    out_dir,
-    notebook_output_dir,
-    Folium_maps_dir,
-    html_maps_dir,
-    html_plots_dir,
-    nc_files_dir,
-    subdomain,
-    GIS_format,
-    param_file,
-    control_file_name,
-    nwis_gage_nobs_min,
-    nhru_nmonths_params,
-    nhru_params,
-    selected_output_variables,
-    water_years,
-    workspace_txt,
-) = load_subdomain_config()
-
-# %%
-Folium_maps_dir
-
-# %%

@@ -130,165 +130,117 @@ con.print(
 # <font size=4> &#x270D;<font color='green'>**Enter Information:**</font> **Run the cell below. In the resulting drop-down boxes, select an HRU **output variable** and a **year** value to display in the map. You may also select a gage plots (optional). &#x270D;<font color='green'>**</font><br>
 # <font size = '3'> The default is set to **recharge**, **mean_annual** with no gage selected, and the map will zoom to the model extent. If a gage number is selected here, the map will zoom to that location. Plots will also be rendered for the selected gage. If no gage is selected (default), the first gage listed in the parameter file will be used. All drop-down box selections can be changed and additional maps and plots will be created. Maps will be displayed and exported (HTML files) to `<NHM subdomain model folder>/notebook_output_files/html_maps`. Plots will be displayed and exported (HTML files) to `<NHM subdomain model folder>/notebook_output_files/html_plots`.
 
-# %%
-# Create selection widgets
-##### Varibale selection widget
-output_var_sel = output_var_list[
-    8
-]  # Set a default value so that the notebook will run without selection
+# %% [markdown]
+# ## Interactive NHM Output Explorer
+#
+# This single, combined cell provides a fully interactive environment for exploring National Hydrologic Model (NHM) outputs. It includes:
+#
+# 1. **Average Flux Plot for Gage Catchment**  
+#    - Plots average fluxes (cubic feet/sec) of **all** NHM output variables for the selected gage catchment at **annual**, **monthly**, and **daily** time steps.  
+#    - Variables can be added or removed on-the-fly via the legend.  
+#    - Interactive controls in the upper-right corner allow zooming, panning, and saving the figure.  
+#
+# 2. **Cumulative Time-Series for Selected Variable**  
+#    - Displays cumulative values of the **currently selected** output variable for the chosen POI basin, also at annual, monthly, and daily resolutions.  
+#    - Compares total basin flux against individual HRU contributions.  
+#    - Fully interactive with save/download widgets.  
+#
+# 3. **Folium Map of HRU Values**  
+#    - Renders an interactive map showing **annual** values of the selected variable for every HRU in the NHM subdomain.  
+#    - Left-click on any HRU polygon to inspect its variable value and metadata.  
+#
+# **Output Files**  
+# - All **plots** are saved as `.html` files in  
+#   ``"./<subdomain model>/notebook_output/html_plots"``  
+# - All **maps** are saved as `.html` files in  
+#   ``"./<subdomain model>/notebook_output/html_maps"``  
+#
 
-style_date = {"description_width": "initial"}
+# %%
+# %matplotlib inline
+import ipywidgets as widgets
+from ipywidgets import HBox, VBox, Button
+from IPython.display import display, IFrame, clear_output
+import nhm_helpers.display_controls as dc
+
 style_var = {"description_width": "initial"}
+layout = widgets.Layout(width="25%")
+
 
 v = widgets.Dropdown(
     options=output_var_list,
-    value=output_var_sel,
-    description="Output variable for map and plot:",
-    layout=widgets.Layout(width="35%"),
+    value=output_var_list[8],
+    description="Output variable:",
+    layout=layout,
     style=style_var,
 )
 
-
-def on_change(change):
-    global output_var_sel, sel_flag
-    if change["type"] == "change" and change["name"] == "value":
-        output_var_sel = v.value
-        # sel_flag = True
-
-
-v.observe(on_change)
-# display(v)
-
-##### Year selection widget
-list_of_years = year_list.copy()
-list_of_years.append(
-    "mean_annual"
-)  # Append the mean annual so that the default will not be a year
-sel_year = list_of_years[
-    -1
-]  # Set a default value so that the notebook will run without selection
-
+# Year selector
+years = year_list.copy() + ["mean_annual"]
 yr = widgets.Dropdown(
-    options=list_of_years,
-    value=list_of_years[-1],
-    description="Time step (year) for map:",
-    layout=widgets.Layout(width="35%"),
+    options=years,
+    value=years[-1],
+    description="Time step (year):",
+    layout=layout,
     style=style_var,
 )
 
-
-def on_change(change):
-    global sel_year  # Have to set the var as global so that it is carried outside of the fucntion to the notebook
-    if change["type"] == "change" and change["name"] == "value":
-        sel_year = yr.value
-
-
-yr.observe(on_change)
-
-# #################################################
+# Gage combobox
 v2 = widgets.Combobox(
-    # value=poi_df.poi_id.tolist()[0],
-    placeholder="(optional) Enter gage id",
     options=poi_df.poi_id.tolist(),
-    description="Zoom to and plot gage:",
+    placeholder="(optional) Enter gage id",
+    description="Zoom to gage:",
     ensure_option=True,
     disabled=False,
-    layout=widgets.Layout(width="35%"),
+    layout=layout,
     style=style_var,
 )
 
 
-def on_change2(change):
-    global poi_id_sel, fig
-    if change["type"] == "change" and change["name"] == "value":
-        poi_id_sel = v2.value
+# Checkboxes for plot types
+cb_map = widgets.Checkbox(value=False, description="Include Map")
+cb_summary = widgets.Checkbox(value=False, description="Include Summary TS")
+cb_flux = widgets.Checkbox(value=False, description="Include Flux TS")
+plot_checks = HBox([cb_map, cb_summary, cb_flux])
 
+# Generate button
+btn_generate = Button(description="Show Plots", button_style="primary")
 
-v2.observe(on_change2)
+# Output areas
+out_map = widgets.Output()
+out_summary = widgets.Output()
+out_flux = widgets.Output()
 
-display(VBox([v, yr, v2]))
+dc.v = v
+dc.yr = yr
+dc.v2 = v2
+dc.cb_map = cb_map
+dc.cb_summary = cb_summary
+dc.cb_flux = cb_flux
+dc.plot_checks = plot_checks
+dc.btn_generate = btn_generate
+dc.out_map = out_map
+dc.out_summary = out_summary
+dc.out_flux = out_flux
+dc.poi_df = poi_df
+dc.out_dir = out_dir
+dc.plot_start_date = plot_start_date
+dc.plot_end_date = plot_end_date
+dc.water_years = water_years
+dc.hru_gdf = hru_gdf
+dc.seg_gdf = seg_gdf
+dc.html_maps_dir = html_maps_dir
+dc.year_list = year_list
+dc.Folium_maps_dir = Folium_maps_dir
+dc.HW_basins = HW_basins
+dc.subdomain = subdomain
+dc.param_filename = param_filename
+dc.output_var_list = output_var_list
+dc.html_plots_dir = html_plots_dir
+btn_generate.on_click(dc.on_generate_clicked)
+
+display(VBox([v, yr, v2, plot_checks, btn_generate, out_map, out_summary, out_flux]))
 
 # %% [markdown]
 # <font size=4> &#x1F6D1;If new selections are made above,</font><br>
 # <font size = '3'><font color='green'>**select this cell**</font>, then select <font color='green'>**Run Selected Cell and All Below**</font> from the Run menu in the toolbar.
-
-# %% [markdown]
-# ## Make interactive map of selected output variable values in the NHM subdomain
-# The following cell creates an interactive folium.map that displays an annual values of all HRUs in the NHM subdomain for a selected output variable. Additionally, variable values for each HRU and additional HRU information can be viewed by left-clicking on HRUs. Maps produced are saved for use outside of notebooks as .html files in `./"subdomain model"/notebook_output/html_maps`.
-
-# %%
-# Make map
-
-# This is for testing only; can comment out in user version
-# if poi_id_sel is None:
-#     poi_id_sel = poi_df.poi_id.tolist()[0]
-
-map_file = make_var_map(
-    root_dir,
-    out_dir,
-    output_var_sel,
-    plot_start_date,
-    plot_end_date,
-    water_years,
-    hru_gdf,
-    poi_df,
-    poi_id_sel,
-    seg_gdf,
-    html_maps_dir,
-    year_list,
-    sel_year,
-    Folium_maps_dir,
-    HW_basins,
-    subdomain,
-)
-
-# %% [markdown]
-# ## Create an interactive time-series plot to evaluate an NHM output variable for poi basin.
-# The following cell creates a plot for the output variable selected in this notebook that shows a cumulative value for the selected poi basin at the annual, monthly, and daily time steps. Individual poi basin HRU contributions can also be compared to the poi basin values. The plot is interactive and can be saved using the widgets in the upper right-hand corner of the plot. Plots produced are saved for use outside of notebooks as .html files in `./"subdomain model"/notebook_output/html_plots`.
-
-# %%
-# This is for testing only; can comment out in user version
-if poi_id_sel is None:
-    poi_id_sel = poi_df.poi_id.tolist()[0]
-
-fig_hru_sum_vars_for_poi_filename = make_plot_var_for_hrus_in_poi_basin(
-    out_dir,
-    param_filename,
-    water_years,
-    hru_gdf,
-    poi_df,
-    output_var_sel,
-    poi_id_sel,
-    plot_start_date,
-    plot_end_date,
-    plot_colors,
-    subdomain,
-    html_plots_dir,
-)
-
-# %% [markdown]
-# ## Create an interactive plot to evaluate all NHM ouput variables as average fluxes (cubic feet/sec) for selected gage catchment.
-# The following cell creates a plot of all listed output variables' average fluxes (cubic feet/sec) for the selected gage catchment at the annual, monthly, and daily time steps. Individual output variables can be added and removed. The plot is interactive and can be saved using the widgets in the upper right-hand corner of the plot. Plots produced are saved for use outside of notebooks as .html files in `./"subdomain model"/notebook_output/html_plots`.
-
-# %%
-fig_var_fluxes_for_poi_filename = oopla(
-    out_dir,
-    param_filename,
-    water_years,
-    hru_gdf,
-    poi_df,
-    output_var_list,
-    output_var_sel,
-    poi_id_sel,
-    plot_start_date,
-    plot_end_date,
-    plot_colors,
-    var_colors_dict,
-    leg_only_dict,
-    subdomain,
-    html_plots_dir,
-)
-
-# %%
-
-# %%

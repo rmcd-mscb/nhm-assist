@@ -15,6 +15,9 @@ from nhm_helpers.output_plots import create_streamflow_plot
 from nhm_helpers.map_template import make_streamflow_map
 from nhm_helpers.nhm_output_visualization import retrieve_hru_output_info
 
+import pathlib as pl
+import os
+root_dir = pl.Path(os.getcwd().rsplit("nhm-assist", 1)[0] + "nhm-assist")
 
 
 def _get_valid_poi() -> str:
@@ -32,6 +35,7 @@ def generate_map() -> None:
     """
     poi_id = _get_valid_poi()
     fmap = make_var_map(
+        root_dir,
         out_dir,
         v.value,
         plot_start_date,
@@ -137,6 +141,7 @@ def on_map_clicked(b: widgets.Button) -> None:
         clear_output(wait=True)
         poi_id_sel = gage_txt.value.strip() or poi_df.poi_id.tolist()[0]
         map_file = make_streamflow_map(
+            root_dir,
             out_dir,
             plot_start_date,
             plot_end_date,

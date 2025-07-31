@@ -775,8 +775,11 @@ def create_append_gages_to_param_file(
 
 def make_myparam_addl_gages_param_file(
     model_dir,
-    pdb,
+    param_filename,
 ):
+    prms_meta = MetaData().metadata
+    pdb = ParameterFile(param_filename, metadata=prms_meta, verbose=False)
+    
     """Read back in the modified gages to add file"""
     col_names = [
         "poi_gage_id",

@@ -18,25 +18,41 @@ import pathlib as pl
 import warnings
 from rich.console import Console
 
-# from rich import pretty
-warnings.filterwarnings("ignore")
-#import jupyter_black
-
-# pretty.install()
 con = Console()
-#jupyter_black.load()
-
-
-import pathlib as pl
 import os
+
 root_folder = "nhm-assist"
 root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
 print(root_dir)
 sys.path.append(str(root_dir))
-
 from nhm_helpers.nhm_assist_utilities import load_subdomain_config
+
+
+# %%
 from nhm_helpers.nhm_hydrofabric import make_hf_map_elements
-from nhm_helpers.map_template import make_hf_map
+from nhm_helpers.map_template import make_par_map
+from nhm_helpers.nhm_assist_utilities import (
+    make_plots_par_vals,
+    create_append_gages_to_param_file,
+    make_myparam_addl_gages_param_file,
+)
+from nhm_helpers.nhm_helpers import *
+from ipywidgets import widgets
+from IPython.display import display
+
+# Import Notebook Packages
+import numpy as np
+import geopandas as gpd
+from shapely.geometry import Point, LineString
+import warnings
+from collections.abc import KeysView
+import networkx as nx
+from pyPRMS import ParameterFile
+from pyPRMS.metadata.metadata import MetaData
+from rich import pretty
+
+pretty.install()
+warnings.filterwarnings("ignore")
 
 # %%
 from nhm_helpers.nhm_assist_utilities import load_subdomain_config
@@ -67,16 +83,6 @@ from nhm_helpers.nhm_assist_utilities import load_subdomain_config
     water_years,
     workspace_txt,
 ) = load_subdomain_config(root_dir)
-
-# %% [markdown]
-# ## Introduction
-# The purpose of this notebook is to assist in verifying NHM subdomain model location, HRU to segment connections, segment routing order, and the locations of gages and associated streamflow segments. This notebook displays hydrofabric elements: HRUs, streamflow segments, and gages both in the parameter file and additional NWIS gages in the domain (potential streamflow gages).
-#
-# The cell below reads the NHM subdomain model hydrofabric elements for mapping purposes using make_hf_map_elements() and writes general NHM subdomain model run and hydrofabric information.
-
-# %% [markdown]
-# ## Make interactive map of hydrofabric elements
-# The cell below creates a map that displays NHM subdomain model hydrofabric elements: HRUs, streamflow segments, and gages both in the parameter file and additional NWIS gages in the domain (potential streamflow gages). Gage locations are overlays in the map of NHM headwater basins (HWs) that are color coded to calibration type: yellow indicates HWs that were calibrated with statistical streamflow targets at the HW outlet; green indicates HWs that were further calibrated with streamflow observations at selected gage locations.
 
 # %%
 (
@@ -112,24 +118,27 @@ con.print(
     f"\n{gages_txt_nb2}",
 )
 
+# %% [markdown]
+# ## Run the cell below makes a .csv file that is used to select additional gages to append the paramter file.
+
 # %%
-map_file = make_hf_map(
-    root_dir,
-    hru_gdf,
-    HW_basins_gdf,
-    HW_basins,
-    poi_df,
-    "",
-    seg_gdf,
-    nwis_gages_aoi,
+create_append_gages_to_param_file(
     gages_df,
-    html_maps_dir,
-    Folium_maps_dir,
-    param_filename,
-    subdomain,
+    seg_gdf,
+    poi_df,
+    model_dir,
 )
 
 # %% [markdown]
-# # Want to Add a potential gage to the parameter file? [Click here!](./add_pois_to_parameters.ipynb)
+# ## Run the cell below to add the gages listed in the additional gages to append .csv file to the parameter file.
+
+# %%
+make_myparam_addl_gages_param_file(
+    model_dir,
+    param_filename,
+)
+
+# %% [markdown]
+# ## To view thhe model with the new parameter file, update the `param_file` in [0_workspace_setup](./0_workspace_setup.ipynb). We strongly recommend renaming the new parameter file, delete the `notebook_output_files` folder in the model directory and delete the `output` folder in the model directory. Then, rerun all notebooks.
 
 # %%

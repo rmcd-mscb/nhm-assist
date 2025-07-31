@@ -19,9 +19,7 @@ import sys
 import pathlib as pl
 
 #sys.path.append("../")
-from nhm_helpers.nhm_hydrofabric import make_hf_map_elements
-from nhm_helpers.map_template import make_par_map
-from nhm_helpers.nhm_assist_utilities import make_plots_par_vals, load_subdomain_config
+
 from ipywidgets import widgets
 from IPython.display import display
 
@@ -38,13 +36,17 @@ import jupyter_black
 # pretty.install()
 con = Console()
 jupyter_black.load()
-sys.path.append('../')
+
 import pathlib as pl
 import os
-root_folder = "nhm_pest_ies"
+root_folder = "nhm-assist"
 root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
 print(root_dir)
 sys.path.append(str(root_dir))
+
+from nhm_helpers.nhm_hydrofabric import make_hf_map_elements
+from nhm_helpers.map_template import make_par_map
+from nhm_helpers.nhm_assist_utilities import make_plots_par_vals, load_subdomain_config
 
 # %%
 from nhm_helpers.nhm_assist_utilities import load_subdomain_config
@@ -99,7 +101,6 @@ from nhm_helpers.nhm_assist_utilities import load_subdomain_config
     HW_basins,
 ) = make_hf_map_elements(
     root_dir,
-    NHM_dir,
     model_dir,
     GIS_format,
     param_filename,
@@ -236,7 +237,3 @@ map_file = make_par_map(
     param_filename,
     subdomain,
 )
-
-# %%
-
-# %%
