@@ -13,67 +13,36 @@
 # ---
 
 # %%
-import sys
-import pathlib as pl
-
-# sys.path.append("../")
-import pathlib as pl
-import os
-
-root_folder = "nhm-assist"
-root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
-print(root_dir)
-sys.path.append(str(root_dir))
-
-# %%
-import xarray as xr
 import warnings
-from rich.console import Console
-
-# from rich import pretty
-warnings.filterwarnings("ignore")
-import jupyter_black
-
+import pandas as pd
+import pathlib as pl
+from pyPRMS.metadata.metadata import MetaData
+from pyPRMS import ParameterFile
 from contextlib import redirect_stdout
 import io
-
 f = io.StringIO()
 with redirect_stdout(f):
     import pywatershed as pws
-
-# pretty.install()
+from rich.console import Console
+from rich import pretty
+warnings.filterwarnings("ignore")
+#import jupyter_black
+pretty.install()
 con = Console()
-jupyter_black.load()
+#jupyter_black.load()
+
+import sys
+import os
+root_folder = "nhm-assist"
+root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
+sys.path.append(str(root_dir))
+
+from nhm_helpers.nhm_assist_utilities import load_subdomain_config
+config = load_subdomain_config(root_dir)
+# con.print(config)
 
 # %%
-from nhm_helpers.nhm_assist_utilities import load_subdomain_config
-
-(
-    Folium_maps_dir,
-    model_dir,
-    param_filename,
-    gages_file,
-    default_gages_file,
-    nwis_gages_file,
-    output_netcdf_filename,
-    NHM_dir,
-    out_dir,
-    notebook_output_dir,
-    Folium_maps_dir,
-    html_maps_dir,
-    html_plots_dir,
-    nc_files_dir,
-    subdomain,
-    GIS_format,
-    param_file,
-    control_file_name,
-    nwis_gage_nobs_min,
-    nhru_nmonths_params,
-    nhru_params,
-    selected_output_variables,
-    water_years,
-    workspace_txt,
-) = load_subdomain_config(root_dir)
+import xarray as xr
 
 # %% [markdown]
 # ## Introduction
@@ -94,10 +63,10 @@ from nhm_helpers.nhm_assist_utilities import load_subdomain_config
 # The NHM subdomain model input was provided as one file, `cbh.nc`, that included tmin, tmax, and precipitation data. These data need to be split into individual files to be read by `pywatershed`.
 
 # %%
-pws_prcp_input_file = model_dir / "prcp.nc"
-pws_tmin_input_file = model_dir / "tmin.nc"
-pws_tmax_input_file = model_dir / "tmax.nc"
-nhmx_input_file = model_dir / "cbh.nc"
+pws_prcp_input_file = config['model_dir'] / "prcp.nc"
+pws_tmin_input_file = config['model_dir'] / "tmin.nc"
+pws_tmax_input_file = config['model_dir'] / "tmax.nc"
+nhmx_input_file = config['model_dir'] / "cbh.nc"
 input_file_path_list = [pws_prcp_input_file, pws_tmin_input_file, pws_tmax_input_file]
 
 for input_file_path in input_file_path_list:
@@ -116,12 +85,12 @@ for input_file_path in input_file_path_list:
         tmin.to_netcdf(pws_tmin_input_file)
         tmax.to_netcdf(pws_tmax_input_file)
         con.print(
-            f"The pywatershed input file [bold]{pl.Path(input_file_path).stem}[/bold] was missing. All pywatershed input files were created in {model_dir} from the cbh.nc file."
+            f"The pywatershed input file [bold]{pl.Path(input_file_path).stem}[/bold] was missing. All pywatershed input files were created in {config['model_dir']} from the cbh.nc file."
         )
     else:
         pass
 con.print(
-    f"[bold][green]Optional:[/bold][/green] To recreate pywatershed input files in {model_dir}, delete [bold]prcp.nc[/bold], [bold]tmin.nc[/bold], and [bold]tmax.nc[/bold] files and re-run this notebook."
+    f"[bold][green]Optional:[/bold][/green] To recreate pywatershed input files in {config['model_dir']}, delete [bold]prcp.nc[/bold], [bold]tmin.nc[/bold], and [bold]tmax.nc[/bold] files and re-run this notebook."
 )
 
 # %% [markdown]
@@ -129,7 +98,7 @@ con.print(
 # `pywatershed` requires the soilzone variable "pref_flow_infil_frac" to be present in the parameter file. If the variable is not in the parameter file, it must be added as all zeros before passing the parameters to `pywatershed`.
 
 # %%
-params = pws.parameters.PrmsParameters.load(param_filename)
+params = pws.parameters.PrmsParameters.load(config['param_filename'])
 if "pref_flow_infil_frac" not in params.parameters.keys():
     # Parameter objects are not directly editable in pywatershed,
     # so we export to an equivalent object we can edit, in this case
@@ -144,19 +113,19 @@ if "pref_flow_infil_frac" not in params.parameters.keys():
 
 # %%
 control = pws.Control.load_prms(
-    model_dir / control_file_name, warn_unused_options=False
+    config['model_dir'] / config['control_file_name'], warn_unused_options=False
 )
 # Sets control options for both cases
 control.options = control.options | {
-    "input_dir": model_dir,
+    "input_dir": config['model_dir'],
     "budget_type": None,
     "verbosity": 0,
     "calc_method": "numba",
 }
 
 control.options = control.options | {
-    "netcdf_output_var_names": selected_output_variables,
-    "netcdf_output_dir": out_dir,
+    "netcdf_output_var_names": config['selected_output_variables'],
+    "netcdf_output_dir": config['out_dir'],
 }
 
 model = pws.Model(
@@ -182,10 +151,10 @@ model.run()
 
 # %%
 hru_streamflow_out = sum(
-    xr.load_dataarray(f"{out_dir / ff}.nc")
+    xr.load_dataarray(f"{config['out_dir']/ ff}.nc")
     for ff in ["sroff_vol", "ssres_flow_vol", "gwres_flow_vol"]
 )
-hru_streamflow_out.to_netcdf(out_dir / "hru_streamflow_out.nc")
+hru_streamflow_out.to_netcdf(config['out_dir'] / "hru_streamflow_out.nc")
 del hru_streamflow_out
 
 # %% [markdown]
@@ -197,8 +166,8 @@ del hru_streamflow_out
 # - 1 is related to the indexing in fortran; made a a tuple see above
 wh_gages = (params.parameters["poi_gage_segment"] - 1,)
 for var in ["seg_outflow"]:
-    data = xr.load_dataarray(f"{out_dir / var}.nc")[:, wh_gages[0]]
+    data = xr.load_dataarray(f"{config['out_dir'] / var}.nc")[:, wh_gages[0]]
     data = data.assign_coords(npoi_gages=("nhm_seg", params.parameters["poi_gage_id"]))
-    out_file = f"{out_dir / var}.nc"
+    out_file = f"{config['out_dir'] / var}.nc"
     data.to_netcdf(out_file)
     del data

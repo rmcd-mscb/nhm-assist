@@ -113,12 +113,13 @@ def bynsegment_parameter_list(param_filename):
 
 # Reads/Creates NWIS stations file if not already created
 def fetch_nwis_gage_info(
+    *,
     root_dir,
     model_dir,
     control_file_name,
     nwis_gage_nobs_min,
     hru_gdf,
-    seg_gdf
+    seg_gdf,
 ):
     """
     This function creates a pandas DataFrame of information for all gages in the model domain that
@@ -320,6 +321,7 @@ def fetch_nwis_gage_info(
 
 
 def make_plots_par_vals(
+    *,
     poi_df,
     hru_gdf,
     param_filename,
@@ -631,14 +633,14 @@ def make_HW_cal_level_files(hru_gdf):
 
     return HW_basins_gdf, HW_basins
 
-def make_obs_plot_files(control, gages_df, xr_streamflow, Folium_maps_dir):
+def make_obs_plot_files(*, start_date, end_date, gages_df, xr_streamflow, Folium_maps_dir):
     """This function makes plots and saved with as html.txt files to be embedded in the hf_map
     by notebook 2_model_hydrofabric_visualization.ipynb used to evaluate ti gages shown in the
     map have desirable lengths of record to include the gage as a poi in the parameter file.
     """
 
-    start_date = pd.to_datetime(str(control.start_time)).strftime("%m/%d/%Y")
-    end_date = pd.to_datetime(str(control.end_time)).strftime("%m/%d/%Y")
+    # start_date = pd.to_datetime(str(control.start_time)).strftime("%m/%d/%Y")
+    # end_date = pd.to_datetime(str(control.end_time)).strftime("%m/%d/%Y")
 
     for cpoi in gages_df.index:
         obs_plot_file = Folium_maps_dir / f"{cpoi}_streamflow_obs.txt"
@@ -710,6 +712,7 @@ def make_obs_plot_files(control, gages_df, xr_streamflow, Folium_maps_dir):
                 f.write(text_div)
 
 def create_append_gages_to_param_file(
+    *,
     gages_df,
     seg_gdf,
     poi_df,
@@ -774,6 +777,7 @@ def create_append_gages_to_param_file(
     )
 
 def make_myparam_addl_gages_param_file(
+    *,
     model_dir,
     param_filename,
 ):
@@ -824,6 +828,7 @@ def make_myparam_addl_gages_param_file(
     return 
 
 def delete_notebook_output_files(
+    *,
     notebook_output_dir,
     model_dir,
 ):
@@ -936,6 +941,8 @@ def load_subdomain_config(root_dir):
         "nhru_params": pp["nhru_params"],
         "selected_output_variables": pp["selected_output_variables"],
         "water_years": pp["water_years"],
+        "start_date" : pd.to_datetime(pp["start_date"]).strftime("%m/%d/%Y"),
+        "end_date" : pd.to_datetime(pp["end_date"]).strftime("%m/%d/%Y"),
         "workspace_txt": pp["workspace_txt"],
     }
     return config

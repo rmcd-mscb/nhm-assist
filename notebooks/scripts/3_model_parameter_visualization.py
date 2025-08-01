@@ -13,8 +13,6 @@
 # ---
 
 # %%
-
-# %%
 import sys
 import pathlib as pl
 
@@ -41,42 +39,13 @@ import pathlib as pl
 import os
 root_folder = "nhm-assist"
 root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
-print(root_dir)
 sys.path.append(str(root_dir))
 
 from nhm_helpers.nhm_hydrofabric import make_hf_map_elements
 from nhm_helpers.map_template import make_par_map
 from nhm_helpers.nhm_assist_utilities import make_plots_par_vals, load_subdomain_config
 
-# %%
-from nhm_helpers.nhm_assist_utilities import load_subdomain_config
-
-(
-    Folium_maps_dir,
-    model_dir,
-    param_filename,
-    gages_file,
-    default_gages_file,
-    nwis_gages_file,
-    output_netcdf_filename,
-    NHM_dir,
-    out_dir,
-    notebook_output_dir,
-    Folium_maps_dir,
-    html_maps_dir,
-    html_plots_dir,
-    nc_files_dir,
-    subdomain,
-    GIS_format,
-    param_file,
-    control_file_name,
-    nwis_gage_nobs_min,
-    nhru_nmonths_params,
-    nhru_params,
-    selected_output_variables,
-    water_years,
-    workspace_txt,
-) = load_subdomain_config(root_dir)
+config = load_subdomain_config(root_dir)
 
 # %% [markdown]
 # ## Introduction
@@ -100,23 +69,23 @@ from nhm_helpers.nhm_assist_utilities import load_subdomain_config
     HW_basins_gdf,
     HW_basins,
 ) = make_hf_map_elements(
-    root_dir,
-    model_dir,
-    GIS_format,
-    param_filename,
-    control_file_name,
-    nwis_gages_file,
-    gages_file,
-    default_gages_file,
-    nhru_params,
-    nhru_nmonths_params,
-    nwis_gage_nobs_min,
+    root_dir=root_dir,
+    model_dir=config["model_dir"],
+    GIS_format=config["GIS_format"],
+    param_filename=config["param_filename"],
+    control_file_name=config["control_file_name"],
+    nwis_gages_file=config["nwis_gages_file"],
+    gages_file=config["gages_file"],
+    default_gages_file=config["default_gages_file"],
+    nhru_params=config["nhru_params"],
+    nhru_nmonths_params=config["nhru_nmonths_params"],
+    nwis_gage_nobs_min=config["nwis_gage_nobs_min"],
 )
-
 con.print(
-    f"{workspace_txt}\n",
+    f"{config['workspace_txt']}\n",
     f"\n{gages_txt}{seg_txt}{hru_txt}",
-    f"\n     {hru_cal_level_txt}",
+    f"\n     {hru_cal_level_txt}\n",
+    f"\n{gages_txt_nb2}",
 )
 
 # %% [markdown]
@@ -125,12 +94,12 @@ con.print(
 
 # %%
 make_plots_par_vals(
-    poi_df,
-    hru_gdf,
-    param_filename,
-    nhru_params,
-    nhru_nmonths_params,
-    Folium_maps_dir,
+    poi_df=poi_df,
+    hru_gdf=hru_gdf,
+    param_filename=config["param_filename"],
+    nhru_params=config["nhru_params"],
+    nhru_nmonths_params=config["nhru_nmonths_params"],
+    Folium_maps_dir=config["Folium_maps_dir"],
 )
 
 # %% [markdown]
@@ -138,7 +107,7 @@ make_plots_par_vals(
 # <font size=4>&#x270D;<font color='green'>**Enter Information:**</font> **Run the cell below. In the resulting drop-down box, select a parameter**.
 
 # %%
-cal_hru_params = nhru_params + nhru_nmonths_params
+cal_hru_params = config["nhru_params"] + config["nhru_nmonths_params"]
 par_sel = cal_hru_params[4]
 # sel_flag = False
 
@@ -167,7 +136,7 @@ display(v)
 
 # %%
 prms_meta = MetaData().metadata
-pdb = ParameterFile(param_filename, metadata=prms_meta, verbose=False)
+pdb = ParameterFile(config["param_filename"], metadata=prms_meta, verbose=False)
 
 mo_num_dict = {
     "January": 1,
@@ -223,17 +192,19 @@ else:
 
 # %%
 map_file = make_par_map(
-    root_dir,
-    hru_gdf,
-    HW_basins,
-    poi_df,
-    par_sel,
-    mo_sel,
-    mo_name,
-    nhru_params,
-    Folium_maps_dir,
-    seg_gdf,
-    html_maps_dir,
-    param_filename,
-    subdomain,
+    root_dir=root_dir,
+    hru_gdf=hru_gdf,
+    HW_basins=HW_basins,
+    poi_df=poi_df,
+    par_sel=par_sel,
+    mo_sel=mo_sel,
+    mo_name=mo_name,
+    nhru_params=config["nhru_params"],
+    Folium_maps_dir=config["Folium_maps_dir"],
+    seg_gdf=seg_gdf,
+    html_maps_dir=config["html_maps_dir"],
+    param_filename=config["param_filename"],
+    subdomain=config["subdomain"],
 )
+
+# %%

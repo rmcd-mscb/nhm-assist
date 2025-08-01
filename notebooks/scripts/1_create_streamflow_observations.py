@@ -13,7 +13,22 @@
 # ---
 
 # %%
+import sys
+import os
+import pathlib as pl
 import warnings
+
+warnings.filterwarnings("ignore")
+from rich.console import Console
+
+con = Console()
+from rich import pretty
+
+pretty.install()
+import jupyter_black
+
+jupyter_black.load()
+
 import pandas as pd
 
 # import pathlib as pl
@@ -25,68 +40,17 @@ import io
 f = io.StringIO()
 with redirect_stdout(f):
     import pywatershed as pws
-from rich.console import Console
 
-# from rich import pretty
-warnings.filterwarnings("ignore")
-import jupyter_black
-
-# pretty.install()
-con = Console()
-jupyter_black.load()
-import sys
-
-# sys.path.append('../')
-import pathlib as pl
-import os
-
-root_folder = "nhm-assist"
-root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
-print(root_dir)
+# Find and set the "nhm-assist" root directory
+root_dir = pl.Path(os.getcwd().rsplit("nhm-assist", 1)[0] + "nhm-assist")
 sys.path.append(str(root_dir))
 
-
-# %%
-from nhm_helpers.nhm_assist_utilities import load_subdomain_config
-
-(
-    Folium_maps_dir,
-    model_dir,
-    param_filename,
-    gages_file,
-    default_gages_file,
-    nwis_gages_file,
-    output_netcdf_filename,
-    NHM_dir,
-    out_dir,
-    notebook_output_dir,
-    Folium_maps_dir,
-    html_maps_dir,
-    html_plots_dir,
-    nc_files_dir,
-    subdomain,
-    GIS_format,
-    param_file,
-    control_file_name,
-    nwis_gage_nobs_min,
-    nhru_nmonths_params,
-    nhru_params,
-    selected_output_variables,
-    water_years,
-    workspace_txt,
-) = load_subdomain_config(root_dir)
-
-# %%
-Folium_maps_dir
-
-# %%
 from nhm_helpers.sf_data_retrieval import (
     create_nwis_sf_df,
     create_OR_sf_df,
     create_ecy_sf_df,
     create_sf_efc_df,
 )
-
 from nhm_helpers.nhm_hydrofabric import (
     create_hru_gdf,
     create_segment_gdf,
@@ -94,15 +58,19 @@ from nhm_helpers.nhm_hydrofabric import (
     create_default_gages_file,
     read_gages_file,
 )
-
 from nhm_helpers.efc import plot_efc
 from nhm_helpers.nhm_assist_utilities import (
     make_obs_plot_files,
     delete_notebook_output_files,
+    load_subdomain_config,
 )
+config = load_subdomain_config(root_dir)
+
 
 # %%
-delete_notebook_output_files(notebook_output_dir, model_dir)
+delete_notebook_output_files(
+    notebook_output_dir=config["notebook_output_dir"], model_dir=config["model_dir"]
+)
 
 # %% [markdown]
 # # Introduction
@@ -127,34 +95,31 @@ delete_notebook_output_files(notebook_output_dir, model_dir)
 # The cell below reads the NHM subdomain model hydrofabric elements for mapping HRUs and gages.
 
 # %%
-root_dir
-
-# %%
 hru_gdf, hru_txt, hru_cal_level_txt = create_hru_gdf(
-    root_dir,
-    model_dir,
-    GIS_format,
-    param_filename,
-    nhru_params,
-    nhru_nmonths_params,
+    root_dir=root_dir,
+    model_dir=config["model_dir"],
+    GIS_format=config["GIS_format"],
+    param_filename=config["param_filename"],
+    nhru_params=config["nhru_params"],
+    nhru_nmonths_params=config["nhru_nmonths_params"],
 )
 
 seg_gdf, seg_txt = create_segment_gdf(
-    model_dir,
-    GIS_format,
-    param_filename,
+    model_dir=config["model_dir"],
+    GIS_format=config["GIS_format"],
+    param_filename=config["param_filename"],
 )
 
 poi_df = create_poi_df(
-    root_dir,
-    model_dir,
-    param_filename,
-    control_file_name,
-    hru_gdf,
-    gages_file,
-    default_gages_file,
-    nwis_gage_nobs_min,
-    seg_gdf,
+    root_dir=root_dir,
+    model_dir=config["model_dir"],
+    param_filename=config["param_filename"],
+    control_file_name=config["control_file_name"],
+    hru_gdf=hru_gdf,
+    gages_file=config["gages_file"],
+    default_gages_file=config["default_gages_file"],
+    nwis_gage_nobs_min=config["nwis_gage_nobs_min"],
+    seg_gdf=seg_gdf,
 )
 
 # %% [markdown]
@@ -163,14 +128,14 @@ poi_df = create_poi_df(
 
 # %%
 NWIS_df = create_nwis_sf_df(
-    root_dir,
-    control_file_name,
-    model_dir,
-    output_netcdf_filename,
-    hru_gdf,
-    poi_df,
-    nwis_gage_nobs_min,
-    seg_gdf,
+    root_dir=root_dir,
+    control_file_name=config["control_file_name"],
+    model_dir=config["model_dir"],
+    output_netcdf_filename=config["output_netcdf_filename"],
+    hru_gdf=hru_gdf,
+    poi_df=poi_df,
+    nwis_gage_nobs_min=config["nwis_gage_nobs_min"],
+    seg_gdf=seg_gdf,
 )
 
 # %% [markdown]
@@ -179,19 +144,19 @@ NWIS_df = create_nwis_sf_df(
 
 # %%
 default_gages_file = create_default_gages_file(
-    root_dir,
-    model_dir,
-    control_file_name,
-    nwis_gage_nobs_min,
-    hru_gdf,
-    poi_df,
-    seg_gdf,
+    root_dir=root_dir,
+    model_dir=config["model_dir"],
+    control_file_name=config["control_file_name"],
+    nwis_gage_nobs_min=config["nwis_gage_nobs_min"],
+    hru_gdf=hru_gdf,
+    poi_df=poi_df,
+    seg_gdf=seg_gdf,
 )
 
 gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
-    model_dir,
-    poi_df,
-    gages_file,
+    model_dir=config["model_dir"],
+    poi_df=poi_df,
+    gages_file=config["gages_file"],
 )
 
 con.print(
@@ -211,12 +176,22 @@ con.print(
 
 # %%
 owrd_df = create_OR_sf_df(
-    root_dir, control_file_name, model_dir, output_netcdf_filename, hru_gdf, gages_df
+    root_dir=root_dir,
+    control_file_name=config["control_file_name"],
+    model_dir=config["model_dir"],
+    output_netcdf_filename=config["output_netcdf_filename"],
+    hru_gdf=hru_gdf,
+    gages_df=gages_df,
 )
 
 # %%
 ecy_df = create_ecy_sf_df(
-    root_dir, control_file_name, model_dir, output_netcdf_filename, hru_gdf, gages_df
+    root_dir=root_dir,
+    control_file_name=config["control_file_name"],
+    model_dir=config["model_dir"],
+    output_netcdf_filename=config["output_netcdf_filename"],
+    hru_gdf=hru_gdf,
+    gages_df=gages_df,
 )
 
 # %% [markdown]
@@ -227,11 +202,11 @@ ecy_df = create_ecy_sf_df(
 
 # %%
 xr_streamflow = create_sf_efc_df(
-    output_netcdf_filename,
-    owrd_df,
-    ecy_df,
-    NWIS_df,
-    gages_df,
+    output_netcdf_filename=config["output_netcdf_filename"],
+    owrd_df=owrd_df,
+    ecy_df=ecy_df,
+    NWIS_df=NWIS_df,
+    gages_df=gages_df,
 )
 
 # %% [markdown]
@@ -244,12 +219,16 @@ print(
     f"Daily streamflow with EFC classifications for gage: {cpoi_id}; Some gages may show no data because some gages in the parameter file have data outside the simulation period."
 )
 
-control = pws.Control.load_prms(
-    model_dir / control_file_name, warn_unused_options=False
-)
+# control = pws.Control.load_prms(
+#     model_dir / control_file_name, warn_unused_options=False
+# )
 
-start_date = pd.to_datetime(str(control.start_time)).strftime("%m/%d/%Y")
-end_date = pd.to_datetime(str(control.end_time)).strftime("%m/%d/%Y")
+start_date = config[
+    "start_date"
+]  # pd.to_datetime(str(control.start_time)).strftime("%m/%d/%Y")
+end_date = config[
+    "end_date"
+]  # pd.to_datetime(str(control.end_time)).strftime("%m/%d/%Y")
 ds_sub = xr_streamflow.sel(poi_id=cpoi_id, time=slice(start_date, end_date))
 ds_sub = ds_sub.to_dataframe()
 flow_col = "discharge"
@@ -260,6 +239,12 @@ plot_efc(ds_sub, flow_col)
 # #### The cell below creates plots of daily streamflow observations and saves the plots as html.txt files for all gages listed in the `gages_df`.
 
 # %%
-make_obs_plot_files(control, gages_df, xr_streamflow, Folium_maps_dir)
+make_obs_plot_files(
+    start_date=config["start_date"],
+    end_date=config["end_date"],
+    gages_df=gages_df,
+    xr_streamflow=xr_streamflow,
+    Folium_maps_dir=config["Folium_maps_dir"],
+)
 
 # %%

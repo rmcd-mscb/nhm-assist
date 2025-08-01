@@ -306,8 +306,12 @@ dict_file = {
     "html_maps_dir": str(notebook_output_dir / "html_maps"),
     "html_plots_dir": str(notebook_output_dir / "html_plots"),
     "nc_files_dir": str(notebook_output_dir / "nc_files"),
+    "start_date" : str(control.start_time),# pd.to_datetime(str(control.start_time)).strftime("%m/%d/%Y")
+    "end_date" : str(control.end_time),# pd.to_datetime(str(control.end_time)).strftime("%m/%d/%Y")
     "workspace_txt": f"NHM model domain: [bold black]{subdomain}[/bold black], parameter file: [bold black]{param_file}[/bold black]\nSimulation and observation data range: {pd.to_datetime(str(control.start_time)).strftime('%m/%d/%Y')} - {pd.to_datetime(str(control.end_time)).strftime('%m/%d/%Y')} (from [bold]{control_file_name}[/bold]).",
 }
 
 with open(r"..\subdomain_config.yaml", "w") as file:
     documents = yaml.dump(dict_file, file)
+
+# %%

@@ -238,6 +238,7 @@ def make_webbrowser_map(map_file):
         webbrowser.open(map_file_str, new=2)
 
 def make_plot_var_for_hrus_in_poi_basin(
+    *,
     out_dir,
     param_filename,
     water_years,
@@ -601,10 +602,11 @@ def make_plot_var_for_hrus_in_poi_basin(
             plotly.offline.plot(fig, filename=f"{plot_file_path}", auto_open=False)
             make_webbrowser_map(plot_file_path)
 
-    return plot_file_path
+    return #plot_file_path
 
 
 def oopla(
+    *,
     out_dir,
     param_filename,
     water_years,
@@ -862,7 +864,7 @@ def oopla(
         plotly.offline.plot(fig, filename=f"{plot_file_path}", auto_open=False)
         make_webbrowser_map(plot_file_path)
 
-    return plot_file_path
+    return #plot_file_path
 
 
 def stats_table(stats_df):
@@ -979,6 +981,7 @@ def calculate_monthly_kge_in_poi_df(
 
 
 def create_streamflow_plot(
+    *,
     poi_id_sel,
     plot_start_date,
     plot_end_date,

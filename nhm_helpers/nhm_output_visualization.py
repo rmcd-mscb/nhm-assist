@@ -11,7 +11,7 @@ con = Console()
 warnings.filterwarnings("ignore")
 
 
-def retrieve_hru_output_info(out_dir, water_years):
+def retrieve_hru_output_info(*, out_dir, water_years):
     """
     Retrieve pywatershed output file information for mapping and plotting.
     

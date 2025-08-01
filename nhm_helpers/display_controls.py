@@ -15,9 +15,9 @@ from nhm_helpers.output_plots import create_streamflow_plot
 from nhm_helpers.map_template import make_streamflow_map
 from nhm_helpers.nhm_output_visualization import retrieve_hru_output_info
 
-import pathlib as pl
-import os
-root_dir = pl.Path(os.getcwd().rsplit("nhm-assist", 1)[0] + "nhm-assist")
+# import pathlib as pl
+# import os
+# root_dir = pl.Path(os.getcwd().rsplit("nhm-assist", 1)[0] + "nhm-assist")
 
 
 def _get_valid_poi() -> str:
@@ -35,22 +35,22 @@ def generate_map() -> None:
     """
     poi_id = _get_valid_poi()
     fmap = make_var_map(
-        root_dir,
-        out_dir,
-        v.value,
-        plot_start_date,
-        plot_end_date,
-        water_years,
-        hru_gdf,
-        poi_df,
-        poi_id,
-        seg_gdf,
-        html_maps_dir,
-        year_list,
-        yr.value,
-        Folium_maps_dir,
-        HW_basins,
-        subdomain,
+        root_dir=root_dir,
+        out_dir=out_dir,
+        output_var_sel=v.value,
+        plot_start_date=plot_start_date,
+        plot_end_date=plot_end_date,
+        water_years=water_years,
+        hru_gdf=hru_gdf,
+        poi_df=poi_df,
+        poi_id_sel=poi_id,
+        seg_gdf=seg_gdf,
+        html_maps_dir=html_maps_dir,
+        year_list=year_list,
+        sel_year=yr.value,
+        Folium_maps_dir=Folium_maps_dir,
+        HW_basins=HW_basins,
+        subdomain=subdomain,
     )
     display(fmap)
 
@@ -62,18 +62,18 @@ def generate_summary() -> None:
     """
     poi_id = _get_valid_poi()
     fig1 = make_plot_var_for_hrus_in_poi_basin(
-        out_dir,
-        param_filename,
-        water_years,
-        hru_gdf,
-        poi_df,
-        v.value,
-        poi_id,
-        plot_start_date,
-        plot_end_date,
-        plot_colors,
-        subdomain,
-        html_plots_dir,
+        out_dir=out_dir,
+        param_filename=param_filename,
+        water_years=water_years,
+        hru_gdf=hru_gdf,
+        poi_df=poi_df,
+        output_var_sel=v.value,
+        poi_id_sel=poi_id,
+        plot_start_date=plot_start_date,
+        plot_end_date=plot_end_date,
+        plot_colors=plot_colors,
+        subdomain=subdomain,
+        html_plots_dir=html_plots_dir,
     )
     display(fig1)
 
@@ -85,21 +85,21 @@ def generate_flux() -> None:
     """
     poi_id = _get_valid_poi()
     fig2 = oopla(
-        out_dir,
-        param_filename,
-        water_years,
-        hru_gdf,
-        poi_df,
-        output_var_list,
-        v.value,
-        poi_id,
-        plot_start_date,
-        plot_end_date,
-        plot_colors,
-        var_colors_dict,
-        leg_only_dict,
-        subdomain,
-        html_plots_dir,
+        out_dir=out_dir,
+        param_filename=param_filename,
+        water_years=water_years,
+        hru_gdf=hru_gdf,
+        poi_df=poi_df,
+        output_var_list=output_var_list,
+        output_var_sel=v.value,
+        poi_id_sel=poi_id,
+        plot_start_date=plot_start_date,
+        plot_end_date=plot_end_date,
+        plot_colors=plot_colors,
+        var_colors_dict=var_colors_dict,
+        leg_only_dict=leg_only_dict,
+        subdomain=subdomain,
+        html_plots_dir=html_plots_dir,
     )
     display(fig2)
 
@@ -141,20 +141,20 @@ def on_map_clicked(b: widgets.Button) -> None:
         clear_output(wait=True)
         poi_id_sel = gage_txt.value.strip() or poi_df.poi_id.tolist()[0]
         map_file = make_streamflow_map(
-            root_dir,
-            out_dir,
-            plot_start_date,
-            plot_end_date,
-            water_years,
-            hru_gdf,
-            poi_df,
-            poi_id_sel,
-            seg_gdf,
-            html_maps_dir,
-            subdomain,
-            HW_basins_gdf,
-            HW_basins,
-            output_netcdf_filename,
+            root_dir=root_dir,
+            out_dir=out_dir,
+            plot_start_date=plot_start_date,
+            plot_end_date=plot_end_date,
+            water_years=water_years,
+            hru_gdf=hru_gdf,
+            poi_df=poi_df,
+            poi_id_sel=poi_id_sel,
+            seg_gdf=seg_gdf,
+            html_maps_dir=html_maps_dir,
+            subdomain=subdomain,
+            HW_basins_gdf=HW_basins_gdf,
+            HW_basins=HW_basins,
+            output_netcdf_filename=output_netcdf_filename,
         )
         if isinstance(map_file, str):
             display(IFrame(src=map_file, width="100%", height="500px"))
@@ -170,13 +170,13 @@ def on_plot_clicked(b: widgets.Button) -> None:
         clear_output(wait=True)
         poi_id_sel = gage_txt.value.strip() or poi_df.poi_id.tolist()[0]
         fplot = create_streamflow_plot(
-            poi_id_sel,
-            plot_start_date,
-            plot_end_date,
-            water_years,
-            html_plots_dir,
-            output_netcdf_filename,
-            out_dir,
-            subdomain,
+            poi_id_sel=poi_id_sel,
+            plot_start_date=plot_start_date,
+            plot_end_date=plot_end_date,
+            water_years=water_years,
+            html_plots_dir=html_plots_dir,
+            output_netcdf_filename=output_netcdf_filename,
+            out_dir=out_dir,
+            subdomain=subdomain,
         )
         display(fplot)

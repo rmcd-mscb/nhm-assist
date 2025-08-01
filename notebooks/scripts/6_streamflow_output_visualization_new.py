@@ -14,24 +14,23 @@
 
 # %%
 import sys
-import pathlib as pl
-
-# sys.path.append("../")
-import pathlib as pl
 import os
-
-root_folder = "nhm-assist"
-root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
-print(root_dir)
-sys.path.append(str(root_dir))
-
+import pathlib as pl
 import warnings
+
+warnings.filterwarnings("ignore")
 from rich.console import Console
 
 con = Console()
+from rich import pretty
+
+pretty.install()
 import jupyter_black
 
 jupyter_black.load()
+# Find and set the "nhm-assist" root directory
+root_dir = pl.Path(os.getcwd().rsplit("nhm-assist", 1)[0] + "nhm-assist")
+sys.path.append(str(root_dir))
 
 # %%
 from nhm_helpers.output_plots import create_streamflow_plot
@@ -41,38 +40,12 @@ from nhm_helpers.nhm_output_visualization import retrieve_hru_output_info
 from ipywidgets import widgets
 from IPython.display import display
 
-poi_id_sel = None
-crs = 4326
-
-# %%
 from nhm_helpers.nhm_assist_utilities import load_subdomain_config
 
-(
-    Folium_maps_dir,
-    model_dir,
-    param_filename,
-    gages_file,
-    default_gages_file,
-    nwis_gages_file,
-    output_netcdf_filename,
-    NHM_dir,
-    out_dir,
-    notebook_output_dir,
-    Folium_maps_dir,
-    html_maps_dir,
-    html_plots_dir,
-    nc_files_dir,
-    subdomain,
-    GIS_format,
-    param_file,
-    control_file_name,
-    nwis_gage_nobs_min,
-    nhru_nmonths_params,
-    nhru_params,
-    selected_output_variables,
-    water_years,
-    workspace_txt,
-) = load_subdomain_config(root_dir)
+config = load_subdomain_config(root_dir)
+
+poi_id_sel = None
+crs = 4326
 
 # %% [markdown]
 # ## Introduction
@@ -96,27 +69,29 @@ from nhm_helpers.nhm_assist_utilities import load_subdomain_config
     HW_basins_gdf,
     HW_basins,
 ) = make_hf_map_elements(
-    root_dir,
-    model_dir,
-    GIS_format,
-    param_filename,
-    control_file_name,
-    nwis_gages_file,
-    gages_file,
-    default_gages_file,
-    nhru_params,
-    nhru_nmonths_params,
-    nwis_gage_nobs_min,
-)
-
-plot_start_date, plot_end_date, year_list, output_var_list = retrieve_hru_output_info(
-    out_dir,
-    water_years,
+    root_dir=root_dir,
+    model_dir=config["model_dir"],
+    GIS_format=config["GIS_format"],
+    param_filename=config["param_filename"],
+    control_file_name=config["control_file_name"],
+    nwis_gages_file=config["nwis_gages_file"],
+    gages_file=config["gages_file"],
+    default_gages_file=config["default_gages_file"],
+    nhru_params=config["nhru_params"],
+    nhru_nmonths_params=config["nhru_nmonths_params"],
+    nwis_gage_nobs_min=config["nwis_gage_nobs_min"],
 )
 con.print(
-    f"{workspace_txt}\n",
+    f"{config['workspace_txt']}\n",
     f"\n{gages_txt}{seg_txt}{hru_txt}",
-    f"\n     {hru_cal_level_txt}",
+    f"\n     {hru_cal_level_txt}\n",
+    f"\n{gages_txt_nb2}",
+)
+
+# Retrieve pywatershed output file information for mapping and plotting
+plot_start_date, plot_end_date, year_list, output_var_list = retrieve_hru_output_info(
+    out_dir=config["out_dir"],
+    water_years=config["water_years"],
 )
 
 # %% [markdown]
@@ -125,20 +100,20 @@ con.print(
 
 # %%
 map_file = make_streamflow_map(
-    root_dir,
-    out_dir,
-    plot_start_date,
-    plot_end_date,
-    water_years,
-    hru_gdf,
-    poi_df,
-    poi_id_sel,
-    seg_gdf,
-    html_maps_dir,
-    subdomain,
-    HW_basins_gdf,
-    HW_basins,
-    output_netcdf_filename,
+    root_dir=root_dir,
+    out_dir=config["out_dir"],
+    plot_start_date=plot_start_date,
+    plot_end_date=plot_end_date,
+    water_years=config["water_years"],
+    hru_gdf=hru_gdf,
+    poi_df=poi_df,
+    poi_id_sel=poi_id_sel,
+    seg_gdf=seg_gdf,
+    html_maps_dir=config["html_maps_dir"],
+    subdomain=config["subdomain"],
+    HW_basins_gdf=HW_basins_gdf,
+    HW_basins=HW_basins,
+    output_netcdf_filename=config["output_netcdf_filename"],
 )
 
 # %% [markdown]
@@ -173,15 +148,31 @@ btn_map = widgets.Button(
     button_style="primary",
 )
 
+dc.root_dir = root_dir
 dc.gage_txt = gage_txt
 dc.btn_plot = btn_plot
 dc.btn_map = btn_map
+dc.plot_start_date = plot_start_date
+dc.plot_end_date = plot_end_date
+dc.water_years = config["water_years"]
+dc.html_plots_dir = config["html_plots_dir"]
+dc.subdomain = config["subdomain"]
+dc.output_netcdf_filename = config["output_netcdf_filename"]
+dc.out_dir = config["out_dir"]
+dc.hru_gdf = hru_gdf
+dc.seg_gdf = seg_gdf
+dc.poi_df = poi_df
+dc.html_maps_dir = config["html_maps_dir"]
+dc.HW_basins_gdf = HW_basins_gdf
+dc.HW_basins = HW_basins
 
 
 controls = widgets.HBox([gage_txt, btn_plot, btn_map])
 
 plot_out = widgets.Output()
 map_out = widgets.Output()
+dc.plot_out = plot_out
+dc.map_out = map_out
 btn_plot.on_click(dc.on_plot_clicked)
 btn_map.on_click(dc.on_map_clicked)
 display(widgets.VBox([controls, plot_out, map_out]))

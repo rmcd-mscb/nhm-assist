@@ -13,25 +13,30 @@
 # ---
 
 # %%
+from ipywidgets import widgets
+from IPython.display import display
+
+from pyPRMS.metadata.metadata import MetaData
+from pyPRMS import ParameterFile
+
 import sys
-import pathlib as pl
-
-# sys.path.append("../")
-import pathlib as pl
 import os
-
-root_folder = "nhm-assist"
-root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
-print(root_dir)
-sys.path.append(str(root_dir))
-
+import pathlib as pl
 import warnings
+
+warnings.filterwarnings("ignore")
 from rich.console import Console
 
 con = Console()
+from rich import pretty
+
+pretty.install()
 import jupyter_black
 
 jupyter_black.load()
+# Find and set the "nhm-assist" root directory
+root_dir = pl.Path(os.getcwd().rsplit("nhm-assist", 1)[0] + "nhm-assist")
+sys.path.append(str(root_dir))
 
 # %%
 from ipywidgets import widgets
@@ -47,38 +52,10 @@ from nhm_helpers.output_plots import (
     make_plot_var_for_hrus_in_poi_basin,
     oopla,
 )
-
-poi_id_sel = None
-
-# %%
 from nhm_helpers.nhm_assist_utilities import load_subdomain_config
 
-(
-    Folium_maps_dir,
-    model_dir,
-    param_filename,
-    gages_file,
-    default_gages_file,
-    nwis_gages_file,
-    output_netcdf_filename,
-    NHM_dir,
-    out_dir,
-    notebook_output_dir,
-    Folium_maps_dir,
-    html_maps_dir,
-    html_plots_dir,
-    nc_files_dir,
-    subdomain,
-    GIS_format,
-    param_file,
-    control_file_name,
-    nwis_gage_nobs_min,
-    nhru_nmonths_params,
-    nhru_params,
-    selected_output_variables,
-    water_years,
-    workspace_txt,
-) = load_subdomain_config(root_dir)
+config = load_subdomain_config(root_dir)
+poi_id_sel = None
 
 # %% [markdown]
 # ## Introduction
@@ -101,29 +78,29 @@ from nhm_helpers.nhm_assist_utilities import load_subdomain_config
     HW_basins_gdf,
     HW_basins,
 ) = make_hf_map_elements(
-    root_dir,
-    model_dir,
-    GIS_format,
-    param_filename,
-    control_file_name,
-    nwis_gages_file,
-    gages_file,
-    default_gages_file,
-    nhru_params,
-    nhru_nmonths_params,
-    nwis_gage_nobs_min,
+    root_dir=root_dir,
+    model_dir=config["model_dir"],
+    GIS_format=config["GIS_format"],
+    param_filename=config["param_filename"],
+    control_file_name=config["control_file_name"],
+    nwis_gages_file=config["nwis_gages_file"],
+    gages_file=config["gages_file"],
+    default_gages_file=config["default_gages_file"],
+    nhru_params=config["nhru_params"],
+    nhru_nmonths_params=config["nhru_nmonths_params"],
+    nwis_gage_nobs_min=config["nwis_gage_nobs_min"],
+)
+con.print(
+    f"{config['workspace_txt']}\n",
+    f"\n{gages_txt}{seg_txt}{hru_txt}",
+    f"\n     {hru_cal_level_txt}\n",
+    f"\n{gages_txt_nb2}",
 )
 
 # Retrieve pywatershed output file information for mapping and plotting
 plot_start_date, plot_end_date, year_list, output_var_list = retrieve_hru_output_info(
-    out_dir,
-    water_years,
-)
-
-con.print(
-    f"{workspace_txt}\n",
-    f"\n{gages_txt}{seg_txt}{hru_txt}",
-    f"\n     {hru_cal_level_txt}",
+    out_dir=config["out_dir"],
+    water_years=config["water_years"],
 )
 
 # %% [markdown]
@@ -222,25 +199,25 @@ dc.btn_generate = btn_generate
 dc.out_map = out_map
 dc.out_summary = out_summary
 dc.out_flux = out_flux
+dc.root_dir = root_dir
 dc.poi_df = poi_df
-dc.out_dir = out_dir
+dc.out_dir = config["out_dir"]
 dc.plot_start_date = plot_start_date
+# dc.poi_id = poi_id
 dc.plot_end_date = plot_end_date
-dc.water_years = water_years
+dc.water_years = config["water_years"]
 dc.hru_gdf = hru_gdf
 dc.seg_gdf = seg_gdf
-dc.html_maps_dir = html_maps_dir
+dc.html_maps_dir = config["html_maps_dir"]
 dc.year_list = year_list
-dc.Folium_maps_dir = Folium_maps_dir
+dc.Folium_maps_dir = config["Folium_maps_dir"]
 dc.HW_basins = HW_basins
-dc.subdomain = subdomain
-dc.param_filename = param_filename
+dc.subdomain = config["subdomain"]
+dc.param_filename = config["param_filename"]
 dc.output_var_list = output_var_list
-dc.html_plots_dir = html_plots_dir
+dc.html_plots_dir = config["html_plots_dir"]
 btn_generate.on_click(dc.on_generate_clicked)
 
 display(VBox([v, yr, v2, plot_checks, btn_generate, out_map, out_summary, out_flux]))
 
-# %% [markdown]
-# <font size=4> &#x1F6D1;If new selections are made above,</font><br>
-# <font size = '3'><font color='green'>**select this cell**</font>, then select <font color='green'>**Run Selected Cell and All Below**</font> from the Run menu in the toolbar.
+# %%

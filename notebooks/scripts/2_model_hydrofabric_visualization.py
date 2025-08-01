@@ -14,65 +14,29 @@
 
 # %%
 import sys
+import os
 import pathlib as pl
 import warnings
+
+warnings.filterwarnings("ignore")
 from rich.console import Console
 
-# from rich import pretty
-warnings.filterwarnings("ignore")
-# import jupyter_black
-
-# pretty.install()
 con = Console()
-# jupyter_black.load()
+from rich import pretty
 
+pretty.install()
+import jupyter_black
 
-import pathlib as pl
-import os
-
-root_folder = "nhm-assist"
-root_dir = pl.Path(os.getcwd().rsplit(root_folder, 1)[0] + root_folder)
-print(root_dir)
+jupyter_black.load()
+# Find and set the "nhm-assist" root directory
+root_dir = pl.Path(os.getcwd().rsplit("nhm-assist", 1)[0] + "nhm-assist")
 sys.path.append(str(root_dir))
-
-from nhm_helpers.nhm_assist_utilities import load_subdomain_config
 from nhm_helpers.nhm_hydrofabric import make_hf_map_elements
 from nhm_helpers.map_template import make_hf_map
-
-# %%
 from nhm_helpers.nhm_assist_utilities import load_subdomain_config
 
-# (
-#     Folium_maps_dir,
-#     model_dir,
-#     param_filename,
-#     gages_file,
-#     default_gages_file,
-#     nwis_gages_file,
-#     output_netcdf_filename,
-#     NHM_dir,
-#     out_dir,
-#     notebook_output_dir,
-#     Folium_maps_dir,
-#     html_maps_dir,
-#     html_plots_dir,
-#     nc_files_dir,
-#     subdomain,
-#     GIS_format,
-#     param_file,
-#     control_file_name,
-#     nwis_gage_nobs_min,
-#     nhru_nmonths_params,
-#     nhru_params,
-#     selected_output_variables,
-#     water_years,
-#     workspace_txt,
-# ) = load_subdomain_config(root_dir)
-
 config = load_subdomain_config(root_dir)
-
-# %%
-config["model_dir"]
+# con.print(config)
 
 # %% [markdown]
 # ## Introduction
@@ -120,19 +84,19 @@ con.print(
 
 # %%
 map_file = make_hf_map(
-    root_dir,
-    hru_gdf,
-    HW_basins_gdf,
-    HW_basins,
-    poi_df,
-    "",
-    seg_gdf,
-    nwis_gages_aoi,
-    gages_df,
-    config["html_maps_dir"],
-    Folium_maps_dir,
-    param_filename,
-    subdomain,
+    root_dir=root_dir,
+    hru_gdf=hru_gdf,
+    HW_basins_gdf=HW_basins_gdf,
+    HW_basins=HW_basins,
+    poi_df=poi_df,
+    poi_id_sel="",
+    seg_gdf=seg_gdf,
+    nwis_gages_aoi=nwis_gages_aoi,
+    gages_df=gages_df,
+    html_maps_dir=config["html_maps_dir"],
+    Folium_maps_dir=config["Folium_maps_dir"],
+    param_filename=config["param_filename"],
+    subdomain=config["subdomain"],
 )
 
 # %% [markdown]

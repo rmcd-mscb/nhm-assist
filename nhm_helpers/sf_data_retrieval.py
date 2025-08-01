@@ -96,7 +96,7 @@ def owrd_scraper(station_nbr, start_date, end_date):
     return df
 
 
-def create_OR_sf_df(root_dir, control_file_name, model_dir, output_netcdf_filename, hru_gdf, gages_df):
+def create_OR_sf_df(*,root_dir, control_file_name, model_dir, output_netcdf_filename, hru_gdf, gages_df):
     """
     Determines whether the subdomain intersects OR and proceeds to call owrd_scraper to generate owrd_df. 
     Exports OR streamflow data as cached netCDF file for faster dataframe access.
@@ -365,7 +365,7 @@ def ecy_scrape(station, ecy_years, ecy_start_date, ecy_end_date):
         return None
 
 
-def create_ecy_sf_df(root_dir, control_file_name, model_dir, output_netcdf_filename, hru_gdf, gages_df):
+def create_ecy_sf_df(*, root_dir, control_file_name, model_dir, output_netcdf_filename, hru_gdf, gages_df):
     """
     Determines whether the subdomain intersects WA and proceeds to call ecy_scrape to generate ecy_df. 
     Exports WA streamflow data as cached netCDF file for faster dataframe access.
@@ -554,6 +554,7 @@ def create_ecy_sf_df(root_dir, control_file_name, model_dir, output_netcdf_filen
 
 
 def create_nwis_sf_df(
+    *,
     root_dir,
     control_file_name,
     model_dir,
@@ -595,12 +596,12 @@ def create_nwis_sf_df(
     """
     
     nwis_gage_info_aoi = fetch_nwis_gage_info(
-        root_dir,
-        model_dir,
-        control_file_name,
-        nwis_gage_nobs_min,
-        hru_gdf,
-        seg_gdf,
+        root_dir=root_dir,
+        model_dir=model_dir,
+        control_file_name=control_file_name,
+        nwis_gage_nobs_min=nwis_gage_nobs_min,
+        hru_gdf=hru_gdf,
+        seg_gdf=seg_gdf,
     )
 
     if nwis_cache_file.exists():
@@ -740,6 +741,7 @@ def create_nwis_sf_df(
 
 
 def create_sf_efc_df(
+    *,
     output_netcdf_filename,
     owrd_df,
     ecy_df,

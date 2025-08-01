@@ -1565,6 +1565,7 @@ def create_streamflow_poi_markers(
 
 
 def make_hf_map(
+    *,
     root_dir,
     hru_gdf,
     HW_basins_gdf,
@@ -1710,6 +1711,7 @@ def make_hf_map(
 
 
 def make_par_map(
+    *,
     root_dir,
     hru_gdf,
     HW_basins,
@@ -1865,6 +1867,7 @@ def make_par_map(
 
 
 def make_var_map(
+    *,
     root_dir,
     out_dir,
     output_var_sel,
@@ -2035,10 +2038,11 @@ def make_var_map(
 
     make_webbrowser_map(map_file)
 
-    return map_file
+    return #map_file
 
 
 def make_streamflow_map(
+    *,
     root_dir,
     out_dir,
     plot_start_date,
@@ -2219,7 +2223,7 @@ def make_streamflow_map(
 
     make_webbrowser_map(map_file)
     
-    return map_file
+    return #map_file
 
 def create_poi_obs_marker_cluster(
     poi_df,
