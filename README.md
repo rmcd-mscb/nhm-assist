@@ -53,9 +53,17 @@ In the miniforge prompt, navigate to the nhm-assist folder, and run
 
 `mamba activate nhm`
 
+## Generate notebooks from .py files
+
+In the miniforge prompt, run
+
+`python make_notebooks.py`
+
 ## Launch Jupyter
 
 In the miniforge prompt, navigate to the nhm-assist folder, and run
+
+`cd notebooks`
 
 `jupyter lab`
 
