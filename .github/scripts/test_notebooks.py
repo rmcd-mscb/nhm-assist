@@ -10,7 +10,8 @@ repo_dir = pl.Path("../../").resolve()
 scripts_dir = repo_dir / "notebooks" / "scripts"
 
 all_notebook_scripts = set(scripts_dir.glob("*.py"))
-# Add notebooks here as needed
+
+# Add scripts here as needed
 scripts_to_not_test = set([scripts_dir / "add_pois_to_parameters.py"])
 scripts_to_test = sorted(all_notebook_scripts - scripts_to_not_test)
 
@@ -29,7 +30,7 @@ def run_script(script_name):
 if __name__ == "__main__":
     failed_list = []
     for script in scripts_to_test:
-        print(f"Testing notebook: {script}")
+        print(f"Testing script: {script}")
         try:
             run_script(script)
         except AssertionError:
@@ -37,5 +38,5 @@ if __name__ == "__main__":
 
     # <<
     if len(failed_list):
-        msg = f"The following notebooks failed: {failed_list}"
+        msg = f"The following scripts failed: {failed_list}"
         raise ValueError(msg)
