@@ -10,9 +10,8 @@ repo_dir = pl.Path("../../").resolve()
 scripts_dir = repo_dir / "notebooks" / "scripts"
 
 all_notebook_scripts = set(scripts_dir.glob("*.py"))
-
 # Add notebooks here as needed
-scripts_to_not_test = set("add_pois_to_parameters.py")
+scripts_to_not_test = set([scripts_dir / "add_pois_to_parameters.py"])
 scripts_to_test = sorted(all_notebook_scripts - scripts_to_not_test)
 
 def run_cmd(cmd):
