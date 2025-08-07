@@ -116,7 +116,7 @@ print(root_dir)
 # %%
 subdomain = "Walla_Walla"
 
-model_dir = pl.Path("../domain_data").resolve() / subdomain
+model_dir = root_dir / "domain_data" / subdomain
 
 # %% [markdown]
 # <font size= '4'> &#x270D;<font color='green'>**Enter Information:** </font> **GIS file format**. </font><br>
@@ -283,7 +283,7 @@ import yaml
 
 dict_file = {
     "subdomain": subdomain,
-    "model_dir": str(pl.Path("../domain_data").resolve() / subdomain),
+    "model_dir": str(model_dir),
     "GIS_format": GIS_format,
     "param_file": param_file,
     "param_filename": str(param_filename),
@@ -299,7 +299,7 @@ dict_file = {
     "output_netcdf_filename": str(
         model_dir / "notebook_output_files/nc_files/sf_efc.nc"
     ),
-    "NHM_dir": str(pl.Path("../").resolve() / "data_dependencies/NHM_v1_1"),
+    "NHM_dir": str(root_dir / "data_dependencies/NHM_v1_1"),
     "out_dir": str(model_dir / "output"),
     "notebook_output_dir": str(model_dir / "notebook_output_files"),
     "Folium_maps_dir": str(notebook_output_dir / "Folium_maps"),
@@ -311,7 +311,7 @@ dict_file = {
     "workspace_txt": f"NHM model domain: [bold black]{subdomain}[/bold black], parameter file: [bold black]{param_file}[/bold black]\nSimulation and observation data range: {pd.to_datetime(str(control.start_time)).strftime('%m/%d/%Y')} - {pd.to_datetime(str(control.end_time)).strftime('%m/%d/%Y')} (from [bold]{control_file_name}[/bold]).",
 }
 
-with open(r"..\subdomain_config.yaml", "w") as file:
+with open(root_dir / "subdomain_config.yaml", "w") as file:
     documents = yaml.dump(dict_file, file)
 
 # %%
