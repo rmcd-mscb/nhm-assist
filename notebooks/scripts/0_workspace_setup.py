@@ -283,7 +283,7 @@ import yaml
 
 dict_file = {
     "subdomain": subdomain,
-    "model_dir": str(pl.Path("../domain_data").resolve() / subdomain),
+    "model_dir": str(model_dir),
     "GIS_format": GIS_format,
     "param_file": param_file,
     "param_filename": str(param_filename),
@@ -299,7 +299,7 @@ dict_file = {
     "output_netcdf_filename": str(
         model_dir / "notebook_output_files/nc_files/sf_efc.nc"
     ),
-    "NHM_dir": str(pl.Path("../").resolve() / "data_dependencies/NHM_v1_1"),
+    "NHM_dir": str(root_dir / "data_dependencies/NHM_v1_1"),
     "out_dir": str(model_dir / "output"),
     "notebook_output_dir": str(model_dir / "notebook_output_files"),
     "Folium_maps_dir": str(notebook_output_dir / "Folium_maps"),
