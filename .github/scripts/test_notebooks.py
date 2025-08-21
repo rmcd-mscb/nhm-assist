@@ -7,7 +7,7 @@ import sys
 from pywatershed.utils.utils import timer
 
 repo_dir = pl.Path("../../").resolve()
-scripts_dir = repo_dir / "notebooks" / "scripts"
+scripts_dir = repo_dir / "notebooks_scripts"
 
 all_notebook_scripts = set(scripts_dir.glob("*.py"))
 
