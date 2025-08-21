@@ -639,20 +639,44 @@ def create_nwis_sf_df(
                         start=nwis_start,
                         end=nwis_end,
                         parameterCd="00060",
+                        StatCd="00003",
                     )
-                    if len(NWISgage_data.index) >= nwis_gage_nobs_min:
-                        NWIS_tmp.append(NWISgage_data)
-                    elif ii in poi_df["poi_id"].unique().tolist():
-                        NWIS_tmp.append(NWISgage_data)
-                    else:
-                        nobs_min_list.append(ii)
-                        # con.print(f"Gage id {ii} fewer obs than nwis_gage_nobs_min.")
+                    # Drop the _cd column--needed to do this due to NWIS updates 8/20/25
+                    try:
+                        dropped = NWISgage_data.columns[NWISgage_data.columns.str.contains("_cd|_2|_aux")]
+                        print("Dropped columns:", list(dropped))
+                        NWISgage_data = NWISgage_data.drop(columns=dropped)
+            
+                        # Check and rename if conditions are met --needed to do this due to NWIS updates 8/20/25
+                        mean_index = NWISgage_data.columns.get_loc(
+                            [col for col in NWISgage_data.columns if "_Mean" in col][0]
+                        )
+                        mean_col = NWISgage_data.columns[mean_index]
+            
+                        if mean_col != "00060_Mean":
+                            print(f"For gage {ii}, column '{mean_col}' was renamed '00060_Mean'.")
+                            NWISgage_data.rename(columns = {mean_col : "00060_Mean"}, inplace=True)
+                        
+                        if len(NWISgage_data.index) >= nwis_gage_nobs_min:
+                            NWIS_tmp.append(NWISgage_data)
+                            print(NWISgage_data.columns)
+                        elif ii in poi_df["poi_id"].unique().tolist():
+                            NWIS_tmp.append(NWISgage_data)
+                            print(NWISgage_data.columns)
+                        else:
+                            nobs_min_list.append(ii)
+                            # con.print(f"Gage id {ii} fewer obs than nwis_gage_nobs_min.")
+                        
+                    except IndexError:
+                        print(f" WTF! Gage {ii} has no data in nwis for the model period?")
+                        pass
+                                  
                 except ValueError:
                     err_list.append(ii)
                     # con.print(f"Gage id {ii} not found in NWIS.")
                     pass
                 progress.update(task, advance=1)
-
+                
         NWIS_df = pd.concat(NWIS_tmp)
         con.print(
             f"{len(nobs_min_list)} gages had fewer obs than nwis_gage_nobs_min and will be ommited from nwis_gages_cache.nc and NWIS gages.csv unless they appear in the paramter file.\n{nobs_min_list}"
