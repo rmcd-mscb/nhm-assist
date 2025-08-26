@@ -3,7 +3,7 @@ from pathlib import Path
 import jupytext
 
 # Specify input folders and output folder
-input_folders = [Path('./notebooks/scripts')]
+input_folders = [Path('./notebook_scripts')]
 output_folder = Path('./notebooks')
 
 for folder in input_folders:
