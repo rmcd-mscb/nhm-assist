@@ -13,7 +13,8 @@ warnings.filterwarnings("ignore")
 
 
 def create_hru_gdf(
-    NHM_dir,
+    *,
+    root_dir,
     model_dir,
     GIS_format,
     param_filename,
@@ -136,7 +137,7 @@ def create_hru_gdf(
     """
 
     #### READ table (.csv) of HRU calibration level file
-    hru_cal_levels_df = pd.read_csv(f"{NHM_dir}/nhm_v1_1_HRU_cal_levels.csv").fillna(0)
+    hru_cal_levels_df = pd.read_csv(f"{root_dir}/data_dependencies/NHM_v1_1/nhm_v1_1_HRU_cal_levels.csv").fillna(0)
     hru_cal_levels_df["hw_id"] = hru_cal_levels_df.hw_id.astype("int32")
 
     hru_gdf = hru_gdf.merge(hru_cal_levels_df, on="nhm_id")
@@ -149,6 +150,7 @@ def create_hru_gdf(
 
 
 def create_segment_gdf(
+    *,
     model_dir,
     GIS_format,
     param_filename,
@@ -239,6 +241,8 @@ def create_segment_gdf(
 
 
 def create_poi_df(
+    *,
+    root_dir,
     model_dir,
     param_filename,
     control_file_name,
@@ -302,11 +306,12 @@ def create_poi_df(
 
     """
     nwis_gage_info_aoi = fetch_nwis_gage_info(
-        model_dir,
-        control_file_name,
-        nwis_gage_nobs_min,
-        hru_gdf,
-        seg_gdf,
+        root_dir=root_dir,
+        model_dir=model_dir,
+        control_file_name=control_file_name,
+        nwis_gage_nobs_min=nwis_gage_nobs_min,
+        hru_gdf=hru_gdf,
+        seg_gdf=seg_gdf,
     )
 
     poi = poi.merge(nwis_gage_info_aoi, left_on="poi_id", right_on="poi_id", how="left")
@@ -337,7 +342,7 @@ def create_poi_df(
     )  # Creates a dictionary of column header and datatype called below.
 
     byHWobs_poi_df = pd.read_csv(
-        r"data_dependencies/NHM_v1_1/nhm_v1_1_byhwobs_cal_gages.csv",
+        root_dir / "data_dependencies/NHM_v1_1/nhm_v1_1_byhwobs_cal_gages.csv",
         sep="\t",
         dtype=cols,
     ).fillna(0)
@@ -352,9 +357,9 @@ def create_poi_df(
 
     if gages_file.exists():
         gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
-            model_dir,
-            poi_df,
-            gages_file,
+            model_dir=model_dir,
+            poi_df=poi_df,
+            gages_file=gages_file,
         )
 
         for idx, row in poi_df.iterrows():
@@ -374,9 +379,9 @@ def create_poi_df(
         pass
     if default_gages_file.exists():
         gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
-            model_dir,
-            poi_df,
-            gages_file,
+            model_dir=model_dir,
+            poi_df=poi_df,
+            gages_file=gages_file,
         )
 
         for idx, row in poi_df.iterrows():
@@ -399,6 +404,8 @@ def create_poi_df(
 
 
 def create_default_gages_file(
+    *,
+    root_dir,
     model_dir,
     control_file_name,
     nwis_gage_nobs_min,
@@ -408,11 +415,12 @@ def create_default_gages_file(
 ):
 
     nwis_gages_aoi = fetch_nwis_gage_info(
-        model_dir,
-        control_file_name,
-        nwis_gage_nobs_min,
-        hru_gdf,
-        seg_gdf,
+        root_dir=root_dir,
+        model_dir=model_dir,
+        control_file_name=control_file_name,
+        nwis_gage_nobs_min=nwis_gage_nobs_min,
+        hru_gdf=hru_gdf,
+        seg_gdf=seg_gdf,
     )
 
     """
@@ -556,6 +564,7 @@ def create_default_gages_file(
 
 
 def read_gages_file(
+    *,
     model_dir,
     poi_df,
     gages_file,
@@ -666,7 +675,8 @@ def read_gages_file(
 
 
 def make_hf_map_elements(
-    NHM_dir,
+    *,
+    root_dir,
     model_dir,
     GIS_format,
     param_filename,
@@ -735,42 +745,44 @@ def make_hf_map_elements(
     
     """
     hru_gdf, hru_txt, hru_cal_level_txt = create_hru_gdf(
-        NHM_dir,
-        model_dir,
-        GIS_format,
-        param_filename,
-        nhru_params,
-        nhru_nmonths_params,
+        root_dir=root_dir,
+        model_dir=model_dir,
+        GIS_format=GIS_format,
+        param_filename=param_filename,
+        nhru_params=nhru_params,
+        nhru_nmonths_params=nhru_nmonths_params,
     )
 
     seg_gdf, seg_txt = create_segment_gdf(
-        model_dir,
-        GIS_format,
-        param_filename,
+        model_dir=model_dir,
+        GIS_format=GIS_format,
+        param_filename=param_filename,
     )
 
     poi_df = create_poi_df(
-        model_dir,
-        param_filename,
-        control_file_name,
-        hru_gdf,
-        gages_file,
-        default_gages_file,
-        nwis_gage_nobs_min,
-        seg_gdf,
+        root_dir=root_dir,
+        model_dir=model_dir,
+        param_filename=param_filename,
+        control_file_name=control_file_name,
+        hru_gdf=hru_gdf,
+        gages_file=gages_file,
+        default_gages_file=default_gages_file,
+        nwis_gage_nobs_min=nwis_gage_nobs_min,
+        seg_gdf=seg_gdf,
     )
     nwis_gages_aoi = fetch_nwis_gage_info(
-        model_dir,
-        control_file_name,
-        nwis_gage_nobs_min,
-        hru_gdf,
-        seg_gdf,
+        root_dir=root_dir,
+        model_dir=model_dir,
+        control_file_name=control_file_name,
+        nwis_gage_nobs_min=nwis_gage_nobs_min,
+        hru_gdf=hru_gdf,
+        seg_gdf=seg_gdf,
     )
 
     gages_df, gages_txt, gages_txt_nb2 = read_gages_file(
-        model_dir,
-        poi_df,
-        gages_file,
+        model_dir=model_dir,
+        poi_df=poi_df,
+        gages_file=gages_file,
     )
 
     HW_basins_gdf, HW_basins = make_HW_cal_level_files(hru_gdf)

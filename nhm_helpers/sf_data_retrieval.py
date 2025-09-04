@@ -96,7 +96,7 @@ def owrd_scraper(station_nbr, start_date, end_date):
     return df
 
 
-def create_OR_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_df):
+def create_OR_sf_df(*,root_dir, control_file_name, model_dir, output_netcdf_filename, hru_gdf, gages_df):
     """
     Determines whether the subdomain intersects OR and proceeds to call owrd_scraper to generate owrd_df. 
     Exports OR streamflow data as cached netCDF file for faster dataframe access.
@@ -120,7 +120,9 @@ def create_OR_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_d
         Dataframe containing OWRD mean daily streamflow data for the specified gage and date range.
     
     """
-    
+    control = pws.Control.load_prms(
+    model_dir / control_file_name, warn_unused_options=False
+)
 
     start_date = pd.to_datetime(str(control.start_time)).strftime("%m/%d/%Y")
     end_date = pd.to_datetime(str(control.end_time)).strftime("%m/%d/%Y")
@@ -143,7 +145,7 @@ def create_OR_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_d
     crs = 4326
 
     # Make a list if the HUC2 region(s) the subdomain intersects for NWIS queries.
-    huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
+    huc2_gdf = gpd.read_file(root_dir/"data_dependencies/HUC2/HUC2.shp").to_crs(crs)
     model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
 
     if any(item in owrd_regions for item in model_domain_regions):
@@ -363,7 +365,7 @@ def ecy_scrape(station, ecy_years, ecy_start_date, ecy_end_date):
         return None
 
 
-def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_df):
+def create_ecy_sf_df(*, root_dir, control_file_name, model_dir, output_netcdf_filename, hru_gdf, gages_df):
     """
     Determines whether the subdomain intersects WA and proceeds to call ecy_scrape to generate ecy_df. 
     Exports WA streamflow data as cached netCDF file for faster dataframe access.
@@ -387,7 +389,9 @@ def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_
         Dataframe containing ECY mean daily streamflow data for the specified gage and date range.
         
     """
-    
+    control = pws.Control.load_prms(
+    model_dir / control_file_name, warn_unused_options=False
+)
     ecy_regions = ["17"]
 
     """
@@ -403,7 +407,7 @@ def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_
     crs = 4326
 
     # Make a list if the HUC2 region(s) the subdomain intersects for NWIS queries.
-    huc2_gdf = gpd.read_file("./data_dependencies/HUC2/HUC2.shp").to_crs(crs)
+    huc2_gdf = gpd.read_file(root_dir/"data_dependencies/HUC2/HUC2.shp").to_crs(crs)
     model_domain_regions = list((huc2_gdf.clip(hru_gdf).loc[:]["huc2"]).values)
     ecy_df = pd.DataFrame()
 
@@ -550,6 +554,8 @@ def create_ecy_sf_df(control, model_dir, output_netcdf_filename, hru_gdf, gages_
 
 
 def create_nwis_sf_df(
+    *,
+    root_dir,
     control_file_name,
     model_dir,
     output_netcdf_filename,
@@ -590,11 +596,12 @@ def create_nwis_sf_df(
     """
     
     nwis_gage_info_aoi = fetch_nwis_gage_info(
-        model_dir,
-        control_file_name,
-        nwis_gage_nobs_min,
-        hru_gdf,
-        seg_gdf,
+        root_dir=root_dir,
+        model_dir=model_dir,
+        control_file_name=control_file_name,
+        nwis_gage_nobs_min=nwis_gage_nobs_min,
+        hru_gdf=hru_gdf,
+        seg_gdf=seg_gdf,
     )
 
     if nwis_cache_file.exists():
@@ -632,20 +639,44 @@ def create_nwis_sf_df(
                         start=nwis_start,
                         end=nwis_end,
                         parameterCd="00060",
+                        StatCd="00003",
                     )
-                    if len(NWISgage_data.index) >= nwis_gage_nobs_min:
-                        NWIS_tmp.append(NWISgage_data)
-                    elif ii in poi_df["poi_id"].unique().tolist():
-                        NWIS_tmp.append(NWISgage_data)
-                    else:
-                        nobs_min_list.append(ii)
-                        # con.print(f"Gage id {ii} fewer obs than nwis_gage_nobs_min.")
+                    # Drop the _cd column--needed to do this due to NWIS updates 8/20/25
+                    try:
+                        dropped = NWISgage_data.columns[NWISgage_data.columns.str.contains("_cd|_2|_aux")]
+                        print("Dropped columns:", list(dropped))
+                        NWISgage_data = NWISgage_data.drop(columns=dropped)
+            
+                        # Check and rename if conditions are met --needed to do this due to NWIS updates 8/20/25
+                        mean_index = NWISgage_data.columns.get_loc(
+                            [col for col in NWISgage_data.columns if "_Mean" in col][0]
+                        )
+                        mean_col = NWISgage_data.columns[mean_index]
+            
+                        if mean_col != "00060_Mean":
+                            print(f"For gage {ii}, column '{mean_col}' was renamed '00060_Mean'.")
+                            NWISgage_data.rename(columns = {mean_col : "00060_Mean"}, inplace=True)
+                        
+                        if len(NWISgage_data.index) >= nwis_gage_nobs_min:
+                            NWIS_tmp.append(NWISgage_data)
+                            print(NWISgage_data.columns)
+                        elif ii in poi_df["poi_id"].unique().tolist():
+                            NWIS_tmp.append(NWISgage_data)
+                            print(NWISgage_data.columns)
+                        else:
+                            nobs_min_list.append(ii)
+                            # con.print(f"Gage id {ii} fewer obs than nwis_gage_nobs_min.")
+                        
+                    except IndexError:
+                        print(f" WTF! Gage {ii} has no data in nwis for the model period?")
+                        pass
+                                  
                 except ValueError:
                     err_list.append(ii)
                     # con.print(f"Gage id {ii} not found in NWIS.")
                     pass
                 progress.update(task, advance=1)
-
+                
         NWIS_df = pd.concat(NWIS_tmp)
         con.print(
             f"{len(nobs_min_list)} gages had fewer obs than nwis_gage_nobs_min and will be ommited from nwis_gages_cache.nc and NWIS gages.csv unless they appear in the paramter file.\n{nobs_min_list}"
@@ -734,6 +765,7 @@ def create_nwis_sf_df(
 
 
 def create_sf_efc_df(
+    *,
     output_netcdf_filename,
     owrd_df,
     ecy_df,

@@ -3,11 +3,14 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
+  - dask
+  - distributed
   - folium==0.18
   - ipyleaflet==0.19.2
   - jupyter_contrib_nbextensions
   - jupytext
   - numpy<=2.2.0
+  - pint-xarray
   - pip
   - plotly==5.24.1
   - pywatershed>=2.0.1
@@ -15,7 +18,9 @@ dependencies:
   - gdptools==0.2.20
   - numpy<=2.2
   - pint-xarray
+  - gdptools==0.2.21
   - pip:
       - hydroeval==0.1
       - jupyter_black
       - git+https://github.com/DOI-USGS/pyPRMS.git
+
