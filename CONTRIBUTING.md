@@ -56,10 +56,11 @@ Thank you for your interest in contributing to nhm-assist!
 
 ## Making Changes
 
-- Edit notebooks in the `notebooks/` directory
+- Edit Python scripts in the `notebook_scripts/` directory (these are the source files)
 - Edit Python modules in the `nhm_helpers/` directory
-- Run `python make_notebooks.py` to sync notebooks with script files
-- Test your changes by running the affected notebooks
+- Run `python make_notebooks.py` to generate notebook files from the scripts
+- Test your changes by running the generated notebooks
+- Note: Only `.py` files are tracked in git; `.ipynb` files are generated automatically
 
 ## Code Standards
 
