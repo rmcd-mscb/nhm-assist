@@ -1,3 +1,8 @@
 [formats]
-"notebooks/" = "ipynb"
+# Only track .py files in git, generate .ipynb files automatically
 "notebook_scripts/" = "py:percent"
+
+[tool.jupytext]
+# Configuration for generating notebooks from scripts
+notebook_metadata_filter = "-all"
+cell_metadata_filter = "-all"
